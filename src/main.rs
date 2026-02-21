@@ -1,6 +1,10 @@
 use regex_automata::util::syntax::{self, Config};
 
-use regex::{self, haystack::Haystack, hir::HirExtension, matcher::Matcher};
+use regex::{self, haystack::Haystack, hir::HirExtension, regex::Regex, matcher::Matcher};
+
+use regex_macro::regex;
+
+regex!(MyPattern = r"^(([a-z]+)|([0-9]+))$");
 
 fn main() {
     let mut a = Haystack::new("A");
@@ -23,4 +27,8 @@ fn main() {
     dbg!(J::matches(&mut Haystack::new("word")));
     dbg!(J::matches(&mut Haystack::new("word123")));
     dbg!(J::matches(&mut Haystack::new("123")));
+
+    dbg!(MyPattern::matches(&mut Haystack::new("word")));
+    dbg!(MyPattern::matches(&mut Haystack::new("word123")));
+    dbg!(MyPattern::matches(&mut Haystack::new("123")));
 }

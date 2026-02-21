@@ -1,5 +1,5 @@
 {
-  description = "Regex";
+  description = "Compile Time Regex";
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-25.11";

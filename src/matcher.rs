@@ -34,9 +34,6 @@ impl<const A: u8, const B: u8> Matcher for ByteRange<A, B> {
     }
 }
 
-type ClassDigit = ByteRange<b'0', b'9'>;
-type ClassWord = Or<Or<ByteRange<b'A', b'Z'>, ByteRange<b'a', b'z'>>, Or<ClassDigit, Byte<b'_'>>>;
-
 #[derive(Debug, Default)]
 pub struct Or<A: Matcher, B: Matcher>(pub PhantomData<A>, pub PhantomData<B>);
 
@@ -64,29 +61,6 @@ impl<A: Matcher, B: Matcher> Matcher for Then<A, B> {
         }
     }
 }
-
-// #[derive(Debug, Default)]
-// pub struct AnyNumber<A: Matcher>(pub PhantomData<A>);
-
-// impl<A: Matcher> Matcher for AnyNumber<A> {
-//     fn matches(hay: &mut Haystack) -> bool {
-//         while A::matches(hay) {}
-//         true
-//     }
-// }
-
-// #[derive(Debug, Default)]
-// pub struct OneOrMore<A: Matcher>(pub PhantomData<A>);
-
-// impl<A: Matcher> Matcher for OneOrMore<A> {
-//     fn matches(hay: &mut Haystack) -> bool {
-//         let mut matched = false;
-//         while A::matches(hay) {
-//             matched = true;
-//         }
-//         matched
-//     }
-// }
 
 #[derive(Debug, Default)]
 pub struct QuantifierN<A: Matcher, const N: usize>(pub PhantomData<A>);
@@ -126,16 +100,6 @@ impl<A: Matcher, const N: usize, const M: usize> Matcher for QuantifierNToM<A, N
         N <= matches && matches <= M
     }
 }
-
-// #[derive(Debug, Default)]
-// pub struct Optional<A: Matcher>(pub PhantomData<A>);
-
-// impl<A: Matcher> Matcher for Optional<A> {
-//     fn matches(hay: &mut Haystack) -> bool {
-//         A::matches(hay);
-//         true
-//     }
-// }
 
 #[derive(Debug, Default)]
 pub struct Beginning;

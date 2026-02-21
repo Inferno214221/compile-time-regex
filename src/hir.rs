@@ -4,6 +4,10 @@ use regex_syntax::hir::{Capture, Class, ClassBytesRange, Hir, HirKind, Literal, 
 
 use crate::matcher::{Always, Beginning, Byte, ByteRange, End, Or, QuantifierN, QuantifierNOrMore, QuantifierNToM, Then};
 
+fn type_name<T>() -> &'static str {
+    any::type_name::<T>().split('<').next().unwrap()
+}
+
 pub trait HirExtension {
     fn into_type_expr(self) -> String;
 }
@@ -23,17 +27,21 @@ trait WriteTypeExpr {
 impl WriteTypeExpr for Hir {
     fn write_type_expr(self, f: &mut String) -> fmt::Result {
         match self.into_kind() {
-            HirKind::Empty              => write_empty(f),
-            HirKind::Literal(lit)       => write_literal(f, lit),
-            HirKind::Class(class)       => write_class(f, class),
-            HirKind::Look(look)         => write_look(f, look),
-            HirKind::Repetition(rep)    => write_repetition(f, rep),
-            HirKind::Capture(cap)       => write_capture(f, cap),
-            HirKind::Concat(hirs)       => write_concat(f, hirs),
-            HirKind::Alternation(hirs)  => write_alternation(f, hirs),
+            HirKind::Empty              => Empty.write_type_expr(f),
+            HirKind::Literal(lit)       => lit.write_type_expr(f),
+            HirKind::Class(class)       => class.write_type_expr(f),
+            HirKind::Look(look)         => look.write_type_expr(f),
+            HirKind::Repetition(rep)    => rep.write_type_expr(f),
+            HirKind::Capture(cap)       => cap.write_type_expr(f),
+            HirKind::Concat(hirs)       => Concat(hirs).write_type_expr(f),
+            HirKind::Alternation(hirs)  => Alternation(hirs).write_type_expr(f),
         }
     }
 }
+
+struct Empty;
+struct Concat(pub Vec<Hir>);
+struct Alternation(pub Vec<Hir>);
 
 impl WriteTypeExpr for u8 {
     fn write_type_expr(self, f: &mut String) -> fmt::Result {
@@ -72,66 +80,78 @@ fn write_nested_pairs<T>(
     Ok(())
 }
 
-fn write_empty(f: &mut String) -> fmt::Result {
-    write!(f, "{}", type_name::<Always>())
-}
-
-fn write_literal(f: &mut String, lit: Literal) -> fmt::Result {
-    write_nested_pairs::<Then<Always, Always>>(f, lit.0)
-}
-
-fn write_class(f: &mut String, class: Class) -> fmt::Result {
-    match class {
-        Class::Unicode(unicode) => todo!("unicode classes {:?}", unicode),
-        Class::Bytes(bytes) => write_nested_pairs::<Or<Always, Always>>(f, bytes.ranges()),
+impl WriteTypeExpr for Empty {
+    fn write_type_expr(self, f: &mut String) -> fmt::Result {
+        write!(f, "{}", type_name::<Always>())
     }
 }
 
-fn write_look(f: &mut String, look: Look) -> fmt::Result {
-    match look {
-        Look::Start => write!(f, "{}", type_name::<Beginning>()),
-        Look::End => write!(f, "{}", type_name::<End>()),
-        _ => todo!("complex looking"),
+impl WriteTypeExpr for Literal {
+    fn write_type_expr(self, f: &mut String) -> fmt::Result {
+        write_nested_pairs::<Then<Always, Always>>(f, self.0)
     }
 }
 
-fn write_repetition(f: &mut String, rep: Repetition) -> fmt::Result {
-    let Repetition { min, max, greedy, sub } = rep;
-    if !greedy {
-        todo!("lazy repetition")
-    }
-    match max {
-        None => {
-            write!(f, "{}<", type_name::<QuantifierNOrMore<Always, 0>>())?;
-            sub.write_type_expr(f)?;
-            write!(f, ",{}>", min)
-        },
-        Some(max) if min == max => {
-            write!(f, "{}<", type_name::<QuantifierN<Always, 0>>())?;
-            sub.write_type_expr(f)?;
-            write!(f, ",{}>", min)
-        },
-        Some(max) => {
-            write!(f, "{}<", type_name::<QuantifierNToM<Always, 0, 0>>())?;
-            sub.write_type_expr(f)?;
-            write!(f, ",{},{}>", min, max)
-        },
+impl WriteTypeExpr for Class {
+    fn write_type_expr(self, f: &mut String) -> fmt::Result {
+        match self {
+            Class::Unicode(unicode) => todo!("unicode classes {:?}", unicode),
+            Class::Bytes(bytes) => write_nested_pairs::<Or<Always, Always>>(f, bytes.ranges()),
+        }
     }
 }
 
-fn write_capture(f: &mut String, cap: Capture) -> fmt::Result {
-    // TODO: Actually handle captures
-    cap.sub.write_type_expr(f)
+impl WriteTypeExpr for Look {
+    fn write_type_expr(self, f: &mut String) -> fmt::Result {
+        match self {
+            Look::Start => write!(f, "{}", type_name::<Beginning>()),
+            Look::End => write!(f, "{}", type_name::<End>()),
+            _ => todo!("complex looking"),
+        }
+    }
 }
 
-fn write_concat(f: &mut String, hirs: Vec<Hir>) -> fmt::Result {
-    write_nested_pairs::<Then<Always, Always>>(f, hirs)
+impl WriteTypeExpr for Repetition {
+    fn write_type_expr(self, f: &mut String) -> fmt::Result {
+        let Repetition { min, max, greedy, sub } = self;
+        if !greedy {
+            todo!("lazy repetition")
+        }
+        match max {
+            None => {
+                write!(f, "{}<", type_name::<QuantifierNOrMore<Always, 0>>())?;
+                sub.write_type_expr(f)?;
+                write!(f, ",{}>", min)
+            },
+            Some(max) if min == max => {
+                write!(f, "{}<", type_name::<QuantifierN<Always, 0>>())?;
+                sub.write_type_expr(f)?;
+                write!(f, ",{}>", min)
+            },
+            Some(max) => {
+                write!(f, "{}<", type_name::<QuantifierNToM<Always, 0, 0>>())?;
+                sub.write_type_expr(f)?;
+                write!(f, ",{},{}>", min, max)
+            },
+        }
+    }
 }
 
-fn write_alternation(f: &mut String, hirs: Vec<Hir>) -> fmt::Result {
-    write_nested_pairs::<Or<Always, Always>>(f, hirs)
+impl WriteTypeExpr for Capture {
+    fn write_type_expr(self, f: &mut String) -> fmt::Result {
+        // TODO: Actually handle captures
+        self.sub.write_type_expr(f)
+    }
 }
 
-fn type_name<T>() -> &'static str {
-    any::type_name::<T>().split('<').next().unwrap()
+impl WriteTypeExpr for Concat {
+    fn write_type_expr(self, f: &mut String) -> fmt::Result {
+        write_nested_pairs::<Then<Always, Always>>(f, self.0)
+    }
+}
+
+impl WriteTypeExpr for Alternation {
+    fn write_type_expr(self, f: &mut String) -> fmt::Result {
+        write_nested_pairs::<Or<Always, Always>>(f, self.0)
+    }
 }

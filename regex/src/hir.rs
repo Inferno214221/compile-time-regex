@@ -20,7 +20,7 @@ impl HirExtension for Hir {
     }
 }
 
-trait WriteTypeExpr {
+pub trait WriteTypeExpr {
     fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result;
 }
 
@@ -78,23 +78,23 @@ impl WriteTypeExpr for &ClassUnicodeRange {
 fn write_nested_pairs<T, I: HaystackItem>(
     f: &mut String,
     into_iter: impl IntoIterator<
-        IntoIter = impl ExactSizeIterator<
-            Item = impl WriteTypeExpr
-        >
+        Item = impl WriteTypeExpr
     >
 ) -> fmt::Result {
-    let iter = into_iter.into_iter();
-    let last = iter.len() - 1;
-    for (i, expr) in iter.enumerate() {
-        if i == last {
-            expr.write_type_expr::<I>(f)?;
-        } else {
-            write!(f, "{}<{},", type_name::<T>(), type_name::<I>())?;
-            expr.write_type_expr::<I>(f)?;
-            write!(f, ",")?;
-        }
+    let mut iter = into_iter.into_iter();
+    let mut len = 0;
+    let mut expr = iter.next().expect("literal contains no items");
+    for next in iter {
+        write!(f, "{}<{},", type_name::<T>(), type_name::<I>())?;
+        expr.write_type_expr::<I>(f)?;
+        write!(f, ",")?;
+
+        expr = next;
+        len += 1;
     }
-    for _ in 0..last {
+    expr.write_type_expr::<I>(f)?;
+
+    for _ in 0..len {
         write!(f, ">")?;
     }
     Ok(())
@@ -108,7 +108,9 @@ impl WriteTypeExpr for Empty {
 
 impl WriteTypeExpr for Literal {
     fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
-        write_nested_pairs::<Then<u8, Always, Always>, I>(f, self.0)
+        write_nested_pairs::<Then<u8, Always, Always>, I>(f, I::from_str(
+            str::from_utf8(&self.0).expect("failed to convert bytes to valid unicode")
+        ))
     }
 }
 

@@ -1,5 +1,8 @@
 use std::{iter::Peekable, str::{Bytes, Chars}};
 
+use crate::hir::WriteTypeExpr;
+
+
 #[derive(Debug, Clone)]
 pub struct Haystack<'a, I: HaystackItem> {
     iter: Peekable<I::Iter<'a>>,
@@ -36,7 +39,7 @@ impl<'a, I: HaystackItem> Haystack<'a, I> {
     }
 }
 
-pub trait HaystackItem: Copy {
+pub trait HaystackItem: Copy + WriteTypeExpr {
     type Iter<'a>: Iterator<Item = Self> + Clone;
 
     fn from_str<'a>(s: &'a str) -> Self::Iter<'a>;

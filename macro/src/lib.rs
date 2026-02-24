@@ -34,9 +34,17 @@ fn regex2(input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
 
     let config = Config::new().unicode(false);
 
-    let type_expr: TokenStream = syntax::parse_with(&pattern_str, &config)
+    let type_expr_byte: TokenStream = syntax::parse_with(&pattern_str, &config)
         .expect("failed to parse regex")
-        .into_type_expr()
+        .into_type_expr::<u8>()
+        .parse()
+        .expect("failed to parse type expression");
+
+    let config = config.unicode(true);
+
+    let type_expr_scalar: TokenStream = syntax::parse_with(&pattern_str, &config)
+        .expect("failed to parse regex")
+        .into_type_expr::<char>()
         .parse()
         .expect("failed to parse type expression");
 
@@ -44,8 +52,12 @@ fn regex2(input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
     quote! {
         pub struct #ident;
 
-        impl regex::regex::Regex for #ident {
-            type Pattern = #type_expr;
+        impl regex::regex::Regex<u8> for #ident {
+            type Pattern = #type_expr_byte;
+        }
+
+        impl regex::regex::Regex<char> for #ident {
+            type Pattern = #type_expr_scalar;
         }
     }
 }

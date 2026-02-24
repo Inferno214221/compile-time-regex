@@ -1,9 +1,9 @@
-use crate::{haystack::Haystack, matcher::Matcher};
+use crate::{haystack::{Haystack, HaystackItem}, matcher::Matcher};
 
-pub trait Regex {
-    type Pattern: Matcher;
+pub trait Regex<I: HaystackItem> {
+    type Pattern: Matcher<I>;
 
-    fn matches(hay: &mut Haystack) -> bool {
+    fn matches(hay: &mut Haystack<I>) -> bool {
         Self::Pattern::matches(hay)
     }
 }

@@ -3,7 +3,7 @@ mod test;
 
 use std::{iter::{Copied, Peekable}, slice::Iter, str::Chars};
 
-use crate::hir::WriteTypeExpr;
+use crate::hir::{CastClass, WriteTypeExpr};
 
 #[derive(Debug, Clone)]
 pub struct Haystack<'a, I: HaystackItem> {
@@ -52,7 +52,7 @@ impl<'a, I: HaystackItem> Haystack<'a, I> {
     }
 }
 
-pub trait HaystackItem: Copy + WriteTypeExpr {
+pub trait HaystackItem: Copy + WriteTypeExpr + CastClass {
     type Iter<'a>: Iterator<Item = Self> + Clone;
 
     fn iter_from_str<'a>(s: &'a str) -> Self::Iter<'a>;

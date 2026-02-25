@@ -1,29 +1,16 @@
 #[cfg(test)]
 mod test;
 
-use std::{any, fmt::{self, Write}};
+mod util;
+pub use util::*;
+
+use std::fmt::{self, Write};
 
 use regex_syntax::hir::{Capture, Class, ClassBytesRange, ClassUnicodeRange, Hir, HirKind, Literal, Look, Repetition};
 
 use crate::{haystack::HaystackItem, matcher::{Always, Beginning, Byte, ByteRange, End, Or, QuantifierN, QuantifierNOrMore, QuantifierNToM, Scalar, ScalarRange, Then}};
 
 use Always as A;
-
-pub fn type_name<T>() -> &'static str {
-    any::type_name::<T>().split('<').next().unwrap()
-}
-
-pub trait HirExtension {
-    fn into_type_expr<I: HaystackItem>(self) -> String;
-}
-
-impl HirExtension for Hir {
-    fn into_type_expr<I: HaystackItem>(self) -> String {
-        let mut string = String::new();
-        self.write_type_expr::<I>(&mut string).unwrap();
-        string
-    }
-}
 
 pub trait WriteTypeExpr {
     fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result;
@@ -71,7 +58,7 @@ impl WriteTypeExpr for char {
 
 impl WriteTypeExpr for &ClassUnicodeRange {
     fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
-        assert_eq!(type_name::<I>(), type_name::<char>());
+        assert_eq!(type_name::<I>(), type_name::<char>(), "{:?}", self);
         write!(f, "{}<'{}','{}'>",
             type_name::<ScalarRange<'a', 'a'>>(),
             self.start().escape_unicode(),
@@ -116,7 +103,7 @@ impl WriteTypeExpr for Literal {
 
 impl WriteTypeExpr for Class {
     fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
-        match self {
+        match I::cast_class(self) {
             Class::Unicode(unicode) => write_chunked::<Or<u8, A, A>, I, _>(
                 f,
                 unicode.ranges().iter().collect()
@@ -183,15 +170,6 @@ impl WriteTypeExpr for Alternation {
         write_chunked::<Or<u8, A, A>, I, _>(f, self.0)
     }
 }
-
-// fn write_nested<T, I: HaystackItem>(
-//     f: &mut String,
-//     into_iter: impl IntoIterator<
-//         Item = impl WriteTypeExpr
-//     >
-// ) -> fmt::Result {
-//     write_chunked::<T, I, _>(f, into_iter.into_iter().collect())
-// }
 
 fn write_chunked<T, I: HaystackItem, W: WriteTypeExpr>(
     f: &mut String,

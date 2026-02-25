@@ -1,6 +1,6 @@
 extern crate proc_macro;
 
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use regex_automata::util::syntax::{self, Config};
 use syn::{Ident, LitStr, Token, Visibility, parse::{Parse, ParseStream}, parse_macro_input};
@@ -34,10 +34,15 @@ pub fn regex(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         name,
         pat
     } = parse_macro_input!(input as RegexArgs);
-    regex2(vis, name, pat).into()
+    regex_internal(vis, name, pat, quote!(ct_regex_internal::regex::Regex)).into()
 }
 
-fn regex2(vis: Visibility, name: Ident, pat: LitStr) -> TokenStream {
+fn regex_internal(
+    vis: Visibility,
+    name: Ident,
+    pat: LitStr,
+    regex_trait: TokenStream
+) -> TokenStream {
     let config = Config::new().unicode(false);
 
     let pat_str = pat.value();
@@ -59,12 +64,33 @@ fn regex2(vis: Visibility, name: Ident, pat: LitStr) -> TokenStream {
     quote! {
         #vis struct #name;
 
-        impl ct_regex_internal::regex::Regex<u8> for #name {
+        impl #regex_trait<u8> for #name {
             type Pattern = #type_expr_byte;
         }
 
-        impl ct_regex_internal::regex::Regex<char> for #name {
+        impl #regex_trait<char> for #name {
             type Pattern = #type_expr_scalar;
         }
     }
+}
+
+#[proc_macro]
+pub fn anon_regex(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    anon_regex_interal(parse_macro_input!(input as LitStr)).into()
+}
+
+fn anon_regex_interal(pat: LitStr) -> TokenStream {
+    let impl_tokens = regex_internal(
+        Visibility::Inherited,
+        Ident::new("__AnonRegex", Span::call_site()),
+        pat,
+        quote!(ct_regex_internal::regex::AnonRegex)
+    );
+    quote! {
+        {
+            #impl_tokens
+
+            __AnonRegex
+        }
+    }.into()
 }

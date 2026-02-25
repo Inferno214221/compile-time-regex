@@ -15,6 +15,8 @@ fn main() {
     dbg!(regex!(r"^[a-z]+$").matches(&mut Haystack::from("123")));
     dbg!(regex!(r"word\n").matches(&mut Haystack::from("word\n")));
 
+    dbg!(regex!(r"^start.*end$").matches(&mut Haystack::from("startfend")));
+    // FIXME: Doesn't backtrack from quantifier.
     dbg!(regex!(r"^start.*end$").matches(&mut Haystack::from("starteend")));
     dbg!(regex!(r"[a-z][A-Z][0-9]\d\w\s").matches(&mut Haystack::from("sS01_ ")));
     dbg!(regex!(r"a|b|c").matches(&mut Haystack::from("c")));

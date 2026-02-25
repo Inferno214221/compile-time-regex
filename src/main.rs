@@ -4,7 +4,7 @@ use ct_regex_internal::{self, haystack::Haystack, hir::HirExtension, regex::Rege
 
 use ct_regex_macro::regex;
 
-regex!(MyPattern = r"^(([a-z]+)|([0-9]+))$");
+regex!(pub MyPattern = r"^(([a-z]+)|([0-9]+))$");
 regex!(MyOtherPattern = r"word\n");
 
 fn main() {

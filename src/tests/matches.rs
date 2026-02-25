@@ -33,8 +33,8 @@ fn test_anon_regex_literal() {
     let mut hay_match = Haystack::from("pattern");
     let mut hay_no_match = Haystack::from("other");
 
-    assert!(anon_regex!("pattern").matches(&mut hay_match));
-    assert!(!anon_regex!("pattern").matches(&mut hay_no_match));
+    assert!(regex!("pattern").matches(&mut hay_match));
+    assert!(!regex!("pattern").matches(&mut hay_no_match));
 }
 
 // ============================================================================
@@ -495,18 +495,18 @@ fn test_word_boundary_pattern() {
 }
 
 // ============================================================================
-// ANON_REGEX MATCHING TESTS
+// ANONYMOUS REGEX MATCHING TESTS
 // ============================================================================
 
 #[test]
 fn test_anon_regex_in_expression() {
-    let result = anon_regex!("^test$").matches(&mut Haystack::from("test"));
+    let result = regex!("^test$").matches(&mut Haystack::from("test"));
     assert!(result);
 }
 
 #[test]
 fn test_anon_regex_stored() {
-    let pattern = anon_regex!("[0-9]+");
+    let pattern = regex!("[0-9]+");
 
     let mut hay1 = Haystack::from("123");
     let mut hay2 = Haystack::from("abc");
@@ -517,7 +517,7 @@ fn test_anon_regex_stored() {
 
 #[test]
 fn test_anon_regex_complex() {
-    let pattern = anon_regex!(r"^[ab]+c$");
+    let pattern = regex!(r"^[ab]+c$");
 
     let mut hay_valid1 = Haystack::from("ac");
     let mut hay_valid2 = Haystack::from("aaabbc");

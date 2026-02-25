@@ -54,10 +54,10 @@ fn test_regex_macro_with_pub_crate_visibility() {
     let _instance = CratePattern;
 }
 
-// Test that anon_regex! creates something that implements AnonRegex
+// Test that regex! creates something that implements AnonRegex when used anonymously
 #[test]
 fn test_anon_regex_implements_anon_regex_trait_char() {
-    let pattern = anon_regex!("test");
+    let pattern = regex!("test");
 
     // Should implement AnonRegex<char>
     fn assert_anon_regex<T: AnonRegex<char>>(_: &T) {}
@@ -66,7 +66,7 @@ fn test_anon_regex_implements_anon_regex_trait_char() {
 
 #[test]
 fn test_anon_regex_implements_anon_regex_trait_u8() {
-    let pattern = anon_regex!("test");
+    let pattern = regex!("test");
 
     // Should implement AnonRegex<u8>
     fn assert_anon_regex<T: AnonRegex<u8>>(_: &T) {}
@@ -75,8 +75,8 @@ fn test_anon_regex_implements_anon_regex_trait_u8() {
 
 #[test]
 fn test_anon_regex_is_expression() {
-    // anon_regex! should be usable directly in expressions
-    let result = anon_regex!("x").matches(&mut Haystack::from("x"));
+    // regex! should be usable directly in expressions (anonymous form)
+    let result = regex!("x").matches(&mut Haystack::from("x"));
     assert!(result);
 }
 
@@ -123,11 +123,11 @@ fn test_regex_macro_with_unicode() {
     let _instance = UnicodePattern;
 }
 
-// Test that both macros work with the same pattern
+// Test that both forms work with the same pattern
 #[test]
-fn test_both_macros_with_same_pattern() {
+fn test_both_forms_with_same_pattern() {
     regex!(NamedTest = "test");
-    let anon = anon_regex!("test");
+    let anon = regex!("test");
 
     let _named_instance = NamedTest;
     let _anon_instance = anon;
@@ -145,12 +145,12 @@ fn test_multiple_regex_declarations() {
     let _p3 = Pattern3;
 }
 
-// Test that multiple anon_regex! invocations work
+// Test that multiple anonymous regex! invocations work
 #[test]
 fn test_multiple_anon_regex_uses() {
-    let _p1 = anon_regex!("a");
-    let _p2 = anon_regex!("b");
-    let _p3 = anon_regex!("c");
+    let _p1 = regex!("a");
+    let _p2 = regex!("b");
+    let _p3 = regex!("c");
 }
 
 // Test empty pattern compiles
@@ -186,7 +186,7 @@ fn test_generated_type_is_zero_sized() {
 
 #[test]
 fn test_anon_regex_type_is_zero_sized() {
-    let pattern = anon_regex!("test");
+    let pattern = regex!("test");
 
     // The generated anonymous type should also be zero-sized
     assert_eq!(std::mem::size_of_val(&pattern), 0);
@@ -223,7 +223,7 @@ fn test_both_implementations_exist() {
 
 #[test]
 fn test_anon_regex_both_implementations() {
-    let pattern = anon_regex!("test");
+    let pattern = regex!("test");
 
     let mut hay_char = Haystack::from("test");
     let mut hay_byte = Haystack::from(b"test" as &[u8]);

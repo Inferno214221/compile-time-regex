@@ -11,9 +11,9 @@ fn main() {
     dbg!(MyOtherPattern::matches(&mut Haystack::from("word")));
     dbg!(MyOtherPattern::matches(&mut Haystack::from("word\n")));
 
-    dbg!(anon_regex!(r"^[a-z]+$").matches(&mut Haystack::from("word")));
-    dbg!(anon_regex!(r"^[a-z]+$").matches(&mut Haystack::from("123")));
-    dbg!(anon_regex!(r"word\n").matches(&mut Haystack::from("word\n")));
+    dbg!(regex!(r"^[a-z]+$").matches(&mut Haystack::from("word")));
+    dbg!(regex!(r"^[a-z]+$").matches(&mut Haystack::from("123")));
+    dbg!(regex!(r"word\n").matches(&mut Haystack::from("word\n")));
 }
 
 // TODO: Test each matcher individually.

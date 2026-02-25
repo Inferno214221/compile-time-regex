@@ -27,20 +27,35 @@ impl Parse for RegexArgs {
     }
 }
 
+enum RegexArgType {
+    Regex(RegexArgs),
+    Anon(LitStr),
+}
+
+impl Parse for RegexArgType {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        if input.fork().parse::<RegexArgs>().is_ok() {
+            Ok(RegexArgType::Regex(input.parse()?))
+        } else {
+            Ok(RegexArgType::Anon(input.parse()?))
+        }
+    }
+}
+
 #[proc_macro]
 pub fn regex(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let RegexArgs {
-        vis,
-        name,
-        pat
-    } = parse_macro_input!(input as RegexArgs);
-    regex_internal(vis, name, pat, quote!(ct_regex_internal::traits::Regex)).into()
+    match parse_macro_input!(input as RegexArgType) {
+        RegexArgType::Regex(args) => regex_internal(args, quote!(ct_regex_internal::traits::Regex)).into(),
+        RegexArgType::Anon(pat) => anon_regex_interal(pat).into(),
+    }
 }
 
 fn regex_internal(
-    vis: Visibility,
-    name: Ident,
-    pat: LitStr,
+    RegexArgs {
+        vis,
+        name,
+        pat
+    }: RegexArgs,
     regex_trait: TokenStream
 ) -> TokenStream {
     let config = Config::new().unicode(false);
@@ -74,16 +89,13 @@ fn regex_internal(
     }
 }
 
-#[proc_macro]
-pub fn anon_regex(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    anon_regex_interal(parse_macro_input!(input as LitStr)).into()
-}
-
 fn anon_regex_interal(pat: LitStr) -> TokenStream {
     let impl_tokens = regex_internal(
-        Visibility::Inherited,
-        Ident::new("__AnonRegex", Span::call_site()),
-        pat,
+        RegexArgs {
+            vis: Visibility::Inherited,
+            name: Ident::new("__AnonRegex", Span::call_site()),
+            pat
+        },
         quote!(ct_regex_internal::traits::AnonRegex)
     );
     quote! {

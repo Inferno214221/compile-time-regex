@@ -14,6 +14,6 @@ fn main() {
     dbg!(regex!(r"^[a-z]+$").matches(&mut Haystack::from("word")));
     dbg!(regex!(r"^[a-z]+$").matches(&mut Haystack::from("123")));
     dbg!(regex!(r"word\n").matches(&mut Haystack::from("word\n")));
-}
 
-// TODO: Test each matcher individually.
+    dbg!(regex!(r"^start.*end$").matches(&mut Haystack::from("starteend")));
+}

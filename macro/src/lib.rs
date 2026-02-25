@@ -46,7 +46,7 @@ impl Parse for RegexArgType {
 pub fn regex(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     match parse_macro_input!(input as RegexArgType) {
         RegexArgType::Regex(args) => regex_internal(args, quote!(ct_regex_internal::traits::Regex)).into(),
-        RegexArgType::Anon(pat) => anon_regex_interal(pat).into(),
+        RegexArgType::Anon(pat) => anon_regex_internal(pat).into(),
     }
 }
 
@@ -58,7 +58,7 @@ fn regex_internal(
     }: RegexArgs,
     regex_trait: TokenStream
 ) -> TokenStream {
-    let config = Config::new().unicode(false);
+    let config = Config::new().unicode(false).utf8(false);
 
     let pat_str = pat.value();
 
@@ -68,7 +68,7 @@ fn regex_internal(
         .parse()
         .expect("failed to parse type expression");
 
-    let config = config.unicode(true);
+    let config = config.unicode(true).utf8(true);
 
     let type_expr_scalar: TokenStream = syntax::parse_with(&pat_str, &config)
         .expect("failed to parse regex")
@@ -89,7 +89,7 @@ fn regex_internal(
     }
 }
 
-fn anon_regex_interal(pat: LitStr) -> TokenStream {
+fn anon_regex_internal(pat: LitStr) -> TokenStream {
     let impl_tokens = regex_internal(
         RegexArgs {
             vis: Visibility::Inherited,

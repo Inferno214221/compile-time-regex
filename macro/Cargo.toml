@@ -1,5 +1,5 @@
 [package]
-name = "regex-macro"
+name = "ct-regex-macro"
 version = "0.1.0"
 edition = "2018"
 
@@ -10,6 +10,6 @@ proc-macro = true
 litrs = { version = "1.0.0", features = ["proc-macro2"] }
 proc-macro2 = "1.0.106"
 quote = "1.0.44"
-regex ={ path = "../regex" }
+ct-regex-internal ={ path = "../internal" }
 regex-automata = "0.4.14"
 regex-syntax = "0.8.9"

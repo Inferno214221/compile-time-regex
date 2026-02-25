@@ -12,12 +12,32 @@ dependencies = [
 ]
 
 [[package]]
-name = "compile-time-regex"
+name = "ct-regex"
 version = "0.1.0"
 dependencies = [
- "regex",
+ "ct-regex-internal",
+ "ct-regex-macro",
  "regex-automata",
- "regex-macro",
+]
+
+[[package]]
+name = "ct-regex-internal"
+version = "0.1.0"
+dependencies = [
+ "regex-automata",
+ "regex-syntax",
+]
+
+[[package]]
+name = "ct-regex-macro"
+version = "0.1.0"
+dependencies = [
+ "ct-regex-internal",
+ "litrs",
+ "proc-macro2",
+ "quote",
+ "regex-automata",
+ "regex-syntax",
 ]
 
 [[package]]
@@ -54,14 +74,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "regex"
-version = "0.1.0"
-dependencies = [
- "regex-automata",
- "regex-syntax",
-]
-
-[[package]]
 name = "regex-automata"
 version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -69,18 +81,6 @@ checksum = "6e1dd4122fc1595e8162618945476892eefca7b88c52820e74af6262213cae8f"
 dependencies = [
  "aho-corasick",
  "memchr",
- "regex-syntax",
-]
-
-[[package]]
-name = "regex-macro"
-version = "0.1.0"
-dependencies = [
- "litrs",
- "proc-macro2",
- "quote",
- "regex",
- "regex-automata",
  "regex-syntax",
 ]
 

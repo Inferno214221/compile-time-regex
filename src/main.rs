@@ -1,8 +1,8 @@
 use regex_automata::util::syntax::{self, Config};
 
-use regex::{self, haystack::Haystack, hir::HirExtension, regex::Regex};
+use ct_regex_internal::{self, haystack::Haystack, hir::HirExtension, regex::Regex};
 
-use regex_macro::regex;
+use ct_regex_macro::regex;
 
 regex!(MyPattern = r"^(([a-z]+)|([0-9]+))$");
 regex!(MyOtherPattern = r"word\n");
@@ -29,10 +29,10 @@ fn main() {
     // dbg!(J::matches(&mut Haystack::new("word123")));
     // dbg!(J::matches(&mut Haystack::new("123")));
 
-    dbg!(MyPattern::matches(&mut Haystack::<char>::new("word")));
-    dbg!(MyPattern::matches(&mut Haystack::<char>::new("word123")));
-    dbg!(MyPattern::matches(&mut Haystack::<char>::new("123")));
+    dbg!(MyPattern::matches(&mut Haystack::from("word")));
+    dbg!(MyPattern::matches(&mut Haystack::from("word123")));
+    dbg!(MyPattern::matches(&mut Haystack::from("123")));
 
-    dbg!(MyOtherPattern::matches(&mut Haystack::<char>::new("word")));
-    dbg!(MyOtherPattern::matches(&mut Haystack::<char>::new("word\n")));
+    dbg!(MyOtherPattern::matches(&mut Haystack::from("word")));
+    dbg!(MyOtherPattern::matches(&mut Haystack::from("word\n")));
 }

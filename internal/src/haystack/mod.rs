@@ -55,21 +55,31 @@ impl<'a, I: HaystackItem> Haystack<'a, I> {
 pub trait HaystackItem: Copy + WriteTypeExpr {
     type Iter<'a>: Iterator<Item = Self> + Clone;
 
-    fn from_str<'a>(s: &'a str) -> Self::Iter<'a>;
+    fn iter_from_str<'a>(s: &'a str) -> Self::Iter<'a>;
+
+    fn vec_from_str(s: &str) -> Vec<Self>;
 }
 
 impl HaystackItem for u8 {
     type Iter<'a> = Copied<Iter<'a, u8>>;
     
-    fn from_str<'a>(s: &'a str) -> Self::Iter<'a> {
+    fn iter_from_str<'a>(s: &'a str) -> Self::Iter<'a> {
         s.as_bytes().iter().copied()
+    }
+
+    fn vec_from_str(s: &str) -> Vec<Self> {
+        s.as_bytes().to_vec()
     }
 }
 
 impl HaystackItem for char {
     type Iter<'a> = Chars<'a>;
     
-    fn from_str<'a>(s: &'a str) -> Self::Iter<'a> {
+    fn iter_from_str<'a>(s: &'a str) -> Self::Iter<'a> {
         s.chars()
+    }
+
+    fn vec_from_str(s: &str) -> Vec<Self> {
+        s.chars().collect()
     }
 }

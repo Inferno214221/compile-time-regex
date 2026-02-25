@@ -175,3 +175,42 @@ impl<I: HaystackItem> Matcher<I> for Always {
         true
     }
 }
+
+/// Macro to generate chunked Or types (Or4, Or8, Or16, etc.)
+///
+/// Each generated type takes N matchers and combines them pairwise using Or,
+/// then delegates to the combiner type (which has N/2 parameters).
+///
+/// Usage: `define_or_n!(Or4, Or, [A B] [C D]);`
+/// - First arg: name of the new type
+/// - Second arg: the combiner type (Or for Or4, Or4 for Or8, etc.)
+/// - Remaining args: pairs of type parameter names in brackets
+macro_rules! define_paired_n {
+    ($pair:ident, $name:ident, $combiner:ident, $([$a:ident $b:ident])+) => {
+        #[derive(Debug, Default)]
+        pub struct $name<
+            Z: HaystackItem,
+            $($a: Matcher<Z>, $b: Matcher<Z>),+
+        >(
+            pub PhantomData<Z>,
+            $(pub PhantomData<$a>, pub PhantomData<$b>),+
+        );
+
+        impl<
+            Z: HaystackItem,
+            $($a: Matcher<Z>, $b: Matcher<Z>),+
+        > Matcher<Z> for $name<Z, $($a, $b),+> {
+            fn matches(hay: &mut Haystack<Z>) -> bool {
+                $combiner::<Z, $($pair<Z, $a, $b>),+>::matches(hay)
+            }
+        }
+    };
+}
+
+define_paired_n!(Or, Or4, Or, [A B] [C D]);
+define_paired_n!(Or, Or8, Or4, [A B] [C D] [E F] [G H]);
+define_paired_n!(Or, Or16, Or8, [A B] [C D] [E F] [G H] [I J] [K L] [M N] [O P]);
+
+define_paired_n!(Then, Then4, Then, [A B] [C D]);
+define_paired_n!(Then, Then8, Then4, [A B] [C D] [E F] [G H]);
+define_paired_n!(Then, Then16, Then8, [A B] [C D] [E F] [G H] [I J] [K L] [M N] [O P]);

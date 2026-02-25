@@ -7,6 +7,8 @@ use regex_syntax::hir::{Capture, Class, ClassBytesRange, ClassUnicodeRange, Hir,
 
 use crate::{haystack::HaystackItem, matcher::{Always, Beginning, Byte, ByteRange, End, Or, QuantifierN, QuantifierNOrMore, QuantifierNToM, Scalar, ScalarRange, Then}};
 
+use Always as A;
+
 pub fn type_name<T>() -> &'static str {
     any::type_name::<T>().split('<').next().unwrap()
 }
@@ -78,29 +80,20 @@ impl WriteTypeExpr for &ClassUnicodeRange {
     }
 }
 
-fn write_nested_pairs<T, I: HaystackItem>(
+fn write_n_items<T, I: HaystackItem, W: WriteTypeExpr>(
     f: &mut String,
-    into_iter: impl IntoIterator<
-        Item = impl WriteTypeExpr
-    >
+    items: Vec<W>,
+    n: usize,
 ) -> fmt::Result {
-    let mut iter = into_iter.into_iter();
-    let mut len = 0;
-    let mut expr = iter.next().expect("literal contains no items");
-    for next in iter {
-        write!(f, "{}<{},", type_name::<T>(), type_name::<I>())?;
-        expr.write_type_expr::<I>(f)?;
+    let base = type_name::<T>();
+    let item_type = type_name::<I>();
+
+    write!(f, "{}{}<{}", base, n, item_type)?;
+    for item in items {
         write!(f, ",")?;
-
-        expr = next;
-        len += 1;
+        item.write_type_expr::<I>(f)?;
     }
-    expr.write_type_expr::<I>(f)?;
-
-    for _ in 0..len {
-        write!(f, ">")?;
-    }
-    Ok(())
+    write!(f, ">")
 }
 
 impl WriteTypeExpr for Empty {
@@ -111,17 +104,27 @@ impl WriteTypeExpr for Empty {
 
 impl WriteTypeExpr for Literal {
     fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
-        write_nested_pairs::<Then<u8, Always, Always>, I>(f, I::from_str(
-            str::from_utf8(&self.0).expect("failed to convert bytes to valid unicode")
-        ))
+        write_chunked::<Then<u8, A, A>, I, _>(
+            f,
+            I::vec_from_str(
+                str::from_utf8(&self.0)
+                    .expect("failed to convert bytes to valid unicode")
+            )
+        )
     }
 }
 
 impl WriteTypeExpr for Class {
     fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
         match self {
-            Class::Unicode(unicode) => write_nested_pairs::<Or<u8, Always, Always>, I>(f, unicode.ranges()),
-            Class::Bytes(bytes) => write_nested_pairs::<Or<u8, Always, Always>, I>(f, bytes.ranges()),
+            Class::Unicode(unicode) => write_chunked::<Or<u8, A, A>, I, _>(
+                f,
+                unicode.ranges().iter().collect()
+            ),
+            Class::Bytes(bytes) => write_chunked::<Or<u8, A, A>, I, _>(
+                f,
+                bytes.ranges().iter().collect()
+            ),
         }
     }
 }
@@ -144,17 +147,17 @@ impl WriteTypeExpr for Repetition {
         }
         match max {
             None => {
-                write!(f, "{}<{},", type_name::<QuantifierNOrMore<u8, Always, 0>>(), type_name::<I>())?;
+                write!(f, "{}<{},", type_name::<QuantifierNOrMore<u8, A, 0>>(), type_name::<I>())?;
                 sub.write_type_expr::<I>(f)?;
                 write!(f, ",{}>", min)
             },
             Some(max) if min == max => {
-                write!(f, "{}<{},", type_name::<QuantifierN<u8, Always, 0>>(), type_name::<I>())?;
+                write!(f, "{}<{},", type_name::<QuantifierN<u8, A, 0>>(), type_name::<I>())?;
                 sub.write_type_expr::<I>(f)?;
                 write!(f, ",{}>", min)
             },
             Some(max) => {
-                write!(f, "{}<{},", type_name::<QuantifierNToM<u8, Always, 0, 0>>(), type_name::<I>())?;
+                write!(f, "{}<{},", type_name::<QuantifierNToM<u8, A, 0, 0>>(), type_name::<I>())?;
                 sub.write_type_expr::<I>(f)?;
                 write!(f, ",{},{}>", min, max)
             },
@@ -171,12 +174,62 @@ impl WriteTypeExpr for Capture {
 
 impl WriteTypeExpr for Concat {
     fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
-        write_nested_pairs::<Then<u8, Always, Always>, I>(f, self.0)
+        write_chunked::<Then<u8, A, A>, I, _>(f, self.0)
     }
 }
 
 impl WriteTypeExpr for Alternation {
     fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
-        write_nested_pairs::<Or<u8, Always, Always>, I>(f, self.0)
+        write_chunked::<Or<u8, A, A>, I, _>(f, self.0)
+    }
+}
+
+// fn write_nested<T, I: HaystackItem>(
+//     f: &mut String,
+//     into_iter: impl IntoIterator<
+//         Item = impl WriteTypeExpr
+//     >
+// ) -> fmt::Result {
+//     write_chunked::<T, I, _>(f, into_iter.into_iter().collect())
+// }
+
+fn write_chunked<T, I: HaystackItem, W: WriteTypeExpr>(
+    f: &mut String,
+    mut items: Vec<W>,
+) -> fmt::Result {
+    let n = items.len();
+    let base = type_name::<T>();
+    let item_type = type_name::<I>();
+
+    match n {
+        0 => panic!("literal contains no items"),
+        1 => items.pop().unwrap().write_type_expr::<I>(f),
+        2 => {
+            let mut iter = items.into_iter();
+            write!(f, "{}<{},", base, item_type)?;
+            iter.next().unwrap().write_type_expr::<I>(f)?;
+            write!(f, ",")?;
+            iter.next().unwrap().write_type_expr::<I>(f)?;
+            write!(f, ">")
+        }
+        3 => {
+            let mut iter = items.into_iter();
+            write!(f, "{}<{},", base, item_type)?;
+            iter.next().unwrap().write_type_expr::<I>(f)?;
+            write!(f, ",")?;
+            write_chunked::<T, I, W>(f, iter.collect())?;
+            write!(f, ">")
+        }
+        4 | 8 | 16 => write_n_items::<T, I, W>(f, items, n),
+        _ => {
+            // Take largest chunk that fits, combine with remainder
+            let chunk_size = if n > 16 { 16 } else if n > 8 { 8 } else { 4 };
+            let remainder = items.split_off(chunk_size);
+            write!(f, "{}<{},", base, item_type)?;
+            write_n_items::<T, I, W>(f, items, chunk_size)?;
+            write!(f, ",")?;
+            write_chunked::<T, I, W>(f, remainder)?;
+            write!(f, ">")
+        }
     }
 }

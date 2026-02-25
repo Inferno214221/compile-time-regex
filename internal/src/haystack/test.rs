@@ -225,21 +225,21 @@ fn test_clone_start_flag() {
 // Tests for HaystackItem trait implementations
 #[test]
 fn test_haystack_item_u8_from_str() {
-    let iter = <u8 as HaystackItem>::from_str("abc");
+    let iter = <u8 as HaystackItem>::iter_from_str("abc");
     let bytes: Vec<u8> = iter.collect();
     assert_eq!(bytes, vec![b'a', b'b', b'c']);
 }
 
 #[test]
 fn test_haystack_item_char_from_str() {
-    let iter = <char as HaystackItem>::from_str("abc");
+    let iter = <char as HaystackItem>::iter_from_str("abc");
     let chars: Vec<char> = iter.collect();
     assert_eq!(chars, vec!['a', 'b', 'c']);
 }
 
 #[test]
 fn test_haystack_item_char_from_str_unicode() {
-    let iter = <char as HaystackItem>::from_str("🦀🎉");
+    let iter = <char as HaystackItem>::iter_from_str("🦀🎉");
     let chars: Vec<char> = iter.collect();
     assert_eq!(chars, vec!['🦀', '🎉']);
 }

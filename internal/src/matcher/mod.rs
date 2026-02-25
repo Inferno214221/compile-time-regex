@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod test;
+
 use std::marker::PhantomData;
 
 use crate::haystack::{Haystack, HaystackItem};

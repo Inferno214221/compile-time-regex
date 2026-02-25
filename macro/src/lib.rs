@@ -34,7 +34,7 @@ pub fn regex(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         name,
         pat
     } = parse_macro_input!(input as RegexArgs);
-    regex_internal(vis, name, pat, quote!(ct_regex_internal::regex::Regex)).into()
+    regex_internal(vis, name, pat, quote!(ct_regex_internal::traits::Regex)).into()
 }
 
 fn regex_internal(
@@ -84,7 +84,7 @@ fn anon_regex_interal(pat: LitStr) -> TokenStream {
         Visibility::Inherited,
         Ident::new("__AnonRegex", Span::call_site()),
         pat,
-        quote!(ct_regex_internal::regex::AnonRegex)
+        quote!(ct_regex_internal::traits::AnonRegex)
     );
     quote! {
         {

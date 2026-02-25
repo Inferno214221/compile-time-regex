@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod test;
+
 use crate::{haystack::{Haystack, HaystackItem}, matcher::Matcher};
 
 pub trait Regex<I: HaystackItem> {

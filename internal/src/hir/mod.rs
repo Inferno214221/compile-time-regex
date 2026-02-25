@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod test;
+
 use std::{any, fmt::{self, Write}};
 
 use regex_syntax::hir::{Capture, Class, ClassBytesRange, ClassUnicodeRange, Hir, HirKind, Literal, Look, Repetition};

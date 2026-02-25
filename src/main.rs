@@ -1,6 +1,4 @@
-use ct_regex_internal::{haystack::Haystack, regex::{AnonRegex, Regex}};
-
-use ct_regex_macro::{anon_regex, regex};
+use ct_regex::*;
 
 regex!(pub MyPattern = r"^(([a-z]+)|([0-9]+))$");
 regex!(MyOtherPattern = r"word\n");
@@ -18,4 +16,4 @@ fn main() {
     dbg!(anon_regex!(r"word\n").matches(&mut Haystack::from("word\n")));
 }
 
-// TODO: Test each matcher individually
+// TODO: Test each matcher individually.

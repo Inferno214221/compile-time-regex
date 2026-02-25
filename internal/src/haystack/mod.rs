@@ -1,7 +1,9 @@
+#[cfg(test)]
+mod test;
+
 use std::{iter::{Copied, Peekable}, slice::Iter, str::Chars};
 
 use crate::hir::WriteTypeExpr;
-
 
 #[derive(Debug, Clone)]
 pub struct Haystack<'a, I: HaystackItem> {

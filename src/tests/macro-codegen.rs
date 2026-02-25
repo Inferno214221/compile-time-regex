@@ -1,0 +1,1 @@
+// Macro spits out the right code.

@@ -20,4 +20,6 @@ fn main() {
     dbg!(regex!(r"[a-z][A-Z][0-9]\d\w\s").matches(&mut Haystack::from("sS01_ ")));
     dbg!(regex!(r"a|b|c").matches(&mut Haystack::from("c")));
     dbg!(regex!(r"^(a|b)+c$").matches(&mut Haystack::from("abc")));
+
+    dbg!(regex!(r"bc*").find_match(&mut Haystack::from("abcccd")));
 }

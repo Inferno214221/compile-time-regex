@@ -104,5 +104,5 @@ fn anon_regex_internal(pat: LitStr) -> TokenStream {
 
             __AnonRegex
         }
-    }.into()
+    }
 }

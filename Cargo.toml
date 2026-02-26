@@ -1,3 +1,6 @@
+[workspace]
+members = ["internal", "macro"]
+
 [package]
 name = "ct-regex"
 version = "0.1.0"

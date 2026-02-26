@@ -706,3 +706,281 @@ fn test_long_literal_chunking() {
         "Expected Then16 or Then8 for 20-char literal, got first 200 chars: {}",
         &result[..result.len().min(200)]);
 }
+
+// ============================================================================
+// QUANTIFIERTHEN HIR GENERATION TESTS
+// Tests that verify QuantifierThen is generated when a quantifier is followed
+// by other matchers in a concatenation
+// ============================================================================
+
+#[test]
+fn test_quantifier_then_basic_generation() {
+    // a*b should generate QuantifierThen<QuantifierNOrMore, Scalar<'b'>>
+    let result = parse_and_convert_char("a*b");
+    assert!(result.contains("QuantifierThen"),
+        "Expected QuantifierThen for a*b, got: {}", result);
+    assert!(result.contains("QuantifierNOrMore"),
+        "Expected QuantifierNOrMore inside QuantifierThen, got: {}", result);
+}
+
+#[test]
+fn test_quantifier_then_plus() {
+    // a+b should generate QuantifierThen<QuantifierNOrMore<1>, Scalar<'b'>>
+    let result = parse_and_convert_char("a+b");
+    assert!(result.contains("QuantifierThen"),
+        "Expected QuantifierThen for a+b, got: {}", result);
+    assert!(result.contains(",1>"),
+        "Expected min=1 for a+, got: {}", result);
+}
+
+#[test]
+fn test_quantifier_then_optional() {
+    // a?b should generate QuantifierThen<QuantifierNToM<0,1>, Scalar<'b'>>
+    let result = parse_and_convert_char("a?b");
+    assert!(result.contains("QuantifierThen"),
+        "Expected QuantifierThen for a?b, got: {}", result);
+    assert!(result.contains("QuantifierNToM"),
+        "Expected QuantifierNToM for a?, got: {}", result);
+}
+
+#[test]
+fn test_quantifier_then_bounded() {
+    // a{2,4}b should generate QuantifierThen<QuantifierNToM<2,4>, Scalar<'b'>>
+    let result = parse_and_convert_char("a{2,4}b");
+    assert!(result.contains("QuantifierThen"),
+        "Expected QuantifierThen for a{{2,4}}b, got: {}", result);
+    assert!(result.contains("QuantifierNToM"),
+        "Expected QuantifierNToM for a{{2,4}}, got: {}", result);
+    assert!(result.contains(",2,4>"),
+        "Expected bounds 2,4 for a{{2,4}}, got: {}", result);
+}
+
+#[test]
+fn test_quantifier_then_with_multi_char_continuation() {
+    // a*bc should generate QuantifierThen with Then<'b','c'> as continuation
+    let result = parse_and_convert_char("a*bc");
+    assert!(result.contains("QuantifierThen"),
+        "Expected QuantifierThen for a*bc, got: {}", result);
+    // The continuation should contain both 'b' and 'c'
+    assert!(result.contains("'\\u{62}'") && result.contains("'\\u{63}'"),
+        "Expected 'b' and 'c' in continuation, got: {}", result);
+}
+
+#[test]
+fn test_quantifier_then_with_prefix() {
+    // xa*b should generate Then<'x', QuantifierThen<...>>
+    let result = parse_and_convert_char("xa*b");
+    assert!(result.contains("QuantifierThen"),
+        "Expected QuantifierThen for xa*b, got: {}", result);
+    assert!(result.contains("Then"),
+        "Expected Then wrapper for prefix 'x', got: {}", result);
+}
+
+#[test]
+fn test_quantifier_then_multiple_quantifiers() {
+    // a*b*c should generate nested QuantifierThen
+    let result = parse_and_convert_char("a*b*c");
+    assert!(result.contains("QuantifierThen"),
+        "Expected QuantifierThen for a*b*c, got: {}", result);
+    // Should have two QuantifierNOrMore for a* and b*
+    let count = result.matches("QuantifierNOrMore").count();
+    assert!(count >= 2,
+        "Expected at least 2 QuantifierNOrMore for a*b*c, got {}: {}", count, result);
+}
+
+#[test]
+fn test_quantifier_then_dot_star_suffix() {
+    // .*end should generate QuantifierThen with class and literal suffix
+    let result = parse_and_convert_char(".*end");
+    assert!(result.contains("QuantifierThen"),
+        "Expected QuantifierThen for .*end, got: {}", result);
+    assert!(result.contains("QuantifierNOrMore"),
+        "Expected QuantifierNOrMore for .*, got: {}", result);
+}
+
+#[test]
+fn test_quantifier_then_anchored() {
+    // ^a*b$ should generate Beginning, QuantifierThen, End
+    let result = parse_and_convert_char("^a*b$");
+    assert!(result.contains("Beginning"),
+        "Expected Beginning for ^, got: {}", result);
+    assert!(result.contains("End"),
+        "Expected End for $, got: {}", result);
+    assert!(result.contains("QuantifierThen"),
+        "Expected QuantifierThen for a*b, got: {}", result);
+}
+
+#[test]
+fn test_quantifier_then_full_anchored_pattern() {
+    // ^start.*end$ - the original failing pattern
+    let result = parse_and_convert_char("^start.*end$");
+    assert!(result.contains("Beginning"),
+        "Expected Beginning for ^, got: {}", result);
+    assert!(result.contains("End"),
+        "Expected End for $, got: {}", result);
+    assert!(result.contains("QuantifierThen"),
+        "Expected QuantifierThen for .*end, got: {}", result);
+}
+
+#[test]
+fn test_quantifier_alone_no_quantifier_then() {
+    // a* alone should NOT generate QuantifierThen (no continuation)
+    let result = parse_and_convert_char("a*");
+    assert!(!result.contains("QuantifierThen"),
+        "Should NOT have QuantifierThen for standalone a*, got: {}", result);
+    assert!(result.contains("QuantifierNOrMore"),
+        "Expected QuantifierNOrMore for a*, got: {}", result);
+}
+
+#[test]
+fn test_quantifier_at_end_no_quantifier_then() {
+    // ab* - quantifier at end should NOT generate QuantifierThen
+    let result = parse_and_convert_char("ab*");
+    assert!(!result.contains("QuantifierThen"),
+        "Should NOT have QuantifierThen for ab* (quantifier at end), got: {}", result);
+}
+
+#[test]
+fn test_quantifier_then_with_alternation_continuation() {
+    // a*(b|c) should generate QuantifierThen with Or continuation
+    let result = parse_and_convert_char("a*(b|c)");
+    assert!(result.contains("QuantifierThen"),
+        "Expected QuantifierThen for a*(b|c), got: {}", result);
+    // b|c are consecutive, so they should be ScalarRange
+    assert!(result.contains("ScalarRange"),
+        "Expected ScalarRange for (b|c), got: {}", result);
+}
+
+#[test]
+fn test_quantifier_then_nested_in_alternation() {
+    // (a*b|c*d) - both branches have QuantifierThen
+    let result = parse_and_convert_char("(a*b|c*d)");
+    assert!(result.contains("QuantifierThen"),
+        "Expected QuantifierThen in alternation branches, got: {}", result);
+    assert!(result.contains("Or"),
+        "Expected Or for alternation, got: {}", result);
+}
+
+#[test]
+fn test_quantifier_then_complex_email_like() {
+    // [a-z]+@[a-z]+\.[a-z]+ - multiple quantifiers with continuations
+    let result = parse_and_convert_char(r"[a-z]+@[a-z]+\.[a-z]+");
+    assert!(result.contains("QuantifierThen"),
+        "Expected QuantifierThen for email-like pattern, got: {}", result);
+}
+
+// ============================================================================
+// QUANTIFIERTHEN BACKTRACKING SEMANTICS TESTS
+// Integration tests that verify the generated types match correctly
+// ============================================================================
+
+use crate::haystack::Haystack;
+use crate::matcher::Matcher;
+
+fn matches_char<M: Matcher<char>>(input: &str) -> bool {
+    let mut hay = Haystack::from(input);
+    M::matches(&mut hay)
+}
+
+#[test]
+fn test_generated_pattern_star_literal_matches() {
+    // Verify a*b pattern matches correctly
+    // Pattern: a*b
+    use crate::matcher::{QuantifierThen, QuantifierNOrMore, Scalar};
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 0>, Scalar<'b'>>;
+
+    assert!(matches_char::<Pattern>("b"));
+    assert!(matches_char::<Pattern>("ab"));
+    assert!(matches_char::<Pattern>("aab"));
+    assert!(matches_char::<Pattern>("aaab"));
+    assert!(!matches_char::<Pattern>("a"));
+    assert!(!matches_char::<Pattern>(""));
+}
+
+#[test]
+fn test_generated_pattern_star_same_char() {
+    // Verify a*a pattern matches correctly (requires backtracking)
+    use crate::matcher::{QuantifierThen, QuantifierNOrMore, Scalar};
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 0>, Scalar<'a'>>;
+
+    assert!(matches_char::<Pattern>("a"));
+    assert!(matches_char::<Pattern>("aa"));
+    assert!(matches_char::<Pattern>("aaa"));
+    assert!(!matches_char::<Pattern>(""));
+    assert!(!matches_char::<Pattern>("b"));
+}
+
+#[test]
+fn test_generated_pattern_plus_same_char() {
+    // Verify a+a pattern matches correctly (requires backtracking with min=1)
+    use crate::matcher::{QuantifierThen, QuantifierNOrMore, Scalar};
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 1>, Scalar<'a'>>;
+
+    assert!(matches_char::<Pattern>("aa"));
+    assert!(matches_char::<Pattern>("aaa"));
+    assert!(!matches_char::<Pattern>("a")); // Need at least 2
+    assert!(!matches_char::<Pattern>(""));
+}
+
+#[test]
+fn test_generated_pattern_bounded_backtrack() {
+    // Verify a{2,4}a pattern (requires backtracking within bounds)
+    use crate::matcher::{QuantifierThen, QuantifierNToM, Scalar};
+    type Pattern = QuantifierThen<char, QuantifierNToM<char, Scalar<'a'>, 2, 4>, Scalar<'a'>>;
+
+    assert!(matches_char::<Pattern>("aaa"));   // 2 + 1
+    assert!(matches_char::<Pattern>("aaaa"));  // 3 + 1
+    assert!(matches_char::<Pattern>("aaaaa")); // 4 + 1
+    assert!(!matches_char::<Pattern>("aa"));   // Can't satisfy both
+    assert!(!matches_char::<Pattern>("a"));
+}
+
+#[test]
+fn test_generated_pattern_dot_star_suffix() {
+    // Verify .*end pattern matches correctly
+    use crate::matcher::{QuantifierThen, QuantifierNOrMore, ScalarRange, Then, Scalar};
+    type AnyChar = ScalarRange<'\0', '\u{10FFFF}'>;
+    type EndStr = Then<char, Then<char, Scalar<'e'>, Then<char, Scalar<'n'>, Scalar<'d'>>>, End>;
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, AnyChar, 0>, EndStr>;
+
+    assert!(matches_char::<Pattern>("end"));
+    assert!(matches_char::<Pattern>("the end"));
+    assert!(matches_char::<Pattern>("startend"));
+    assert!(matches_char::<Pattern>("endendend"));
+    assert!(!matches_char::<Pattern>("en"));
+    assert!(!matches_char::<Pattern>("ending")); // 'ing' left over, but pattern consumes to 'end'
+}
+
+#[test]
+fn test_generated_pattern_anchored() {
+    // Verify ^a*b$ pattern matches correctly
+    use crate::matcher::{QuantifierThen, QuantifierNOrMore, Scalar, Then, Beginning, End as EndMatcher};
+    type Inner = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 0>, Scalar<'b'>>;
+    type Pattern = Then<char, Beginning, Then<char, Inner, EndMatcher>>;
+
+    assert!(matches_char::<Pattern>("b"));
+    assert!(matches_char::<Pattern>("ab"));
+    assert!(matches_char::<Pattern>("aab"));
+    assert!(!matches_char::<Pattern>("abc")); // Extra char
+    assert!(!matches_char::<Pattern>("cab")); // Prefix
+}
+
+#[test]
+fn test_generated_pattern_original_failing_case() {
+    // The original failing pattern: ^start.*end$
+    use crate::matcher::{QuantifierThen, QuantifierNOrMore, ScalarRange, Then, Then4, Scalar, Beginning, End as EndMatcher};
+    type AnyChar = ScalarRange<'\0', '\u{10FFFF}'>;
+    type Start = Then4<char, Scalar<'s'>, Scalar<'t'>, Scalar<'a'>, Then<char, Scalar<'r'>, Scalar<'t'>>>;
+    type End = Then<char, Scalar<'e'>, Then<char, Scalar<'n'>, Scalar<'d'>>>;
+    type DotStarEnd = QuantifierThen<char, QuantifierNOrMore<char, AnyChar, 0>, End>;
+    type StartDotStarEnd = Then<char, Start, DotStarEnd>;
+    type Pattern = Then<char, Beginning, Then<char, StartDotStarEnd, EndMatcher>>;
+
+    // The original failing case
+    assert!(matches_char::<Pattern>("starteend"));
+    assert!(matches_char::<Pattern>("startend"));
+    assert!(matches_char::<Pattern>("start end"));
+    assert!(matches_char::<Pattern>("startXXXend"));
+    assert!(!matches_char::<Pattern>("startXXX"));
+    assert!(!matches_char::<Pattern>("XXXend"));
+}

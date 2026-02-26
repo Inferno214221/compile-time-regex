@@ -192,7 +192,7 @@ fn test_range_count_below() {
 
 #[test]
 fn test_range_count_above() {
-    regex!(Range = "y{2,4}");
+    regex!(Range = "^y{2,4}$");
 
     let mut hay = Haystack::from("yyyyy");
     assert!(!Range::matches(&mut hay));

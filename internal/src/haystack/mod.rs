@@ -1,14 +1,18 @@
 #[cfg(test)]
 mod test;
 
-use std::{iter::{Copied, Peekable}, slice::Iter, str::Chars};
+mod indexer;
+mod util;
+
+use std::ops::Range;
+
+pub use indexer::*;
 
 use crate::hir::{CastClass, WriteTypeExpr};
 
 #[derive(Debug, Clone)]
 pub struct Haystack<'a, I: HaystackItem> {
-    iter: Peekable<I::Iter<'a>>,
-    start: bool,
+    inner: I::Iter<'a>,
 }
 
 // TODO: Make Haystack track progress and then record it for groups?
@@ -16,8 +20,7 @@ pub struct Haystack<'a, I: HaystackItem> {
 impl<'a> From<&'a str> for Haystack<'a, char> {
     fn from(value: &'a str) -> Self {
         Haystack {
-            iter: value.chars().peekable(),
-            start: true
+            inner: char::iter_from_slice(value),
         }
     }
 }
@@ -25,46 +28,61 @@ impl<'a> From<&'a str> for Haystack<'a, char> {
 impl<'a> From<&'a [u8]> for Haystack<'a, u8> {
     fn from(value: &'a [u8]) -> Self {
         Haystack {
-            iter: value.iter().copied().peekable(),
-            start: true
+            inner: u8::iter_from_slice(value),
         }
     }
 }
 
 impl<'a, I: HaystackItem> Haystack<'a, I> {
     pub fn item(&mut self) -> Option<I> {
-        self.iter.peek().copied()
+        self.inner.current_item()
+    }
+
+    pub fn index(&mut self) -> usize {
+        self.inner.current_index()
     }
 
     // Progression is only completed by elements which explicitly check the byte and succeed.
     pub fn progress(&mut self) {
-        self.iter.next();
-        self.start = false;
+        self.inner.next();
     }
 
     pub fn is_start(&mut self) -> bool {
-        self.start
+        self.inner.is_start()
     }
 
     pub fn is_end(&mut self) -> bool {
-        // TODO: Check that there is no other way of getting a None
         self.item().is_none()
+    }
+
+    pub fn slice(&'a self, range: Range<usize>) -> <I::Iter<'a> as HaystackIter<'a>>::Slice<'a> {
+        self.inner.slice_with(range)
     }
 }
 
 pub trait HaystackItem: Copy + WriteTypeExpr + CastClass {
-    type Iter<'a>: Iterator<Item = Self> + Clone;
+    type Iter<'a>: HaystackIter<'a, Item = Self> + Clone;
 
-    fn iter_from_str<'a>(s: &'a str) -> Self::Iter<'a>;
+    type Slice<'a>;
 
-    fn vec_from_str(s: &str) -> Vec<Self>;
+    fn iter_from_str<'a>(value: &'a str) -> Self::Iter<'a>;
+
+    fn iter_from_slice<'a>(value: Self::Slice<'a>) -> Self::Iter<'a>;
+
+    fn vec_from_str(value: &str) -> Vec<Self>;
 }
 
 impl HaystackItem for u8 {
-    type Iter<'a> = Copied<Iter<'a, u8>>;
+    type Iter<'a> = ByteIter<'a>;
+
+    type Slice<'a> = <Self::Iter<'a> as HaystackIter<'a>>::Slice<'a>;
     
-    fn iter_from_str<'a>(s: &'a str) -> Self::Iter<'a> {
-        s.as_bytes().iter().copied()
+    fn iter_from_str<'a>(value: &'a str) -> Self::Iter<'a> {
+        Self::iter_from_slice(value.as_bytes())
+    }
+
+    fn iter_from_slice<'a>(value: Self::Slice<'a>) -> Self::Iter<'a> {
+        ByteIter::from(value)
     }
 
     fn vec_from_str(s: &str) -> Vec<Self> {
@@ -73,13 +91,19 @@ impl HaystackItem for u8 {
 }
 
 impl HaystackItem for char {
-    type Iter<'a> = Chars<'a>;
+    type Iter<'a> = StrIter<'a>;
+
+    type Slice<'a> = <Self::Iter<'a> as HaystackIter<'a>>::Slice<'a>;
     
-    fn iter_from_str<'a>(s: &'a str) -> Self::Iter<'a> {
-        s.chars()
+    fn iter_from_str<'a>(value: &'a str) -> Self::Iter<'a> {
+        StrIter::from(value)
     }
 
-    fn vec_from_str(s: &str) -> Vec<Self> {
-        s.chars().collect()
+    fn iter_from_slice<'a>(value: Self::Slice<'a>) -> Self::Iter<'a> {
+        Self::iter_from_str(value)
+    }
+
+    fn vec_from_str(value: &str) -> Vec<Self> {
+        value.chars().collect()
     }
 }

@@ -8,7 +8,7 @@ use std::fmt::{self, Write};
 
 use regex_syntax::hir::{Capture, Class, ClassBytesRange, ClassUnicodeRange, Hir, HirKind, Literal, Look, Repetition};
 
-use crate::{haystack::HaystackItem, matcher::{Always, Beginning, Byte, ByteRange, End, Or, QuantifierN, QuantifierNOrMore, QuantifierNToM, Scalar, ScalarRange, Then}};
+use crate::{haystack::HaystackItem, matcher::{Always, Beginning, Byte, ByteRange, End, Or, QuantifierN, QuantifierNOrMore, QuantifierNToM, QuantifierThen, Scalar, ScalarRange, Then}};
 
 use Always as A;
 
@@ -65,22 +65,6 @@ impl WriteTypeExpr for &ClassUnicodeRange {
             self.end().escape_unicode()
         )
     }
-}
-
-fn write_n_items<T, I: HaystackItem, W: WriteTypeExpr>(
-    f: &mut String,
-    items: Vec<W>,
-    n: usize,
-) -> fmt::Result {
-    let base = type_name::<T>();
-    let item_type = type_name::<I>();
-
-    write!(f, "{}{}<{}", base, n, item_type)?;
-    for item in items {
-        write!(f, ",")?;
-        item.write_type_expr::<I>(f)?;
-    }
-    write!(f, ">")
 }
 
 impl WriteTypeExpr for Empty {
@@ -159,9 +143,76 @@ impl WriteTypeExpr for Capture {
     }
 }
 
+#[derive(Debug)]
+pub enum PossibleBacktrack {
+    Nope(Hir),
+    Backtrack(Backtrack)
+}
+
+#[derive(Debug)]
+pub struct Backtrack {
+    rep: Repetition,
+    then: Vec<Hir>,
+}
+
+impl WriteTypeExpr for Backtrack {
+    fn write_type_expr<I: HaystackItem>(mut self, f: &mut String) -> fmt::Result {
+        if self.then.is_empty() {
+            return self.rep.write_type_expr::<I>(f);
+        }
+
+        write!(f, "{}<{},", type_name::<QuantifierThen<u8, A, A>>(), type_name::<I>())?;
+        self.rep.write_type_expr::<I>(f)?;
+        write!(f, ",")?;
+        match self.then.len() {
+            0 => unreachable!(),
+            1 => self.then.pop().unwrap().write_type_expr::<I>(f),
+            _ => Concat(self.then).write_type_expr::<I>(f)
+        }?;
+        write!(f, ">")
+    }
+}
+
+impl Concat {
+    fn write_type_basic<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+        write_chunked::<Then<u8, A, A>, I, _>(f, self.0)
+    }
+}
+
 impl WriteTypeExpr for Concat {
     fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
-        write_chunked::<Then<u8, A, A>, I, _>(f, self.0)
+        let mut iter = self.0.into_iter();
+        let mut rep_item = None;
+        let concat = Concat(
+            iter.by_ref()
+                .take_while(|i| if let HirKind::Repetition(rep) = i.kind() {
+                    rep_item = Some(rep.clone());
+                    false
+                } else {
+                    true
+                })
+                .collect()
+        );
+        if let Some(rep) = rep_item {
+            let backtrack = Backtrack {
+                rep,
+                then: iter.collect(),
+            };
+
+            match (concat.0.len(), backtrack.then.len()) {
+                (0, 0) => unreachable!(),
+                (0, _) => backtrack.write_type_expr::<I>(f),
+                (_, _) => {
+                    write!(f, "{}<{},", type_name::<Then<u8, A, A>>(), type_name::<I>())?;
+                    concat.write_type_basic::<I>(f)?;
+                    write!(f, ",")?;
+                    backtrack.write_type_expr::<I>(f)?;
+                    write!(f, ">")
+                },
+            }
+        } else {
+            concat.write_type_basic::<I>(f)
+        }
     }
 }
 
@@ -210,4 +261,20 @@ fn write_chunked<T, I: HaystackItem, W: WriteTypeExpr>(
             write!(f, ">")
         }
     }
+}
+
+fn write_n_items<T, I: HaystackItem, W: WriteTypeExpr>(
+    f: &mut String,
+    items: Vec<W>,
+    n: usize,
+) -> fmt::Result {
+    let base = type_name::<T>();
+    let item_type = type_name::<I>();
+
+    write!(f, "{}{}<{}", base, n, item_type)?;
+    for item in items {
+        write!(f, ",")?;
+        item.write_type_expr::<I>(f)?;
+    }
+    write!(f, ">")
 }

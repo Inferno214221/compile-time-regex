@@ -8,14 +8,13 @@ pub struct QuantifierN<I: HaystackItem, A: Matcher<I>, const N: usize>(
     pub PhantomData<A>,
 );
 
-// TODO: Is this ever used?
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierN<I, A, N> {
     fn matches(hay: &mut Haystack<I>) -> bool {
-        let mut matches = 0;
+        let mut count = 0;
         while A::matches(hay) {
-            matches += 1;
+            count += 1;
         }
-        matches == N
+        count == N
     }
 }
 
@@ -27,23 +26,29 @@ pub struct QuantifierNOrMore<I: HaystackItem, A: Matcher<I>, const N: usize>(
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNOrMore<I, A, N> {
     fn matches(hay: &mut Haystack<I>) -> bool {
-        let mut matches = 0;
+        let mut count = 0;
         while A::matches(hay) {
-            matches += 1;
+            count += 1;
         }
-        matches >= N
+        count >= N
     }
     
     fn all_matches<'a>(hay: &mut Haystack<'a, I>) -> Vec<Haystack<'a, I>> {
-        let mut vec = Vec::new();
-        let mut matches = 0;
+        let mut matches = vec![];
+        let mut count = 0;
+
+        // Include zero-match position when N=0
+        if N == 0 {
+            matches.push(hay.clone());
+        }
+
         while A::matches(hay) {
-            matches += 1;
-            if matches >= N {
-                vec.push(hay.clone());
+            count += 1;
+            if count >= N {
+                matches.push(hay.clone());
             }
         }
-        vec
+        matches
     }
 }
 
@@ -55,31 +60,37 @@ pub struct QuantifierNToM<I: HaystackItem, A: Matcher<I>, const N: usize, const 
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> for QuantifierNToM<I, A, N, M> {
     fn matches(hay: &mut Haystack<I>) -> bool {
-        let mut matches = 0;
+        let mut count = 0;
         while A::matches(hay) {
-            matches += 1;
+            count += 1;
 
-            if matches == M && matches >= N {
+            if count == M && count >= N {
                 return true;
             }
         }
-        N <= matches && matches <= M
+        N <= count && count <= M
     }
     
     fn all_matches<'a>(hay: &mut Haystack<'a, I>) -> Vec<Haystack<'a, I>> {
-        let mut vec = Vec::new();
-        let mut matches = 0;
+        let mut matches = Vec::new();
+        let mut count = 0;
+        
+        // Include zero-match position when N=0
+        if N == 0 {
+            matches.push(hay.clone());
+        }
+        
         while A::matches(hay) {
-            matches += 1;
-            if N <= matches && matches <= M {
-                vec.push(hay.clone());
+            count += 1;
+            if N <= count && count <= M {
+                matches.push(hay.clone());
                 
-                if matches == M {
-                    return vec;
+                if count == M {
+                    return matches;
                 }
             }
         }
-        vec
+        matches
     }
 }
 

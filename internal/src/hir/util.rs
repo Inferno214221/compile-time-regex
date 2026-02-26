@@ -15,6 +15,7 @@ pub trait HirExtension {
 impl HirExtension for Hir {
     fn into_type_expr<I: HaystackItem>(self) -> String {
         let mut string = String::new();
+        // FIXME: Move start on a fail.
         self.write_type_expr::<I>(&mut string).unwrap();
         string
     }

@@ -955,3 +955,280 @@ fn test_always_is_zero_width() {
     assert!(Always::matches(&mut hay));
     assert_eq!(hay.item(), Some('t')); // Nothing consumed
 }
+
+// ============================================================================
+// COMPOSITE BACKTRACKING TESTS
+// These tests verify that all_matches propagates correctly through Or, Then,
+// Or4, etc. to enable backtracking within nested expressions
+// ============================================================================
+
+// Test: Or with quantifiers - (a*|b)c pattern
+#[test]
+fn test_or_quantifier_first_branch_backtracks() {
+    // Pattern: (a*|b)c
+    // Input: "aac"
+    // Expected: a* matches "aa", then 'c' matches
+    let mut hay = Haystack::from("aac");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type Alt = Or<char, StarA, Scalar<'b'>>;
+    type Pattern = QuantifierThen<char, Alt, Scalar<'c'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_or_quantifier_first_branch_gives_back() {
+    // Pattern: (a*|b)a
+    // Input: "aaa"
+    // Expected: a* matches "aa" (gives back one), then 'a' matches
+    let mut hay = Haystack::from("aaa");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type Alt = Or<char, StarA, Scalar<'b'>>;
+    type Pattern = QuantifierThen<char, Alt, Scalar<'a'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_or_quantifier_second_branch_used() {
+    // Pattern: (a*|b)c
+    // Input: "bc"
+    // Expected: a* matches "" but then 'c' fails on 'b', backtrack to 'b' branch
+    let mut hay = Haystack::from("bc");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type Alt = Or<char, StarA, Scalar<'b'>>;
+    type Pattern = QuantifierThen<char, Alt, Scalar<'c'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_or_both_quantifiers_prefers_first() {
+    // Pattern: (a*|b*)c
+    // Input: "aac"
+    // Expected: Prefers a* (first branch) matching "aa", then 'c'
+    let mut hay = Haystack::from("aac");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type StarB = QuantifierNOrMore<char, Scalar<'b'>, 0>;
+    type Alt = Or<char, StarA, StarB>;
+    type Pattern = QuantifierThen<char, Alt, Scalar<'c'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_or_both_quantifiers_falls_back_to_second() {
+    // Pattern: (a*|b*)c
+    // Input: "bbc"
+    // Expected: a* matches "" but 'c' fails on 'b', falls back to b* matching "bb"
+    let mut hay = Haystack::from("bbc");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type StarB = QuantifierNOrMore<char, Scalar<'b'>, 0>;
+    type Alt = Or<char, StarA, StarB>;
+    type Pattern = QuantifierThen<char, Alt, Scalar<'c'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+// Test: Then with multiple quantifiers - a*b*c pattern
+#[test]
+fn test_then_multiple_quantifiers() {
+    // Pattern: a*b*c
+    // Input: "aabbc"
+    // Expected: a* matches "aa", b* matches "bb", 'c' matches
+    let mut hay = Haystack::from("aabbc");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type StarB = QuantifierNOrMore<char, Scalar<'b'>, 0>;
+    type AB = QuantifierThen<char, StarA, StarB>;
+    type Pattern = QuantifierThen<char, AB, Scalar<'c'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_then_quantifiers_backtrack_first() {
+    // Pattern: a*b*b (two quantifiers followed by literal 'b')
+    // Input: "aabbb"
+    // Expected: a* matches "aa", b* matches "bb" (gives back one), 'b' matches
+    let mut hay = Haystack::from("aabbb");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type StarB = QuantifierNOrMore<char, Scalar<'b'>, 0>;
+    type AB = QuantifierThen<char, StarA, StarB>;
+    type Pattern = QuantifierThen<char, AB, Scalar<'b'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_then_quantifiers_empty_first() {
+    // Pattern: a*b*c
+    // Input: "bbbc"
+    // Expected: a* matches "" (zero), b* matches "bbb", 'c' matches
+    let mut hay = Haystack::from("bbbc");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type StarB = QuantifierNOrMore<char, Scalar<'b'>, 0>;
+    type AB = QuantifierThen<char, StarA, StarB>;
+    type Pattern = QuantifierThen<char, AB, Scalar<'c'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+// Test: Nested Or within quantifier continuation
+#[test]
+fn test_nested_or_in_continuation() {
+    // Pattern: a*(b|c)
+    // Input: "aaab"
+    // Expected: a* matches "aaa", then (b|c) matches 'b'
+    let mut hay = Haystack::from("aaab");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type BorC = Or<char, Scalar<'b'>, Scalar<'c'>>;
+    type Pattern = QuantifierThen<char, StarA, BorC>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_nested_or_in_continuation_second_branch() {
+    // Pattern: a*(b|c)
+    // Input: "aaac"
+    // Expected: a* matches "aaa", then (b|c) matches 'c' via second branch
+    let mut hay = Haystack::from("aaac");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type BorC = Or<char, Scalar<'b'>, Scalar<'c'>>;
+    type Pattern = QuantifierThen<char, StarA, BorC>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+// Test: Or4 with quantifiers
+#[test]
+fn test_or4_with_quantifiers() {
+    // Pattern: (a*|b*|c*|d*)e
+    // Input: "ccce"
+    // Expected: Falls through a*, b* (both match ""), to c* matching "ccc"
+    let mut hay = Haystack::from("ccce");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type StarB = QuantifierNOrMore<char, Scalar<'b'>, 0>;
+    type StarC = QuantifierNOrMore<char, Scalar<'c'>, 0>;
+    type StarD = QuantifierNOrMore<char, Scalar<'d'>, 0>;
+    type Alt = Or4<char, StarA, StarB, StarC, StarD>;
+    type Pattern = QuantifierThen<char, Alt, Scalar<'e'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_or4_prefers_earlier_branch() {
+    // Pattern: (a*|b*|c*|d*)e
+    // Input: "aae"
+    // Expected: Prefers a* (first branch) matching "aa"
+    let mut hay = Haystack::from("aae");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type StarB = QuantifierNOrMore<char, Scalar<'b'>, 0>;
+    type StarC = QuantifierNOrMore<char, Scalar<'c'>, 0>;
+    type StarD = QuantifierNOrMore<char, Scalar<'d'>, 0>;
+    type Alt = Or4<char, StarA, StarB, StarC, StarD>;
+    type Pattern = QuantifierThen<char, Alt, Scalar<'e'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+// Test: Complex nested pattern - (a*b|c*)d
+#[test]
+fn test_complex_nested_first_branch() {
+    // Pattern: (a*b|c*)d
+    // Input: "aabd"
+    // Expected: First branch a*b matches "aab", then 'd' matches
+    let mut hay = Haystack::from("aabd");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type AB = QuantifierThen<char, StarA, Scalar<'b'>>;
+    type StarC = QuantifierNOrMore<char, Scalar<'c'>, 0>;
+    type Alt = Or<char, AB, StarC>;
+    type Pattern = QuantifierThen<char, Alt, Scalar<'d'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_complex_nested_second_branch() {
+    // Pattern: (a*b|c*)d
+    // Input: "cccd"
+    // Expected: First branch a*b fails (no 'b'), second branch c* matches "ccc"
+    let mut hay = Haystack::from("cccd");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type AB = QuantifierThen<char, StarA, Scalar<'b'>>;
+    type StarC = QuantifierNOrMore<char, Scalar<'c'>, 0>;
+    type Alt = Or<char, AB, StarC>;
+    type Pattern = QuantifierThen<char, Alt, Scalar<'d'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+// Test: Greedy preference verification - ensure longer matches preferred
+#[test]
+fn test_or_greedy_prefers_longer_first_branch() {
+    // Pattern: (a+|a)b
+    // Input: "aab"
+    // Expected: Greedy a+ matches "aa" (not just "a"), then 'b' matches
+    // This verifies that within Or, longer matches from first branch are preferred
+    let mut hay = Haystack::from("aab");
+    type PlusA = QuantifierNOrMore<char, Scalar<'a'>, 1>;
+    type Alt = Or<char, PlusA, Scalar<'a'>>;
+    type Pattern = QuantifierThen<char, Alt, Scalar<'b'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_or_greedy_backtracks_within_first_branch() {
+    // Pattern: (a+|a)a
+    // Input: "aaa"
+    // Expected: a+ greedily matches "aaa", backtracks to "aa", then 'a' matches
+    let mut hay = Haystack::from("aaa");
+    type PlusA = QuantifierNOrMore<char, Scalar<'a'>, 1>;
+    type Alt = Or<char, PlusA, Scalar<'a'>>;
+    type Pattern = QuantifierThen<char, Alt, Scalar<'a'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+// Test: Edge case - empty alternatives
+#[test]
+fn test_or_with_empty_match_first() {
+    // Pattern: (a*|b)c
+    // Input: "c"
+    // Expected: a* matches "" (zero), then 'c' matches
+    let mut hay = Haystack::from("c");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type Alt = Or<char, StarA, Scalar<'b'>>;
+    type Pattern = QuantifierThen<char, Alt, Scalar<'c'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+// Test: Failure cases
+#[test]
+fn test_or_quantifiers_both_fail() {
+    // Pattern: (a+|b+)c
+    // Input: "c"
+    // Expected: Neither a+ nor b+ can match (need at least 1), so fails
+    let mut hay = Haystack::from("c");
+    type PlusA = QuantifierNOrMore<char, Scalar<'a'>, 1>;
+    type PlusB = QuantifierNOrMore<char, Scalar<'b'>, 1>;
+    type Alt = Or<char, PlusA, PlusB>;
+    type Pattern = QuantifierThen<char, Alt, Scalar<'c'>>;
+    assert!(!Pattern::matches(&mut hay));
+}
+
+#[test]
+fn test_then_quantifiers_continuation_fails() {
+    // Pattern: a*b*c
+    // Input: "aabbd"
+    // Expected: a* matches "aa", b* matches "bb", but 'c' fails on 'd'
+    let mut hay = Haystack::from("aabbd");
+    type StarA = QuantifierNOrMore<char, Scalar<'a'>, 0>;
+    type StarB = QuantifierNOrMore<char, Scalar<'b'>, 0>;
+    type AB = QuantifierThen<char, StarA, StarB>;
+    type Pattern = QuantifierThen<char, AB, Scalar<'c'>>;
+    assert!(!Pattern::matches(&mut hay));
+}

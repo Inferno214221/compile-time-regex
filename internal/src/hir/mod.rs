@@ -31,9 +31,20 @@ impl WriteTypeExpr for Hir {
     }
 }
 
+#[derive(Debug)]
 struct Empty;
+
+#[derive(Debug)]
 struct Concat(pub Vec<Hir>);
+
+#[derive(Debug)]
 struct Alternation(pub Vec<Hir>);
+
+#[derive(Debug)]
+pub struct Backtrack {
+    rep: Repetition,
+    then: Vec<Hir>,
+}
 
 impl WriteTypeExpr for u8 {
     fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
@@ -143,39 +154,9 @@ impl WriteTypeExpr for Capture {
     }
 }
 
-#[derive(Debug)]
-pub enum PossibleBacktrack {
-    Nope(Hir),
-    Backtrack(Backtrack)
-}
-
-#[derive(Debug)]
-pub struct Backtrack {
-    rep: Repetition,
-    then: Vec<Hir>,
-}
-
-impl WriteTypeExpr for Backtrack {
-    fn write_type_expr<I: HaystackItem>(mut self, f: &mut String) -> fmt::Result {
-        if self.then.is_empty() {
-            return self.rep.write_type_expr::<I>(f);
-        }
-
-        write!(f, "{}<{},", type_name::<QuantifierThen<u8, A, A>>(), type_name::<I>())?;
-        self.rep.write_type_expr::<I>(f)?;
-        write!(f, ",")?;
-        match self.then.len() {
-            0 => unreachable!(),
-            1 => self.then.pop().unwrap().write_type_expr::<I>(f),
-            _ => Concat(self.then).write_type_expr::<I>(f)
-        }?;
-        write!(f, ">")
-    }
-}
-
-impl Concat {
-    fn write_type_basic<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
-        write_chunked::<Then<u8, A, A>, I, _>(f, self.0)
+impl WriteTypeExpr for Alternation {
+    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+        write_chunked::<Or<u8, A, A>, I, _>(f, self.0)
     }
 }
 
@@ -216,9 +197,27 @@ impl WriteTypeExpr for Concat {
     }
 }
 
-impl WriteTypeExpr for Alternation {
-    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
-        write_chunked::<Or<u8, A, A>, I, _>(f, self.0)
+impl WriteTypeExpr for Backtrack {
+    fn write_type_expr<I: HaystackItem>(mut self, f: &mut String) -> fmt::Result {
+        if self.then.is_empty() {
+            return self.rep.write_type_expr::<I>(f);
+        }
+
+        write!(f, "{}<{},", type_name::<QuantifierThen<u8, A, A>>(), type_name::<I>())?;
+        self.rep.write_type_expr::<I>(f)?;
+        write!(f, ",")?;
+        match self.then.len() {
+            0 => unreachable!(),
+            1 => self.then.pop().unwrap().write_type_expr::<I>(f),
+            _ => Concat(self.then).write_type_expr::<I>(f)
+        }?;
+        write!(f, ">")
+    }
+}
+
+impl Concat {
+    fn write_type_basic<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+        write_chunked::<Then<u8, A, A>, I, _>(f, self.0)
     }
 }
 

@@ -275,9 +275,27 @@ fn test_quantifier_n_to_m_below_range() {
 }
 
 #[test]
-fn test_quantifier_n_to_m_above_range() {
+fn test_quantifier_n_to_m_stops_at_max() {
+    // a{2,4} on "aaaaa" should match exactly 4 'a's and leave the 5th
     let mut hay = Haystack::from("aaaaa");
-    assert!(!QuantifierNToM::<char, Scalar::<'a'>, 2, 4>::matches(&mut hay));
+    assert!(QuantifierNToM::<char, Scalar::<'a'>, 2, 4>::matches(&mut hay));
+    assert_eq!(hay.item(), Some('a')); // 5th 'a' remains
+}
+
+#[test]
+fn test_quantifier_n_to_m_stops_at_max_with_different_suffix() {
+    // a{2,4} on "aaaab" should match exactly 4 'a's and leave 'b'
+    let mut hay = Haystack::from("aaaab");
+    assert!(QuantifierNToM::<char, Scalar::<'a'>, 2, 4>::matches(&mut hay));
+    assert_eq!(hay.item(), Some('b'));
+}
+
+#[test]
+fn test_quantifier_n_to_m_greedy_up_to_max() {
+    // a{2,4} on "aaa" should greedily match all 3 (less than max)
+    let mut hay = Haystack::from("aaa");
+    assert!(QuantifierNToM::<char, Scalar::<'a'>, 2, 4>::matches(&mut hay));
+    assert!(hay.is_end()); // All consumed since 3 < 4
 }
 
 #[test]
@@ -632,6 +650,285 @@ fn test_successful_match_consumes_exactly() {
     type ABC = Then<char, Scalar<'a'>, Then<char, Scalar<'b'>, Scalar<'c'>>>;
     assert!(ABC::matches(&mut hay));
     assert_eq!(hay.item(), Some('d')); // Consumed 'abc', 'def' remains
+}
+
+// ============================================================================
+// QUANTIFIERTHEN BACKTRACKING TESTS
+// These tests verify that QuantifierThen correctly implements greedy matching
+// with backtracking when the continuation fails
+// ============================================================================
+
+// Test: Basic backtracking - quantifier gives back to let continuation match
+#[test]
+fn test_quantifier_then_backtracks_for_same_char() {
+    // Pattern: a*a (greedy a* followed by literal a)
+    // Input: "aaa"
+    // Expected: a* matches "aa", then final 'a' matches - total match
+    let mut hay = Haystack::from("aaa");
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 0>, Scalar<'a'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_quantifier_then_backtracks_for_suffix() {
+    // Pattern: .*end (greedy .* followed by "end")
+    // Input: "startend"
+    // Expected: .* matches "start", then "end" matches
+    let mut hay = Haystack::from("startend");
+    type AnyChar = ScalarRange<'\0', '\u{10FFFF}'>;
+    type End = Then<char, Scalar<'e'>, Then<char, Scalar<'n'>, Scalar<'d'>>>;
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, AnyChar, 0>, End>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_quantifier_then_backtracks_overlapping_content() {
+    // Pattern: .*ee (greedy .* followed by "ee")
+    // Input: "eee"
+    // Expected: .* matches "e", then "ee" matches
+    let mut hay = Haystack::from("eee");
+    type AnyChar = ScalarRange<'\0', '\u{10FFFF}'>;
+    type EE = Then<char, Scalar<'e'>, Scalar<'e'>>;
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, AnyChar, 0>, EE>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+// Test: Greedy preference - should prefer more matches when possible
+#[test]
+fn test_quantifier_then_prefers_greedy_when_possible() {
+    // Pattern: a*b (greedy a* followed by 'b')
+    // Input: "aaab"
+    // Expected: a* matches "aaa", then 'b' matches (no backtracking needed)
+    let mut hay = Haystack::from("aaab");
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 0>, Scalar<'b'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_quantifier_then_greedy_consumes_maximum_possible() {
+    // Pattern: a+a (one or more 'a' followed by 'a')
+    // Input: "aaaa"
+    // Expected: a+ matches "aaa" (greedy, but gives one back), then final 'a' matches
+    let mut hay = Haystack::from("aaaa");
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 1>, Scalar<'a'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+// Test: Minimum bounds respected during backtracking
+#[test]
+fn test_quantifier_then_respects_minimum_bound() {
+    // Pattern: a{2,}a (two or more 'a' followed by 'a')
+    // Input: "aaa"
+    // Expected: a{2,} matches "aa", then final 'a' matches
+    let mut hay = Haystack::from("aaa");
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 2>, Scalar<'a'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_quantifier_then_fails_when_minimum_not_satisfiable() {
+    // Pattern: a{2,}a (two or more 'a' followed by 'a')
+    // Input: "aa"
+    // Expected: Cannot satisfy both a{2,} and final 'a' - fails
+    let mut hay = Haystack::from("aa");
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 2>, Scalar<'a'>>;
+    assert!(!Pattern::matches(&mut hay));
+}
+
+#[test]
+fn test_quantifier_then_minimum_one_plus_same_char() {
+    // Pattern: a+a (one or more 'a' followed by 'a')
+    // Input: "aa"
+    // Expected: a+ matches "a" (minimum), then final 'a' matches
+    let mut hay = Haystack::from("aa");
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 1>, Scalar<'a'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+// Test: QuantifierNToM (bounded quantifier) backtracking
+#[test]
+fn test_quantifier_n_to_m_then_backtracks() {
+    // Pattern: a{2,4}a (2-4 'a's followed by 'a')
+    // Input: "aaaaa"
+    // Expected: a{2,4} matches "aaaa" (max), then final 'a' matches
+    let mut hay = Haystack::from("aaaaa");
+    type Pattern = QuantifierThen<char, QuantifierNToM<char, Scalar<'a'>, 2, 4>, Scalar<'a'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_quantifier_n_to_m_then_at_minimum() {
+    // Pattern: a{2,4}a (2-4 'a's followed by 'a')
+    // Input: "aaa"
+    // Expected: a{2,4} matches "aa" (min), then final 'a' matches
+    let mut hay = Haystack::from("aaa");
+    type Pattern = QuantifierThen<char, QuantifierNToM<char, Scalar<'a'>, 2, 4>, Scalar<'a'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_quantifier_n_to_m_then_fails_below_minimum() {
+    // Pattern: a{2,4}a (2-4 'a's followed by 'a')
+    // Input: "aa"
+    // Expected: Cannot have a{2,4} AND another 'a' with only 2 chars - fails
+    let mut hay = Haystack::from("aa");
+    type Pattern = QuantifierThen<char, QuantifierNToM<char, Scalar<'a'>, 2, 4>, Scalar<'a'>>;
+    assert!(!Pattern::matches(&mut hay));
+}
+
+#[test]
+fn test_quantifier_n_to_m_then_fails_max_bound_too_restrictive() {
+    // Pattern: a{2,3}b (2-3 'a's followed by 'b')
+    // Input: "aaaab" (4 'a's + 'b')
+    // Expected: a{2,3} stops at 3 'a's (max), 'b' fails on 4th 'a'
+    //           Backtracking tries 2 'a's, 'b' still fails on 3rd 'a'
+    //           Overall fails because max bound prevents matching all 4 'a's
+    // Note: a{2,4}b would succeed on this input!
+    let mut hay = Haystack::from("aaaab");
+    type Pattern = QuantifierThen<char, QuantifierNToM<char, Scalar<'a'>, 2, 3>, Scalar<'b'>>;
+    assert!(!Pattern::matches(&mut hay));
+}
+
+#[test]
+fn test_quantifier_n_to_m_then_succeeds_with_higher_max() {
+    // Same input as above, but with higher max bound - now succeeds
+    // Pattern: a{2,4}b (2-4 'a's followed by 'b')
+    // Input: "aaaab" (4 'a's + 'b')
+    // Expected: a{2,4} matches 4 'a's, 'b' matches 'b' - success
+    let mut hay = Haystack::from("aaaab");
+    type Pattern = QuantifierThen<char, QuantifierNToM<char, Scalar<'a'>, 2, 4>, Scalar<'b'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_quantifier_n_to_m_then_fails_continuation_needs_more_than_available() {
+    // Pattern: a{3,4}aa (3-4 'a's followed by "aa")
+    // Input: "aaaa" (4 'a's total)
+    // Expected: a{3,4} matches 4, leaving 0 for "aa" - fails
+    //           Backtrack to 3, leaving 1 for "aa" - still fails (needs 2)
+    //           Overall fails because max bound doesn't leave enough for continuation
+    let mut hay = Haystack::from("aaaa");
+    type AA = Then<char, Scalar<'a'>, Scalar<'a'>>;
+    type Pattern = QuantifierThen<char, QuantifierNToM<char, Scalar<'a'>, 3, 4>, AA>;
+    assert!(!Pattern::matches(&mut hay));
+}
+
+// Test: Edge cases
+#[test]
+fn test_quantifier_then_empty_input() {
+    // Pattern: a*b
+    // Input: ""
+    // Expected: a* matches "" (zero), but 'b' fails - overall fails
+    let mut hay = Haystack::from("");
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 0>, Scalar<'b'>>;
+    assert!(!Pattern::matches(&mut hay));
+}
+
+#[test]
+fn test_quantifier_then_zero_matches_success() {
+    // Pattern: a*b
+    // Input: "b"
+    // Expected: a* matches "" (zero), then 'b' matches
+    let mut hay = Haystack::from("b");
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 0>, Scalar<'b'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_quantifier_then_continuation_longer_than_available() {
+    // Pattern: a*abc
+    // Input: "aabc"
+    // Expected: a* matches "a", then "abc" matches
+    let mut hay = Haystack::from("aabc");
+    type ABC = Then<char, Scalar<'a'>, Then<char, Scalar<'b'>, Scalar<'c'>>>;
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 0>, ABC>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_quantifier_then_no_possible_match() {
+    // Pattern: a+b
+    // Input: "aaa"
+    // Expected: No 'b' in input, so fails
+    let mut hay = Haystack::from("aaa");
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 1>, Scalar<'b'>>;
+    assert!(!Pattern::matches(&mut hay));
+}
+
+// Test: Byte variant
+#[test]
+fn test_quantifier_then_with_bytes() {
+    // Pattern: [a-z]*! with bytes
+    // Input: "hello!"
+    let mut hay = Haystack::from(b"hello!" as &[u8]);
+    type Pattern = QuantifierThen<u8, QuantifierNOrMore<u8, ByteRange<b'a', b'z'>, 0>, Byte<b'!'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_quantifier_then_bytes_backtracking() {
+    // Pattern: .*ll with bytes
+    // Input: "helll" (three l's, no trailing char)
+    let mut hay = Haystack::from(b"helll" as &[u8]);
+    type AnyByte = ByteRange<0, 255>;
+    type LL = Then<u8, Byte<b'l'>, Byte<b'l'>>;
+    type Pattern = QuantifierThen<u8, QuantifierNOrMore<u8, AnyByte, 0>, LL>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+// Test: Complex nested pattern as continuation
+#[test]
+fn test_quantifier_then_complex_continuation() {
+    // Pattern: .*(end|fin)
+    // Input: "the end"
+    let mut hay = Haystack::from("the end");
+    type AnyChar = ScalarRange<'\0', '\u{10FFFF}'>;
+    type End = Then<char, Scalar<'e'>, Then<char, Scalar<'n'>, Scalar<'d'>>>;
+    type Fin = Then<char, Scalar<'f'>, Then<char, Scalar<'i'>, Scalar<'n'>>>;
+    type Suffix = Or<char, End, Fin>;
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, AnyChar, 0>, Suffix>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_quantifier_then_complex_continuation_second_alt() {
+    // Pattern: .*(end|fin)
+    // Input: "the fin"
+    let mut hay = Haystack::from("the fin");
+    type AnyChar = ScalarRange<'\0', '\u{10FFFF}'>;
+    type End = Then<char, Scalar<'e'>, Then<char, Scalar<'n'>, Scalar<'d'>>>;
+    type Fin = Then<char, Scalar<'f'>, Then<char, Scalar<'i'>, Scalar<'n'>>>;
+    type Suffix = Or<char, End, Fin>;
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, AnyChar, 0>, Suffix>;
+    assert!(Pattern::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+// Test: Verify haystack position after partial match failure
+#[test]
+fn test_quantifier_then_leaves_remainder() {
+    // Pattern: a*b (as part of larger input)
+    // Input: "aaabcd"
+    // After match: should leave "cd"
+    let mut hay = Haystack::from("aaabcd");
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 0>, Scalar<'b'>>;
+    assert!(Pattern::matches(&mut hay));
+    assert_eq!(hay.item(), Some('c'));
 }
 
 // Test 8: Zero-width assertions

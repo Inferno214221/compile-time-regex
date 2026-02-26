@@ -101,12 +101,22 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B>
     }
 }
 
+pub trait BacktrackQuantifier<I: HaystackItem>: Matcher<I> {
+    // It would be nice to use a customer Iterator here rather than a Vec, but reversing an
+    // arbitrary match is not easy, so we just progress through linearly and store them all.
+    // This could cause issues with huge haystacks, but: all regexes need to be compiled at compile
+    // time and are hence controlled by the author. If their pattern will be operating on huge
+    // haystacks and need backtracking, that's up to them.
+    fn match_points<'a>(hay: &mut Haystack<'a, I>) -> Vec<Haystack<'a, I>>;
+}
+
 #[derive(Debug, Default)]
 pub struct QuantifierN<I: HaystackItem, A: Matcher<I>, const N: usize>(
     pub PhantomData<I>,
     pub PhantomData<A>,
 );
 
+// TODO: Is this ever used?
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierN<I, A, N> {
     fn matches(hay: &mut Haystack<I>) -> bool {
         let mut matches = 0;
@@ -133,6 +143,20 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNO
     }
 }
 
+impl<I: HaystackItem, A: Matcher<I>, const N: usize> BacktrackQuantifier<I> for QuantifierNOrMore<I, A, N> {
+    fn match_points<'a>(hay: &mut Haystack<'a, I>) -> Vec<Haystack<'a, I>> {
+        let mut vec = Vec::new();
+        let mut matches = 0;
+        while A::matches(hay) {
+            matches += 1;
+            if matches >= N {
+                vec.push(hay.clone());
+            }
+        }
+        vec
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct QuantifierNToM<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize>(
     pub PhantomData<I>,
@@ -144,8 +168,58 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
         let mut matches = 0;
         while A::matches(hay) {
             matches += 1;
+
+            if matches == M && matches >= N {
+                return true;
+            }
         }
         N <= matches && matches <= M
+    }
+}
+
+impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> BacktrackQuantifier<I> for QuantifierNToM<I, A, N, M> {
+    fn match_points<'a>(hay: &mut Haystack<'a, I>) -> Vec<Haystack<'a, I>> {
+        let mut vec = Vec::new();
+        let mut matches = 0;
+        while A::matches(hay) {
+            matches += 1;
+            if N <= matches && matches <= M {
+                vec.push(hay.clone());
+                
+                if matches == M {
+                    return vec;
+                }
+            }
+        }
+        vec
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct QuantifierThen<I: HaystackItem, Q: BacktrackQuantifier<I>, T: Matcher<I>>(
+    pub PhantomData<I>,
+    pub PhantomData<Q>,
+    pub PhantomData<T>,
+);
+
+impl<I: HaystackItem, Q: BacktrackQuantifier<I>, T: Matcher<I>> Matcher<I> for QuantifierThen<I, Q, T> {
+    fn matches(hay: &mut Haystack<I>) -> bool {
+        let mut start = hay.clone();
+        if Then::<I, Q, T>::matches(hay) {
+            true
+        } else {
+            // Try all valid match points for Q in reverse order (greedy).
+            let match_points = Q::match_points(&mut start);
+
+            for mut point in match_points.into_iter().rev() {
+                if T::matches(&mut point) {
+                    // Overwrite the provided haystack with the progressed version.
+                    *hay = point;
+                    return true;
+                }
+            }
+            false
+        }
     }
 }
 

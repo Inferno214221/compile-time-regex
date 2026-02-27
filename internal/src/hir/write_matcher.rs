@@ -6,21 +6,21 @@ use crate::{haystack::HaystackItem, hir::util::type_name, matcher::{Always, Begi
 
 use Always as A;
 
-pub trait WriteTypeExpr {
-    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result;
+pub trait WriteMatcher {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String) -> fmt::Result;
 }
 
-impl WriteTypeExpr for Hir {
-    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+impl WriteMatcher for Hir {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
         match self.into_kind() {
-            HirKind::Empty              => Empty.write_type_expr::<I>(f),
-            HirKind::Literal(lit)       => lit.write_type_expr::<I>(f),
-            HirKind::Class(class)       => class.write_type_expr::<I>(f),
-            HirKind::Look(look)         => look.write_type_expr::<I>(f),
-            HirKind::Repetition(rep)    => rep.write_type_expr::<I>(f),
-            HirKind::Capture(cap)       => cap.write_type_expr::<I>(f),
-            HirKind::Concat(hirs)       => Concat(hirs).write_type_expr::<I>(f),
-            HirKind::Alternation(hirs)  => Alternation(hirs).write_type_expr::<I>(f),
+            HirKind::Empty              => Empty.write_matcher::<I>(f),
+            HirKind::Literal(lit)       => lit.write_matcher::<I>(f),
+            HirKind::Class(class)       => class.write_matcher::<I>(f),
+            HirKind::Look(look)         => look.write_matcher::<I>(f),
+            HirKind::Repetition(rep)    => rep.write_matcher::<I>(f),
+            HirKind::Capture(cap)       => cap.write_matcher::<I>(f),
+            HirKind::Concat(hirs)       => Concat(hirs).write_matcher::<I>(f),
+            HirKind::Alternation(hirs)  => Alternation(hirs).write_matcher::<I>(f),
         }
     }
 }
@@ -40,29 +40,29 @@ pub struct Backtrack {
     then: Vec<Hir>,
 }
 
-impl WriteTypeExpr for u8 {
-    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+impl WriteMatcher for u8 {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
         assert_eq!(type_name::<I>(), type_name::<u8>());
         write!(f, "{}<{}u8>", type_name::<Byte<0>>(), self)
     }
 }
 
-impl WriteTypeExpr for &ClassBytesRange {
-    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+impl WriteMatcher for &ClassBytesRange {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
         assert_eq!(type_name::<I>(), type_name::<u8>());
         write!(f, "{}<{}u8,{}u8>", type_name::<ByteRange<0, 0>>(), self.start(), self.end())
     }
 }
 
-impl WriteTypeExpr for char {
-    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+impl WriteMatcher for char {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
         assert_eq!(type_name::<I>(), type_name::<char>());
         write!(f, "{}<'{}'>", type_name::<Scalar<'a'>>(), self.escape_unicode())
     }
 }
 
-impl WriteTypeExpr for &ClassUnicodeRange {
-    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+impl WriteMatcher for &ClassUnicodeRange {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
         assert_eq!(type_name::<I>(), type_name::<char>(), "{:?}", self);
         write!(f, "{}<'{}','{}'>",
             type_name::<ScalarRange<'a', 'a'>>(),
@@ -72,14 +72,14 @@ impl WriteTypeExpr for &ClassUnicodeRange {
     }
 }
 
-impl WriteTypeExpr for Empty {
-    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+impl WriteMatcher for Empty {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
         write!(f, "{}", type_name::<Always>())
     }
 }
 
-impl WriteTypeExpr for Literal {
-    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+impl WriteMatcher for Literal {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
         write_chunked::<Then<u8, A, A>, I, _>(
             f,
             I::vec_from_str(
@@ -90,8 +90,8 @@ impl WriteTypeExpr for Literal {
     }
 }
 
-impl WriteTypeExpr for Class {
-    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+impl WriteMatcher for Class {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
         match I::cast_class(self) {
             Class::Unicode(unicode) => write_chunked::<Or<u8, A, A>, I, _>(
                 f,
@@ -105,8 +105,8 @@ impl WriteTypeExpr for Class {
     }
 }
 
-impl WriteTypeExpr for Look {
-    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+impl WriteMatcher for Look {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
         match self {
             Look::Start => write!(f, "{}", type_name::<Beginning>()),
             Look::End => write!(f, "{}", type_name::<End>()),
@@ -115,8 +115,8 @@ impl WriteTypeExpr for Look {
     }
 }
 
-impl WriteTypeExpr for Repetition {
-    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+impl WriteMatcher for Repetition {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
         let Repetition { min, max, greedy, sub } = self;
         if !greedy {
             todo!("lazy repetition")
@@ -124,38 +124,38 @@ impl WriteTypeExpr for Repetition {
         match max {
             None => {
                 write!(f, "{}<{},", type_name::<QuantifierNOrMore<u8, A, 0>>(), type_name::<I>())?;
-                sub.write_type_expr::<I>(f)?;
+                sub.write_matcher::<I>(f)?;
                 write!(f, ",{}>", min)
             },
             Some(max) if min == max => {
                 write!(f, "{}<{},", type_name::<QuantifierN<u8, A, 0>>(), type_name::<I>())?;
-                sub.write_type_expr::<I>(f)?;
+                sub.write_matcher::<I>(f)?;
                 write!(f, ",{}>", min)
             },
             Some(max) => {
                 write!(f, "{}<{},", type_name::<QuantifierNToM<u8, A, 0, 0>>(), type_name::<I>())?;
-                sub.write_type_expr::<I>(f)?;
+                sub.write_matcher::<I>(f)?;
                 write!(f, ",{},{}>", min, max)
             },
         }
     }
 }
 
-impl WriteTypeExpr for Capture {
-    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+impl WriteMatcher for Capture {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
         // TODO: Actually handle captures
-        self.sub.write_type_expr::<I>(f)
+        self.sub.write_matcher::<I>(f)
     }
 }
 
-impl WriteTypeExpr for Alternation {
-    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+impl WriteMatcher for Alternation {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
         write_chunked::<Or<u8, A, A>, I, _>(f, self.0)
     }
 }
 
-impl WriteTypeExpr for Concat {
-    fn write_type_expr<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
+impl WriteMatcher for Concat {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String) -> fmt::Result {
         let mut iter = self.0.into_iter();
         let mut rep_item = None;
         let concat = Concat(
@@ -176,12 +176,12 @@ impl WriteTypeExpr for Concat {
 
             match (concat.0.len(), backtrack.then.len()) {
                 (0, 0) => unreachable!(),
-                (0, _) => backtrack.write_type_expr::<I>(f),
+                (0, _) => backtrack.write_matcher::<I>(f),
                 (_, _) => {
                     write!(f, "{}<{},", type_name::<Then<u8, A, A>>(), type_name::<I>())?;
                     concat.write_type_basic::<I>(f)?;
                     write!(f, ",")?;
-                    backtrack.write_type_expr::<I>(f)?;
+                    backtrack.write_matcher::<I>(f)?;
                     write!(f, ">")
                 },
             }
@@ -191,19 +191,19 @@ impl WriteTypeExpr for Concat {
     }
 }
 
-impl WriteTypeExpr for Backtrack {
-    fn write_type_expr<I: HaystackItem>(mut self, f: &mut String) -> fmt::Result {
+impl WriteMatcher for Backtrack {
+    fn write_matcher<I: HaystackItem>(mut self, f: &mut String) -> fmt::Result {
         if self.then.is_empty() {
-            return self.rep.write_type_expr::<I>(f);
+            return self.rep.write_matcher::<I>(f);
         }
 
         write!(f, "{}<{},", type_name::<QuantifierThen<u8, A, A>>(), type_name::<I>())?;
-        self.rep.write_type_expr::<I>(f)?;
+        self.rep.write_matcher::<I>(f)?;
         write!(f, ",")?;
         match self.then.len() {
             0 => unreachable!(),
-            1 => self.then.pop().unwrap().write_type_expr::<I>(f),
-            _ => Concat(self.then).write_type_expr::<I>(f)
+            1 => self.then.pop().unwrap().write_matcher::<I>(f),
+            _ => Concat(self.then).write_matcher::<I>(f)
         }?;
         write!(f, ">")
     }
@@ -215,7 +215,7 @@ impl Concat {
     }
 }
 
-fn write_chunked<T, I: HaystackItem, W: WriteTypeExpr>(
+fn write_chunked<T, I: HaystackItem, W: WriteMatcher>(
     f: &mut String,
     mut items: Vec<W>,
 ) -> fmt::Result {
@@ -225,19 +225,19 @@ fn write_chunked<T, I: HaystackItem, W: WriteTypeExpr>(
 
     match n {
         0 => panic!("literal contains no items"),
-        1 => items.pop().unwrap().write_type_expr::<I>(f),
+        1 => items.pop().unwrap().write_matcher::<I>(f),
         2 => {
             let mut iter = items.into_iter();
             write!(f, "{}<{},", base, item_type)?;
-            iter.next().unwrap().write_type_expr::<I>(f)?;
+            iter.next().unwrap().write_matcher::<I>(f)?;
             write!(f, ",")?;
-            iter.next().unwrap().write_type_expr::<I>(f)?;
+            iter.next().unwrap().write_matcher::<I>(f)?;
             write!(f, ">")
         }
         3 => {
             let mut iter = items.into_iter();
             write!(f, "{}<{},", base, item_type)?;
-            iter.next().unwrap().write_type_expr::<I>(f)?;
+            iter.next().unwrap().write_matcher::<I>(f)?;
             write!(f, ",")?;
             write_chunked::<T, I, W>(f, iter.collect())?;
             write!(f, ">")
@@ -256,7 +256,7 @@ fn write_chunked<T, I: HaystackItem, W: WriteTypeExpr>(
     }
 }
 
-fn write_n_items<T, I: HaystackItem, W: WriteTypeExpr>(
+fn write_n_items<T, I: HaystackItem, W: WriteMatcher>(
     f: &mut String,
     items: Vec<W>,
     n: usize,
@@ -267,7 +267,7 @@ fn write_n_items<T, I: HaystackItem, W: WriteTypeExpr>(
     write!(f, "{}{}<{}", base, n, item_type)?;
     for item in items {
         write!(f, ",")?;
-        item.write_type_expr::<I>(f)?;
+        item.write_matcher::<I>(f)?;
     }
     write!(f, ">")
 }

@@ -2,7 +2,7 @@ use std::any;
 
 use regex_syntax::hir::{Class, Hir};
 
-use crate::{haystack::HaystackItem, hir::write_type_expr::WriteTypeExpr};
+use crate::{haystack::HaystackItem, hir::write_matcher::WriteMatcher};
 
 pub fn type_name<T>() -> &'static str {
     any::type_name::<T>().split('<').next().unwrap()
@@ -15,7 +15,7 @@ pub trait HirExtension {
 impl HirExtension for Hir {
     fn into_type_expr<I: HaystackItem>(self) -> String {
         let mut string = String::new();
-        self.write_type_expr::<I>(&mut string).unwrap();
+        self.write_matcher::<I>(&mut string).unwrap();
         string
     }
 }

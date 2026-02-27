@@ -1,8 +1,8 @@
 pub mod util;
-pub mod write_type_expr;
+pub mod write_matcher;
 
 pub use util::*;
-pub use write_type_expr::*;
+pub use write_matcher::*;
 
 #[cfg(test)]
 mod test;

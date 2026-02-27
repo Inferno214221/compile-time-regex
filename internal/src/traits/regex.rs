@@ -1,9 +1,11 @@
+use std::collections::HashMap;
+
 use crate::{haystack::{Haystack, HaystackItem, HaystackIter}, matcher::Matcher};
 
 pub trait Regex<I: HaystackItem> {
     type Pattern: Matcher<I>;
 
-    fn matches(hay: &mut Haystack<I>) -> bool {
+    fn is_match(hay: &mut Haystack<I>) -> bool {
         Self::Pattern::matches(hay) && hay.is_end()
     }
 
@@ -28,12 +30,28 @@ pub trait Regex<I: HaystackItem> {
         }
         None
     }
+
+    fn find_all_matches<'a>(_hay: &'a mut Haystack<'a, I>) -> Vec<<I::Iter<'a> as HaystackIter<'a>>::Slice<'a>> {
+        todo!("all matches including overlaps")
+    }
+
+    fn captures<'a>(_hay: &'a mut Haystack<'a, I>) -> Option<HashMap<String, &'a str>> {
+        todo!("matches equivalent")
+    }
+
+    fn find_captures<'a>(_hay: &'a mut Haystack<'a, I>) -> Option<HashMap<String, &'a str>> {
+        todo!("find_matches equivalent")
+    }
+
+    fn find_all_captures<'a>(_hay: &'a mut Haystack<'a, I>) -> Vec<HashMap<String, &'a str>> {
+        todo!("find_all_matches equivalent")
+    }
 }
 
 pub trait AnonRegex<I: HaystackItem> {
     type Pattern: Matcher<I>;
 
-    fn matches(&self, hay: &mut Haystack<I>) -> bool {
+    fn is_match(&self, hay: &mut Haystack<I>) -> bool {
         Self::Pattern::matches(hay) && hay.is_end()
     }
 

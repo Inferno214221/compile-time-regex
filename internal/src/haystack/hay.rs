@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use crate::{haystack::{ByteIter, HaystackIter, StrIter}, hir::{CastClass, WriteTypeExpr}};
+use crate::{haystack::{ByteIter, HaystackIter, StrIter}, hir::{CastClass, WriteMatcher}};
 
 #[derive(Debug, Clone)]
 pub struct Haystack<'a, I: HaystackItem> {
@@ -52,7 +52,7 @@ impl<'a, I: HaystackItem> Haystack<'a, I> {
     }
 }
 
-pub trait HaystackItem: Copy + WriteTypeExpr + CastClass {
+pub trait HaystackItem: Copy + WriteMatcher + CastClass {
     type Iter<'a>: HaystackIter<'a, Item = Self> + Clone;
 
     type Slice<'a>;

@@ -315,7 +315,7 @@ fn test_complex_anchored_pattern() {
 #[test]
 fn test_write_type_expr_u8() {
     let mut s = String::new();
-    (b'x').write_type_expr::<u8>(&mut s).unwrap();
+    (b'x').write_matcher::<u8>(&mut s).unwrap();
     assert!(s.contains("Byte"));
     assert!(s.contains("120")); // ASCII value of 'x'
 }
@@ -323,7 +323,7 @@ fn test_write_type_expr_u8() {
 #[test]
 fn test_write_type_expr_char() {
     let mut s = String::new();
-    'a'.write_type_expr::<char>(&mut s).unwrap();
+    'a'.write_matcher::<char>(&mut s).unwrap();
     assert!(s.contains("Scalar"));
     assert!(s.contains("a"));
 }
@@ -331,14 +331,14 @@ fn test_write_type_expr_char() {
 #[test]
 fn test_write_type_expr_char_unicode() {
     let mut s = String::new();
-    '🦀'.write_type_expr::<char>(&mut s).unwrap();
+    '🦀'.write_matcher::<char>(&mut s).unwrap();
     assert!(s.contains("Scalar"));
 }
 
 #[test]
 fn test_write_type_expr_char_escape() {
     let mut s = String::new();
-    '\n'.write_type_expr::<char>(&mut s).unwrap();
+    '\n'.write_matcher::<char>(&mut s).unwrap();
     assert!(s.contains("Scalar"));
     assert!(s.contains("\\u{a}")); // escaped newline
 }

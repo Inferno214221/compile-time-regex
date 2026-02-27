@@ -13,8 +13,8 @@ fn test_literal_match() {
     let mut hay_match = Haystack::from("hello");
     let mut hay_no_match = Haystack::from("world");
 
-    assert!(Literal::matches(&mut hay_match));
-    assert!(!Literal::matches(&mut hay_no_match));
+    assert!(Literal::is_match(&mut hay_match));
+    assert!(!Literal::is_match(&mut hay_no_match));
 }
 
 #[test]
@@ -24,8 +24,8 @@ fn test_literal_match_bytes() {
     let mut hay_match = Haystack::from(b"test" as &[u8]);
     let mut hay_no_match = Haystack::from(b"fail" as &[u8]);
 
-    assert!(LiteralBytes::matches(&mut hay_match));
-    assert!(!LiteralBytes::matches(&mut hay_no_match));
+    assert!(LiteralBytes::is_match(&mut hay_match));
+    assert!(!LiteralBytes::is_match(&mut hay_no_match));
 }
 
 #[test]
@@ -33,8 +33,8 @@ fn test_anon_regex_literal() {
     let mut hay_match = Haystack::from("pattern");
     let mut hay_no_match = Haystack::from("other");
 
-    assert!(regex!("pattern").matches(&mut hay_match));
-    assert!(!regex!("pattern").matches(&mut hay_no_match));
+    assert!(regex!("pattern").is_match(&mut hay_match));
+    assert!(!regex!("pattern").is_match(&mut hay_no_match));
 }
 
 // ============================================================================
@@ -46,7 +46,7 @@ fn test_alternation_first_branch() {
     regex!(Alt = "foo|bar|baz");
 
     let mut hay = Haystack::from("foo");
-    assert!(Alt::matches(&mut hay));
+    assert!(Alt::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -55,7 +55,7 @@ fn test_alternation_second_branch() {
     regex!(Alt = "foo|bar|baz");
 
     let mut hay = Haystack::from("bar");
-    assert!(Alt::matches(&mut hay));
+    assert!(Alt::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -64,7 +64,7 @@ fn test_alternation_third_branch() {
     regex!(Alt = "foo|bar|baz");
 
     let mut hay = Haystack::from("baz");
-    assert!(Alt::matches(&mut hay));
+    assert!(Alt::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -73,7 +73,7 @@ fn test_alternation_no_match() {
     regex!(Alt = "foo|bar|baz");
 
     let mut hay = Haystack::from("qux");
-    assert!(!Alt::matches(&mut hay));
+    assert!(!Alt::is_match(&mut hay));
 }
 
 // ============================================================================
@@ -85,7 +85,7 @@ fn test_zero_or_more_zero_matches() {
     regex!(ZeroOrMore = "a*");
 
     let mut hay = Haystack::from("");
-    assert!(ZeroOrMore::matches(&mut hay));
+    assert!(ZeroOrMore::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -94,7 +94,7 @@ fn test_zero_or_more_multiple_matches() {
     regex!(ZeroOrMore = "a*");
 
     let mut hay = Haystack::from("aaa");
-    assert!(ZeroOrMore::matches(&mut hay));
+    assert!(ZeroOrMore::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -103,7 +103,7 @@ fn test_one_or_more_single_match() {
     regex!(OneOrMore = "b+");
 
     let mut hay = Haystack::from("b");
-    assert!(OneOrMore::matches(&mut hay));
+    assert!(OneOrMore::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -112,7 +112,7 @@ fn test_one_or_more_multiple_matches() {
     regex!(OneOrMore = "b+");
 
     let mut hay = Haystack::from("bbbb");
-    assert!(OneOrMore::matches(&mut hay));
+    assert!(OneOrMore::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -121,7 +121,7 @@ fn test_one_or_more_no_match() {
     regex!(OneOrMore = "b+");
 
     let mut hay = Haystack::from("");
-    assert!(!OneOrMore::matches(&mut hay));
+    assert!(!OneOrMore::is_match(&mut hay));
 }
 
 #[test]
@@ -129,7 +129,7 @@ fn test_optional_present() {
     regex!(Optional = "c?");
 
     let mut hay = Haystack::from("c");
-    assert!(Optional::matches(&mut hay));
+    assert!(Optional::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -138,7 +138,7 @@ fn test_optional_absent() {
     regex!(Optional = "c?");
 
     let mut hay = Haystack::from("");
-    assert!(Optional::matches(&mut hay));
+    assert!(Optional::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -150,9 +150,9 @@ fn test_exact_count() {
     let mut hay_too_few = Haystack::from("xx");
     let mut hay_too_many = Haystack::from("xxxx");
 
-    assert!(Exact::matches(&mut hay_match));
-    assert!(!Exact::matches(&mut hay_too_few));
-    assert!(!Exact::matches(&mut hay_too_many));
+    assert!(Exact::is_match(&mut hay_match));
+    assert!(!Exact::is_match(&mut hay_too_few));
+    assert!(!Exact::is_match(&mut hay_too_many));
 }
 
 #[test]
@@ -160,7 +160,7 @@ fn test_range_count_lower() {
     regex!(Range = "y{2,4}");
 
     let mut hay = Haystack::from("yy");
-    assert!(Range::matches(&mut hay));
+    assert!(Range::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -169,7 +169,7 @@ fn test_range_count_middle() {
     regex!(Range = "y{2,4}");
 
     let mut hay = Haystack::from("yyy");
-    assert!(Range::matches(&mut hay));
+    assert!(Range::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -178,7 +178,7 @@ fn test_range_count_upper() {
     regex!(Range = "y{2,4}");
 
     let mut hay = Haystack::from("yyyy");
-    assert!(Range::matches(&mut hay));
+    assert!(Range::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -187,7 +187,7 @@ fn test_range_count_below() {
     regex!(Range = "y{2,4}");
 
     let mut hay = Haystack::from("y");
-    assert!(!Range::matches(&mut hay));
+    assert!(!Range::is_match(&mut hay));
 }
 
 #[test]
@@ -195,7 +195,7 @@ fn test_range_count_above() {
     regex!(Range = "^y{2,4}$");
 
     let mut hay = Haystack::from("yyyyy");
-    assert!(!Range::matches(&mut hay));
+    assert!(!Range::is_match(&mut hay));
 }
 
 #[test]
@@ -206,9 +206,9 @@ fn test_at_least_count() {
     let mut hay_more = Haystack::from("zzzzzz");
     let mut hay_less = Haystack::from("zz");
 
-    assert!(AtLeast::matches(&mut hay_exact));
-    assert!(AtLeast::matches(&mut hay_more));
-    assert!(!AtLeast::matches(&mut hay_less));
+    assert!(AtLeast::is_match(&mut hay_exact));
+    assert!(AtLeast::is_match(&mut hay_more));
+    assert!(!AtLeast::is_match(&mut hay_less));
 }
 
 // ============================================================================
@@ -223,9 +223,9 @@ fn test_char_range_lowercase() {
     let mut hay_upper = Haystack::from("M");
     let mut hay_digit = Haystack::from("5");
 
-    assert!(Lower::matches(&mut hay_match));
-    assert!(!Lower::matches(&mut hay_upper));
-    assert!(!Lower::matches(&mut hay_digit));
+    assert!(Lower::is_match(&mut hay_match));
+    assert!(!Lower::is_match(&mut hay_upper));
+    assert!(!Lower::is_match(&mut hay_digit));
 }
 
 #[test]
@@ -235,8 +235,8 @@ fn test_char_range_uppercase() {
     let mut hay_match = Haystack::from("M");
     let mut hay_lower = Haystack::from("m");
 
-    assert!(Upper::matches(&mut hay_match));
-    assert!(!Upper::matches(&mut hay_lower));
+    assert!(Upper::is_match(&mut hay_match));
+    assert!(!Upper::is_match(&mut hay_lower));
 }
 
 #[test]
@@ -246,8 +246,8 @@ fn test_char_range_digits() {
     let mut hay_match = Haystack::from("7");
     let mut hay_letter = Haystack::from("a");
 
-    assert!(Digits::matches(&mut hay_match));
-    assert!(!Digits::matches(&mut hay_letter));
+    assert!(Digits::is_match(&mut hay_match));
+    assert!(!Digits::is_match(&mut hay_letter));
 }
 
 #[test]
@@ -257,8 +257,8 @@ fn test_digit_class() {
     let mut hay_digit = Haystack::from("5");
     let mut hay_letter = Haystack::from("x");
 
-    assert!(DigitClass::matches(&mut hay_digit));
-    assert!(!DigitClass::matches(&mut hay_letter));
+    assert!(DigitClass::is_match(&mut hay_digit));
+    assert!(!DigitClass::is_match(&mut hay_letter));
 }
 
 #[test]
@@ -270,10 +270,10 @@ fn test_multiple_ranges() {
     let mut hay_digit = Haystack::from("6");
     let mut hay_punct = Haystack::from("!");
 
-    assert!(AlphaNum::matches(&mut hay_lower));
-    assert!(AlphaNum::matches(&mut hay_upper));
-    assert!(AlphaNum::matches(&mut hay_digit));
-    assert!(!AlphaNum::matches(&mut hay_punct));
+    assert!(AlphaNum::is_match(&mut hay_lower));
+    assert!(AlphaNum::is_match(&mut hay_upper));
+    assert!(AlphaNum::is_match(&mut hay_digit));
+    assert!(!AlphaNum::is_match(&mut hay_punct));
 }
 
 // ============================================================================
@@ -285,7 +285,7 @@ fn test_start_anchor_at_start() {
     regex!(StartAnchor = "^abc");
 
     let mut hay = Haystack::from("abc");
-    assert!(StartAnchor::matches(&mut hay));
+    assert!(StartAnchor::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -294,7 +294,7 @@ fn test_start_anchor_not_at_start() {
     regex!(StartAnchor = "^abc");
 
     let mut hay = Haystack::from("xabc");
-    assert!(!StartAnchor::matches(&mut hay));
+    assert!(!StartAnchor::is_match(&mut hay));
 }
 
 #[test]
@@ -302,7 +302,7 @@ fn test_end_anchor_at_end() {
     regex!(EndAnchor = "abc$");
 
     let mut hay = Haystack::from("abc");
-    assert!(EndAnchor::matches(&mut hay));
+    assert!(EndAnchor::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -311,7 +311,7 @@ fn test_end_anchor_not_at_end() {
     regex!(EndAnchor = "abc$");
 
     let mut hay = Haystack::from("abcx");
-    assert!(!EndAnchor::matches(&mut hay));
+    assert!(!EndAnchor::is_match(&mut hay));
 }
 
 #[test]
@@ -322,9 +322,9 @@ fn test_both_anchors_exact_match() {
     let mut hay_prefix = Haystack::from("xtest");
     let mut hay_suffix = Haystack::from("testx");
 
-    assert!(BothAnchors::matches(&mut hay_exact));
-    assert!(!BothAnchors::matches(&mut hay_prefix));
-    assert!(!BothAnchors::matches(&mut hay_suffix));
+    assert!(BothAnchors::is_match(&mut hay_exact));
+    assert!(!BothAnchors::is_match(&mut hay_prefix));
+    assert!(!BothAnchors::is_match(&mut hay_suffix));
 }
 
 // ============================================================================
@@ -339,9 +339,9 @@ fn test_quantifier_in_sequence() {
     let mut hay_no_a = Haystack::from("b");
     let mut hay_no_b = Haystack::from("aaa");
 
-    assert!(QuantSeq::matches(&mut hay_match));
-    assert!(!QuantSeq::matches(&mut hay_no_a));
-    assert!(!QuantSeq::matches(&mut hay_no_b));
+    assert!(QuantSeq::is_match(&mut hay_match));
+    assert!(!QuantSeq::is_match(&mut hay_no_a));
+    assert!(!QuantSeq::is_match(&mut hay_no_b));
 }
 
 #[test]
@@ -352,9 +352,9 @@ fn test_alternation_with_quantifiers() {
     let mut hay_b = Haystack::from("bbb");
     let mut hay_empty = Haystack::from("");
 
-    assert!(AltQuant::matches(&mut hay_a));
-    assert!(AltQuant::matches(&mut hay_b));
-    assert!(AltQuant::matches(&mut hay_empty)); // b* matches empty
+    assert!(AltQuant::is_match(&mut hay_a));
+    assert!(AltQuant::is_match(&mut hay_b));
+    assert!(AltQuant::is_match(&mut hay_empty)); // b* matches empty
 }
 
 #[test]
@@ -365,9 +365,9 @@ fn test_range_with_quantifier() {
     let mut hay_multiple = Haystack::from("12345");
     let mut hay_letter = Haystack::from("abc");
 
-    assert!(RangeQuant::matches(&mut hay_single));
-    assert!(RangeQuant::matches(&mut hay_multiple));
-    assert!(!RangeQuant::matches(&mut hay_letter));
+    assert!(RangeQuant::is_match(&mut hay_single));
+    assert!(RangeQuant::is_match(&mut hay_multiple));
+    assert!(!RangeQuant::is_match(&mut hay_letter));
 }
 
 #[test]
@@ -378,9 +378,9 @@ fn test_anchored_range_quantifier() {
     let mut hay_mixed = Haystack::from("Hello");
     let mut hay_digits = Haystack::from("123");
 
-    assert!(Anchored::matches(&mut hay_match));
-    assert!(!Anchored::matches(&mut hay_mixed));
-    assert!(!Anchored::matches(&mut hay_digits));
+    assert!(Anchored::is_match(&mut hay_match));
+    assert!(!Anchored::is_match(&mut hay_mixed));
+    assert!(!Anchored::is_match(&mut hay_digits));
 }
 
 // ============================================================================
@@ -392,7 +392,7 @@ fn test_newline_escape() {
     regex!(Newline = "line\n");
 
     let mut hay = Haystack::from("line\n");
-    assert!(Newline::matches(&mut hay));
+    assert!(Newline::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -401,7 +401,7 @@ fn test_tab_escape() {
     regex!(Tab = "col\t");
 
     let mut hay = Haystack::from("col\t");
-    assert!(Tab::matches(&mut hay));
+    assert!(Tab::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -410,7 +410,7 @@ fn test_backslash_escape() {
     regex!(Backslash = r"path\\file");
 
     let mut hay = Haystack::from("path\\file");
-    assert!(Backslash::matches(&mut hay));
+    assert!(Backslash::is_match(&mut hay));
     assert!(hay.is_end());
 }
 
@@ -425,8 +425,8 @@ fn test_unicode_literal() {
     let mut hay_match = Haystack::from("hello🦀");
     let mut hay_no_match = Haystack::from("hello");
 
-    assert!(Unicode::matches(&mut hay_match));
-    assert!(!Unicode::matches(&mut hay_no_match));
+    assert!(Unicode::is_match(&mut hay_match));
+    assert!(!Unicode::is_match(&mut hay_no_match));
 }
 
 #[test]
@@ -436,8 +436,8 @@ fn test_unicode_pattern() {
     let mut hay_single = Haystack::from("🎉");
     let mut hay_multiple = Haystack::from("🎉🎉🎉");
 
-    assert!(UnicodeEmoji::matches(&mut hay_single));
-    assert!(UnicodeEmoji::matches(&mut hay_multiple));
+    assert!(UnicodeEmoji::is_match(&mut hay_single));
+    assert!(UnicodeEmoji::is_match(&mut hay_multiple));
 }
 
 // ============================================================================
@@ -451,8 +451,8 @@ fn test_simple_email_pattern() {
     let mut hay_valid = Haystack::from("user@example.com");
     let mut hay_invalid = Haystack::from("not-an-email");
 
-    assert!(Email::matches(&mut hay_valid));
-    assert!(!Email::matches(&mut hay_invalid));
+    assert!(Email::is_match(&mut hay_valid));
+    assert!(!Email::is_match(&mut hay_invalid));
 }
 
 #[test]
@@ -464,9 +464,9 @@ fn test_url_protocol() {
     let mut hay_http = Haystack::from("http://");
     let mut hay_ftp = Haystack::from("ftp://");
 
-    assert!(Protocol::matches(&mut hay_https));
-    assert!(Protocol::matches(&mut hay_http));
-    assert!(!Protocol::matches(&mut hay_ftp));
+    assert!(Protocol::is_match(&mut hay_https));
+    assert!(Protocol::is_match(&mut hay_http));
+    assert!(!Protocol::is_match(&mut hay_ftp));
 }
 
 #[test]
@@ -477,9 +477,9 @@ fn test_three_digit_code() {
     let mut hay_short = Haystack::from("12");
     let mut hay_long = Haystack::from("1234");
 
-    assert!(ThreeDigits::matches(&mut hay_valid));
-    assert!(!ThreeDigits::matches(&mut hay_short));
-    assert!(!ThreeDigits::matches(&mut hay_long));
+    assert!(ThreeDigits::is_match(&mut hay_valid));
+    assert!(!ThreeDigits::is_match(&mut hay_short));
+    assert!(!ThreeDigits::is_match(&mut hay_long));
 }
 
 #[test]
@@ -489,9 +489,9 @@ fn test_word_boundary_pattern() {
     let mut hay_word = Haystack::from("word");
     let mut hay_mixed = Haystack::from("word123");
 
-    assert!(Word::matches(&mut hay_word));
+    assert!(Word::is_match(&mut hay_word));
     // matches() requires entire haystack to match, so "word123" fails
-    assert!(!Word::matches(&mut hay_mixed));
+    assert!(!Word::is_match(&mut hay_mixed));
 }
 
 // ============================================================================
@@ -500,7 +500,7 @@ fn test_word_boundary_pattern() {
 
 #[test]
 fn test_anon_regex_in_expression() {
-    let result = regex!("^test$").matches(&mut Haystack::from("test"));
+    let result = regex!("^test$").is_match(&mut Haystack::from("test"));
     assert!(result);
 }
 
@@ -511,8 +511,8 @@ fn test_anon_regex_stored() {
     let mut hay1 = Haystack::from("123");
     let mut hay2 = Haystack::from("abc");
 
-    assert!(pattern.matches(&mut hay1));
-    assert!(!pattern.matches(&mut hay2));
+    assert!(pattern.is_match(&mut hay1));
+    assert!(!pattern.is_match(&mut hay2));
 }
 
 #[test]
@@ -523,9 +523,9 @@ fn test_anon_regex_complex() {
     let mut hay_valid2 = Haystack::from("aaabbc");
     let mut hay_invalid = Haystack::from("cd");
 
-    assert!(pattern.matches(&mut hay_valid1));
-    assert!(pattern.matches(&mut hay_valid2));
-    assert!(!pattern.matches(&mut hay_invalid));
+    assert!(pattern.is_match(&mut hay_valid1));
+    assert!(pattern.is_match(&mut hay_valid2));
+    assert!(!pattern.is_match(&mut hay_invalid));
 }
 
 // ============================================================================
@@ -540,8 +540,8 @@ fn test_empty_pattern() {
     let mut hay_non_empty = Haystack::from("x");
 
     // Empty pattern only matches empty haystack when matches() requires full match
-    assert!(Empty::matches(&mut hay_empty));
-    assert!(!Empty::matches(&mut hay_non_empty));
+    assert!(Empty::is_match(&mut hay_empty));
+    assert!(!Empty::is_match(&mut hay_non_empty));
 }
 
 #[test]
@@ -552,8 +552,8 @@ fn test_pattern_requires_full_match() {
     let mut hay_longer = Haystack::from("abcdef");
 
     // matches() requires the entire haystack to match
-    assert!(Partial::matches(&mut hay_exact));
-    assert!(!Partial::matches(&mut hay_longer));
+    assert!(Partial::is_match(&mut hay_exact));
+    assert!(!Partial::is_match(&mut hay_longer));
 }
 
 #[test]
@@ -564,8 +564,8 @@ fn test_greedy_matching() {
     let mut hay_trailing = Haystack::from("aaab");
 
     // matches() requires the entire haystack to match
-    assert!(Greedy::matches(&mut hay_all_a));
-    assert!(!Greedy::matches(&mut hay_trailing));
+    assert!(Greedy::is_match(&mut hay_all_a));
+    assert!(!Greedy::is_match(&mut hay_trailing));
 }
 
 #[test]
@@ -577,16 +577,16 @@ fn test_alternation_precedence() {
 
     // matches() requires the entire haystack to match
     // "ab" matches the first alternative exactly
-    assert!(AltPrec::matches(&mut hay_ab));
+    assert!(AltPrec::is_match(&mut hay_ab));
     // "abc" - first alternative "ab" matches but leaves "c", and alternation
     // doesn't backtrack to try "abc", so this fails with current implementation
-    assert!(!AltPrec::matches(&mut hay_abc));
+    assert!(!AltPrec::is_match(&mut hay_abc));
     // FIXME: Is this a bug?
 
     // To match "abc", put the longer alternative first
     regex!(AltPrecFixed = "abc|ab");
     let mut hay_abc2 = Haystack::from("abc");
-    assert!(AltPrecFixed::matches(&mut hay_abc2));
+    assert!(AltPrecFixed::is_match(&mut hay_abc2));
 }
 
 // ============================================================================
@@ -600,8 +600,8 @@ fn test_byte_and_char_same_pattern() {
     let mut hay_char = Haystack::from("test");
     let mut hay_byte = Haystack::from(b"test" as &[u8]);
 
-    assert!(BothTypes::matches(&mut hay_char));
-    assert!(BothTypes::matches(&mut hay_byte));
+    assert!(BothTypes::is_match(&mut hay_char));
+    assert!(BothTypes::is_match(&mut hay_byte));
 }
 
 #[test]
@@ -610,9 +610,9 @@ fn test_unicode_char_vs_byte() {
 
     // Unicode works with char
     let mut hay_char = Haystack::from("🦀");
-    assert!(UnicodeBoth::matches(&mut hay_char));
+    assert!(UnicodeBoth::is_match(&mut hay_char));
 
     // Unicode with bytes (UTF-8 encoded)
     let mut hay_byte = Haystack::from("🦀".as_bytes());
-    assert!(UnicodeBoth::matches(&mut hay_byte));
+    assert!(UnicodeBoth::is_match(&mut hay_byte));
 }

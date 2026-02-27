@@ -76,7 +76,7 @@ fn test_anon_regex_implements_anon_regex_trait_u8() {
 #[test]
 fn test_anon_regex_is_expression() {
     // regex! should be usable directly in expressions (anonymous form)
-    let result = regex!("x").matches(&mut Haystack::from("x"));
+    let result = regex!("x").is_match(&mut Haystack::from("x"));
     assert!(result);
 }
 
@@ -217,8 +217,8 @@ fn test_both_implementations_exist() {
     let mut hay_byte = Haystack::from(b"test" as &[u8]);
 
     // Both should work
-    let _matches_char = DualImpl::matches(&mut hay_char);
-    let _matches_byte = DualImpl::matches(&mut hay_byte);
+    let _matches_char = DualImpl::is_match(&mut hay_char);
+    let _matches_byte = DualImpl::is_match(&mut hay_byte);
 }
 
 #[test]
@@ -228,6 +228,6 @@ fn test_anon_regex_both_implementations() {
     let mut hay_char = Haystack::from("test");
     let mut hay_byte = Haystack::from(b"test" as &[u8]);
 
-    let _matches_char = pattern.matches(&mut hay_char);
-    let _matches_byte = pattern.matches(&mut hay_byte);
+    let _matches_char = pattern.is_match(&mut hay_char);
+    let _matches_byte = pattern.is_match(&mut hay_byte);
 }

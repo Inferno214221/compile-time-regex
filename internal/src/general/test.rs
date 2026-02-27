@@ -7,6 +7,7 @@ struct TestRegexChar;
 
 impl Regex<char> for TestRegexChar {
     type Pattern = Scalar<'a'>;
+    type Captures<'a> = ();
 }
 
 // Test struct implementing Regex trait with bytes
@@ -14,6 +15,7 @@ struct TestRegexByte;
 
 impl Regex<u8> for TestRegexByte {
     type Pattern = Byte<b'x'>;
+    type Captures<'a> = ();
 }
 
 // Test struct implementing Regex trait with complex pattern
@@ -21,6 +23,7 @@ struct TestRegexComplex;
 
 impl Regex<char> for TestRegexComplex {
     type Pattern = Then<char, Scalar<'h'>, Scalar<'i'>>;
+    type Captures<'a> = ();
 }
 
 // Test struct implementing AnonRegex trait
@@ -28,6 +31,7 @@ struct TestAnonRegexChar;
 
 impl AnonRegex<char> for TestAnonRegexChar {
     type Pattern = Scalar<'b'>;
+    type Captures<'a> = ();
 }
 
 // Test struct implementing AnonRegex trait with bytes
@@ -35,6 +39,7 @@ struct TestAnonRegexByte;
 
 impl AnonRegex<u8> for TestAnonRegexByte {
     type Pattern = Byte<b'y'>;
+    type Captures<'a> = ();
 }
 
 // Tests for Regex trait with chars

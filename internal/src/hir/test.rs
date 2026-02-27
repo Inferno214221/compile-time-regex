@@ -5,12 +5,14 @@ use regex_syntax::Parser;
 // Helper function to parse regex and convert to type expression
 fn parse_and_convert_char(pattern: &str) -> String {
     let hir = Parser::new().parse(pattern).unwrap();
-    hir.into_matcher::<char>()
+    let (matcher, _groups) = hir.into_matcher::<char>();
+    matcher
 }
 
 fn parse_and_convert_byte(pattern: &str) -> String {
     let hir = Parser::new().parse(pattern).unwrap();
-    hir.into_matcher::<u8>()
+    let (matcher, _groups) = hir.into_matcher::<u8>();
+    matcher
 }
 
 // Tests for type_name function
@@ -315,7 +317,8 @@ fn test_complex_anchored_pattern() {
 #[test]
 fn test_write_type_expr_u8() {
     let mut s = String::new();
-    (b'x').write_matcher::<u8>(&mut s).unwrap();
+    let mut groups = Groups::new();
+    (b'x').write_matcher::<u8>(&mut s, &mut groups).unwrap();
     assert!(s.contains("Byte"));
     assert!(s.contains("120")); // ASCII value of 'x'
 }
@@ -323,7 +326,8 @@ fn test_write_type_expr_u8() {
 #[test]
 fn test_write_type_expr_char() {
     let mut s = String::new();
-    'a'.write_matcher::<char>(&mut s).unwrap();
+    let mut groups = Groups::new();
+    'a'.write_matcher::<char>(&mut s, &mut groups).unwrap();
     assert!(s.contains("Scalar"));
     assert!(s.contains("a"));
 }
@@ -331,14 +335,16 @@ fn test_write_type_expr_char() {
 #[test]
 fn test_write_type_expr_char_unicode() {
     let mut s = String::new();
-    '🦀'.write_matcher::<char>(&mut s).unwrap();
+    let mut groups = Groups::new();
+    '🦀'.write_matcher::<char>(&mut s, &mut groups).unwrap();
     assert!(s.contains("Scalar"));
 }
 
 #[test]
 fn test_write_type_expr_char_escape() {
     let mut s = String::new();
-    '\n'.write_matcher::<char>(&mut s).unwrap();
+    let mut groups = Groups::new();
+    '\n'.write_matcher::<char>(&mut s, &mut groups).unwrap();
     assert!(s.contains("Scalar"));
     assert!(s.contains("\\u{a}")); // escaped newline
 }
@@ -368,7 +374,7 @@ fn test_unicode_escape() {
 #[test]
 fn test_hir_extension_into_type_expr() {
     let hir = Parser::new().parse("abc").unwrap();
-    let result: String = hir.into_matcher::<char>();
+    let (result, _groups) = hir.into_matcher::<char>();
     assert!(result.contains("Then"));
     assert!(result.contains("Scalar"));
 }
@@ -376,7 +382,7 @@ fn test_hir_extension_into_type_expr() {
 #[test]
 fn test_hir_extension_with_quantifier() {
     let hir = Parser::new().parse("a+").unwrap();
-    let result: String = hir.into_matcher::<char>();
+    let (result, _groups) = hir.into_matcher::<char>();
     assert!(result.contains("QuantifierNOrMore"));
 }
 

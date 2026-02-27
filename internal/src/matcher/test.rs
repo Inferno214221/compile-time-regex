@@ -647,8 +647,8 @@ fn test_partial_then_failure_does_not_consume() {
 fn test_successful_match_consumes_exactly() {
     // A successful match should consume exactly what it matches
     let mut hay = Haystack::from("abcdef");
-    type ABC = Then<char, Scalar<'a'>, Then<char, Scalar<'b'>, Scalar<'c'>>>;
-    assert!(ABC::matches(&mut hay));
+    type Abc = Then<char, Scalar<'a'>, Then<char, Scalar<'b'>, Scalar<'c'>>>;
+    assert!(Abc::matches(&mut hay));
     assert_eq!(hay.item(), Some('d')); // Consumed 'abc', 'def' remains
 }
 
@@ -851,8 +851,8 @@ fn test_quantifier_then_continuation_longer_than_available() {
     // Input: "aabc"
     // Expected: a* matches "a", then "abc" matches
     let mut hay = Haystack::from("aabc");
-    type ABC = Then<char, Scalar<'a'>, Then<char, Scalar<'b'>, Scalar<'c'>>>;
-    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 0>, ABC>;
+    type Abc = Then<char, Scalar<'a'>, Then<char, Scalar<'b'>, Scalar<'c'>>>;
+    type Pattern = QuantifierThen<char, QuantifierNOrMore<char, Scalar<'a'>, 0>, Abc>;
     assert!(Pattern::matches(&mut hay));
     assert!(hay.is_end());
 }

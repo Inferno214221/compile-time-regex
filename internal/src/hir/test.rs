@@ -1,4 +1,5 @@
 use super::*;
+use crate::matcher::*;
 use regex_syntax::Parser;
 
 // Helper function to parse regex and convert to type expression
@@ -875,7 +876,6 @@ fn test_quantifier_then_complex_email_like() {
 // ============================================================================
 
 use crate::haystack::Haystack;
-use crate::matcher::Matcher;
 
 fn matches_char<M: Matcher<char>>(input: &str) -> bool {
     let mut hay = Haystack::from(input);

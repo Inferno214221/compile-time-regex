@@ -2,7 +2,7 @@ use std::any;
 
 use regex_syntax::hir::{Class, Hir};
 
-use crate::{haystack::HaystackItem, hir::WriteTypeExpr};
+use crate::{haystack::HaystackItem, hir::write_type_expr::WriteTypeExpr};
 
 pub fn type_name<T>() -> &'static str {
     any::type_name::<T>().split('<').next().unwrap()

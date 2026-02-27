@@ -2,21 +2,22 @@ use std::any;
 
 use regex_syntax::hir::{Class, Hir};
 
-use crate::{haystack::HaystackItem, hir::write_matcher::WriteMatcher};
+use crate::{haystack::HaystackItem, hir::{Groups, Group, write_matcher::WriteMatcher}};
 
 pub fn type_name<T>() -> &'static str {
     any::type_name::<T>().split('<').next().unwrap()
 }
 
 pub trait HirExtension {
-    fn into_type_expr<I: HaystackItem>(self) -> String;
+    fn into_matcher<I: HaystackItem>(self) -> (String, Vec<Group>);
 }
 
 impl HirExtension for Hir {
-    fn into_type_expr<I: HaystackItem>(self) -> String {
+    fn into_matcher<I: HaystackItem>(self) -> (String, Vec<Group>) {
         let mut string = String::new();
-        self.write_matcher::<I>(&mut string).unwrap();
-        string
+        let mut caps = Groups::new();
+        self.write_matcher::<I>(&mut string, &mut caps).unwrap();
+        (string, caps.into_vec())
     }
 }
 

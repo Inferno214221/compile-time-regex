@@ -5,12 +5,12 @@ use regex_syntax::Parser;
 // Helper function to parse regex and convert to type expression
 fn parse_and_convert_char(pattern: &str) -> String {
     let hir = Parser::new().parse(pattern).unwrap();
-    hir.into_type_expr::<char>()
+    hir.into_matcher::<char>()
 }
 
 fn parse_and_convert_byte(pattern: &str) -> String {
     let hir = Parser::new().parse(pattern).unwrap();
-    hir.into_type_expr::<u8>()
+    hir.into_matcher::<u8>()
 }
 
 // Tests for type_name function
@@ -368,7 +368,7 @@ fn test_unicode_escape() {
 #[test]
 fn test_hir_extension_into_type_expr() {
     let hir = Parser::new().parse("abc").unwrap();
-    let result: String = hir.into_type_expr::<char>();
+    let result: String = hir.into_matcher::<char>();
     assert!(result.contains("Then"));
     assert!(result.contains("Scalar"));
 }
@@ -376,7 +376,7 @@ fn test_hir_extension_into_type_expr() {
 #[test]
 fn test_hir_extension_with_quantifier() {
     let hir = Parser::new().parse("a+").unwrap();
-    let result: String = hir.into_type_expr::<char>();
+    let result: String = hir.into_matcher::<char>();
     assert!(result.contains("QuantifierNOrMore"));
 }
 

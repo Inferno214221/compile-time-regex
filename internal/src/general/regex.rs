@@ -4,6 +4,7 @@ use crate::{haystack::{Haystack, HaystackItem, HaystackIter}, matcher::Matcher};
 
 pub trait Regex<I: HaystackItem> {
     type Pattern: Matcher<I>;
+    type Captures<'a>;
 
     fn is_match(hay: &mut Haystack<I>) -> bool {
         Self::Pattern::matches(hay) && hay.is_end()
@@ -50,6 +51,7 @@ pub trait Regex<I: HaystackItem> {
 
 pub trait AnonRegex<I: HaystackItem> {
     type Pattern: Matcher<I>;
+    type Captures<'a>;
 
     fn is_match(&self, hay: &mut Haystack<I>) -> bool {
         Self::Pattern::matches(hay) && hay.is_end()

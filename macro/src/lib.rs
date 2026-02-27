@@ -45,7 +45,7 @@ impl Parse for RegexArgType {
 #[proc_macro]
 pub fn regex(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     match parse_macro_input!(input as RegexArgType) {
-        RegexArgType::Regex(args) => regex_internal(args, quote!(ct_regex_internal::traits::Regex)).into(),
+        RegexArgType::Regex(args) => regex_internal(args, quote!(ct_regex_internal::general::Regex)).into(),
         RegexArgType::Anon(pat) => anon_regex_internal(pat).into(),
     }
 }
@@ -96,7 +96,7 @@ fn anon_regex_internal(pat: LitStr) -> TokenStream {
             name: Ident::new("__AnonRegex", Span::call_site()),
             pat
         },
-        quote!(ct_regex_internal::traits::AnonRegex)
+        quote!(ct_regex_internal::general::AnonRegex)
     );
     quote! {
         {

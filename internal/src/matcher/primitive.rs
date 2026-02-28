@@ -1,6 +1,8 @@
+use std::fmt::{self, Debug};
+
 use crate::{general::IndexedCaptures, haystack::{Haystack, HaystackItem}};
 
-pub trait Matcher<I: HaystackItem> {
+pub trait Matcher<I: HaystackItem>: Debug + Default {
     /// Checks if the start of the haystack contains a match for this [`Matcher`].
     fn matches(hay: &mut Haystack<I>) -> bool;
 
@@ -15,7 +17,7 @@ pub trait Matcher<I: HaystackItem> {
     /// highest priority.
     /// 
     /// # Required
-    /// This method needs to be implemented by all [`Matchers`] that can match more than one string
+    /// This method needs to be implemented by all [`Matcher`]s that can match more than one string
     /// of characters from a haystack.
     fn all_matches<'a>(hay: &mut Haystack<'a, I>) -> Vec<Haystack<'a, I>> {
         if Self::matches(hay) {
@@ -43,7 +45,7 @@ pub trait Matcher<I: HaystackItem> {
     /// 
     /// # Required
     /// This method needs to be implemented for any type that also implements
-    /// [`capture`](Matcher::capture) and [`all_matches`](Matcher::all_matches).
+    /// [`captures`](Matcher::captures) and [`all_matches`](Matcher::all_matches).
     fn all_captures<'a>(
         hay: &mut Haystack<'a, I>,
         caps: &mut IndexedCaptures
@@ -56,7 +58,7 @@ pub trait Matcher<I: HaystackItem> {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct Byte<const N: u8>;
 
 impl<const N: u8> Matcher<u8> for Byte<N> {
@@ -70,7 +72,13 @@ impl<const N: u8> Matcher<u8> for Byte<N> {
     }
 }
 
-#[derive(Debug, Default)]
+impl<const N: u8> Debug for Byte<N> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{N:#04x}")
+    }
+}
+
+#[derive(Default)]
 pub struct ByteRange<const A: u8, const B: u8>;
 
 impl<const A: u8, const B: u8> Matcher<u8> for ByteRange<A, B> {
@@ -84,7 +92,13 @@ impl<const A: u8, const B: u8> Matcher<u8> for ByteRange<A, B> {
     }
 }
 
-#[derive(Debug, Default)]
+impl<const A: u8, const B: u8> Debug for ByteRange<A, B> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[{A:#04x}-{B:#04x}]")
+    }
+}
+
+#[derive(Default)]
 pub struct Scalar<const N: char>;
 
 impl<const N: char> Matcher<char> for Scalar<N> {
@@ -98,7 +112,13 @@ impl<const N: char> Matcher<char> for Scalar<N> {
     }
 }
 
-#[derive(Debug, Default)]
+impl<const N: char> Debug for Scalar<N> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", N.escape_debug())
+    }
+}
+
+#[derive(Default)]
 pub struct ScalarRange<const A: char, const B: char>;
 
 impl<const A: char, const B: char> Matcher<char> for ScalarRange<A, B> {
@@ -112,7 +132,13 @@ impl<const A: char, const B: char> Matcher<char> for ScalarRange<A, B> {
     }
 }
 
-#[derive(Debug, Default)]
+impl<const A: char, const B: char> Debug for ScalarRange<A, B> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[{}-{}]", A.escape_debug(), B.escape_debug())
+    }
+}
+
+#[derive(Default)]
 pub struct Always;
 
 impl<I: HaystackItem> Matcher<I> for Always {
@@ -121,7 +147,13 @@ impl<I: HaystackItem> Matcher<I> for Always {
     }
 }
 
-#[derive(Debug, Default)]
+impl Debug for Always {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "()")
+    }
+}
+
+#[derive(Default)]
 pub struct Beginning;
 
 impl<I: HaystackItem> Matcher<I> for Beginning {
@@ -130,11 +162,23 @@ impl<I: HaystackItem> Matcher<I> for Beginning {
     }
 }
 
-#[derive(Debug, Default)]
+impl Debug for Beginning {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "^")
+    }
+}
+
+#[derive(Default)]
 pub struct End;
 
 impl<I: HaystackItem> Matcher<I> for End {
     fn matches(hay: &mut Haystack<I>) -> bool {
         hay.is_end()
+    }
+}
+
+impl Debug for End {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "$")
     }
 }

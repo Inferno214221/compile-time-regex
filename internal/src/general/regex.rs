@@ -1,6 +1,8 @@
+use std::fmt::Debug;
+
 use crate::{general::{FromCaptures, IndexedCaptures}, haystack::{Haystack, HaystackItem}, matcher::Matcher};
 
-pub trait Regex<I: HaystackItem, const N: usize> {
+pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     type Pattern: Matcher<I>;
 
     type Captures<'a>: FromCaptures<'a, I, N> where I: 'a;
@@ -94,7 +96,7 @@ pub trait Regex<I: HaystackItem, const N: usize> {
     }
 }
 
-pub trait AnonRegex<I: HaystackItem, const N: usize> {
+pub trait AnonRegex<I: HaystackItem, const N: usize>: Debug {
     type Pattern: Matcher<I>;
     type Captures<'a>: FromCaptures<'a, I, N>;
 

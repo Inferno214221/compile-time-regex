@@ -1,8 +1,8 @@
-use std::marker::PhantomData;
+use std::{fmt::{self, Debug}, marker::PhantomData};
 
 use crate::{general::IndexedCaptures, haystack::{Haystack, HaystackItem}, matcher::Matcher};
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct Or<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
     pub PhantomData<I>,
     pub PhantomData<A>,
@@ -52,7 +52,13 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
     }
 }
 
-#[derive(Debug, Default)]
+impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Debug for Or<I, A, B> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}|{:?}", A::default(), B::default())
+    }
+}
+
+#[derive(Default)]
 pub struct Then<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
     pub PhantomData<I>,
     pub PhantomData<A>,
@@ -92,6 +98,12 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B>
     }
 }
 
+impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Debug for Then<I, A, B> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}{:?}", A::default(), B::default())
+    }
+}
+
 /// Macro to generate chunked Or types (Or4, Or8, Or16, etc.)
 ///
 /// Each generated type takes N matchers and combines them pairwise using Or,
@@ -103,7 +115,7 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B>
 /// - Remaining args: pairs of type parameter names in brackets
 macro_rules! define_paired_n {
     ($pair:ident, $name:ident, $combiner:ident, $([$a:ident $b:ident])+) => {
-        #[derive(Debug, Default)]
+        #[derive(Default)]
         pub struct $name<
             Z: HaystackItem,
             $($a: Matcher<Z>, $b: Matcher<Z>),+
@@ -133,6 +145,12 @@ macro_rules! define_paired_n {
                 caps: &mut IndexedCaptures
             ) -> Vec<(Haystack<'a, Z>, IndexedCaptures)> {
                 $combiner::<Z, $($pair<Z, $a, $b>),+>::all_captures(hay, caps)
+            }
+        }
+
+        impl<Z: HaystackItem, $($a: Matcher<Z>, $b: Matcher<Z>),+> Debug for $name<Z, $($a, $b),+> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(f, "{:?}", $combiner::<Z, $($pair<Z, $a, $b>),+>::default())
             }
         }
     };

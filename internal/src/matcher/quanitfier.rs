@@ -1,8 +1,8 @@
-use std::{marker::PhantomData, vec};
+use std::{fmt::{self, Debug}, marker::PhantomData, vec};
 
 use crate::{general::IndexedCaptures, haystack::{Haystack, HaystackItem}, matcher::{Matcher, Then}};
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct QuantifierN<I: HaystackItem, A: Matcher<I>, const N: usize>(
     pub PhantomData<I>,
     pub PhantomData<A>,
@@ -26,7 +26,13 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierN<
     }
 }
 
-#[derive(Debug, Default)]
+impl<I: HaystackItem, A: Matcher<I>, const N: usize> Debug for QuantifierN<I, A, N> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}{{{N}}}", A::default())
+    }
+}
+
+#[derive(Default)]
 pub struct QuantifierNOrMore<I: HaystackItem, A: Matcher<I>, const N: usize>(
     pub PhantomData<I>,
     pub PhantomData<A>,
@@ -89,7 +95,13 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNO
     }
 }
 
-#[derive(Debug, Default)]
+impl<I: HaystackItem, A: Matcher<I>, const N: usize> Debug for QuantifierNOrMore<I, A, N> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}{{{N},}}", A::default())
+    }
+}
+
+#[derive(Default)]
 pub struct QuantifierNToM<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize>(
     pub PhantomData<I>,
     pub PhantomData<A>,
@@ -168,7 +180,13 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
     }
 }
 
-#[derive(Debug, Default)]
+impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Debug for QuantifierNToM<I, A, N, M> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}{{{N},{M}}}", A::default())
+    }
+}
+
+#[derive(Default)]
 pub struct QuantifierThen<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>>(
     pub PhantomData<I>,
     pub PhantomData<Q>,
@@ -216,5 +234,11 @@ impl<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>> Matcher<I> for QuantifierThe
             }
             false
         }
+    }
+}
+
+impl<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>> Debug for QuantifierThen<I, Q, T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", Then::<I, Q, T>::default())
     }
 }

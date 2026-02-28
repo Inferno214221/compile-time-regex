@@ -99,6 +99,12 @@ fn regex_internal(
             type Captures<'a> = #captures_name<'a, char>;
         }
 
+        impl ::std::fmt::Debug for #name {
+            fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+                write!(f, "/{:?}/", <Self as #regex_trait<char, #captures_len>>::Pattern::default())
+            }
+        }
+
         #captures_impl
     }
 }
@@ -188,7 +194,6 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
 fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStream {
     // Aliases
     #![allow(nonstandard_style)]
-    let general_mod = quote!(::ct_regex::internal::general);
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
 

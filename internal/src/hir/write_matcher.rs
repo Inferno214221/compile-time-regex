@@ -46,9 +46,13 @@ impl WriteMatcher for u8 {
 }
 
 impl WriteMatcher for &ClassBytesRange {
-    fn write_matcher<I: HaystackItem>(self, f: &mut String, _caps: &mut Groups) -> fmt::Result {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String, caps: &mut Groups) -> fmt::Result {
         assert_eq!(type_name::<I>(), type_name::<u8>());
-        write!(f, "{}<{}u8,{}u8>", type_name::<ByteRange<0, 0>>(), self.start(), self.end())
+        if self.start() == self.end() {
+            self.start().write_matcher::<I>(f, caps)
+        } else {
+            write!(f, "{}<{}u8,{}u8>", type_name::<ByteRange<0, 0>>(), self.start(), self.end())
+        }
     }
 }
 
@@ -60,13 +64,17 @@ impl WriteMatcher for char {
 }
 
 impl WriteMatcher for &ClassUnicodeRange {
-    fn write_matcher<I: HaystackItem>(self, f: &mut String, _caps: &mut Groups) -> fmt::Result {
+    fn write_matcher<I: HaystackItem>(self, f: &mut String, caps: &mut Groups) -> fmt::Result {
         assert_eq!(type_name::<I>(), type_name::<char>(), "{:?}", self);
-        write!(f, "{}<'{}','{}'>",
-            type_name::<ScalarRange<'a', 'a'>>(),
-            self.start().escape_unicode(),
-            self.end().escape_unicode()
-        )
+        if self.start() == self.end() {
+            self.start().write_matcher::<I>(f, caps)
+        } else {
+            write!(f, "{}<'{}','{}'>",
+                type_name::<ScalarRange<'a', 'a'>>(),
+                self.start().escape_unicode(),
+                self.end().escape_unicode()
+            )
+        }
     }
 }
 

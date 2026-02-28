@@ -1,7 +1,8 @@
-use std::marker::PhantomData;
+use std::{fmt::{self, Debug}, marker::PhantomData};
 
 use crate::{general::IndexedCaptures, haystack::{Haystack, HaystackItem}, matcher::Matcher};
 
+#[derive(Default)]
 pub struct CaptureGroup<I: HaystackItem, A: Matcher<I>, const N: usize>(
     pub PhantomData<I>,
     pub PhantomData<A>,
@@ -34,5 +35,11 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for CaptureGroup
         }
 
         captures
+    }
+}
+
+impl<I: HaystackItem, A: Matcher<I>, const N: usize> Debug for CaptureGroup<I, A, N> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({:?})", A::default())
     }
 }

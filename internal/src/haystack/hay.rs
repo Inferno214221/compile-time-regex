@@ -1,11 +1,11 @@
 use crate::{general::Capture, haystack::{HaystackItem, HaystackIter}};
 
+// TODO: It needs to be noted that a haystack can only be matched against once.
+
 #[derive(Debug, Clone)]
 pub struct Haystack<'a, I: HaystackItem> {
     inner: I::Iter<'a>,
 }
-
-// TODO: Make Haystack track progress and then record it for groups?
 
 impl<'a> From<&'a str> for Haystack<'a, char> {
     fn from(value: &'a str) -> Self {
@@ -45,7 +45,7 @@ impl<'a, I: HaystackItem> Haystack<'a, I> {
         self.item().is_none()
     }
 
-    pub fn slice(&'a self, cap: Capture) -> <I::Iter<'a> as HaystackIter<'a>>::Slice<'a> {
+    pub fn slice(&self, cap: Capture) -> <I::Iter<'a> as HaystackIter<'a>>::Slice<'a> {
         self.inner.slice_with(cap.0)
     }
 }

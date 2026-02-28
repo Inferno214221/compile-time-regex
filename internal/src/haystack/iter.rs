@@ -17,7 +17,7 @@ pub trait HaystackIter<'a>: Iterator + Debug {
 
     fn rem_as_slice<'s>(&'s self) -> Self::Slice<'s>;
 
-    fn slice_with<'s>(&'s self, range: Range<usize>) -> Self::Slice<'s>;
+    fn slice_with(&self, range: Range<usize>) -> Self::Slice<'a>;
 }
 
 #[derive(Debug, Clone)]
@@ -73,7 +73,7 @@ impl<'a> HaystackIter<'a> for StrIter<'a> {
         &self.inner[self.index..]
     }
 
-    fn slice_with<'s>(&'s self, range: Range<usize>) -> Self::Slice<'s> {
+    fn slice_with(&self, range: Range<usize>) -> Self::Slice<'a> {
         &self.inner[range]
     }
 }
@@ -130,7 +130,7 @@ impl<'a> HaystackIter<'a> for ByteIter<'a> {
         &self.inner[self.index..]
     }
 
-    fn slice_with<'s>(&'s self, range: Range<usize>) -> Self::Slice<'s> {
+    fn slice_with(&self, range: Range<usize>) -> Self::Slice<'a> {
         &self.inner[range]
     }
 }

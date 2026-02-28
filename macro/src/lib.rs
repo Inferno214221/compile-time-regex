@@ -62,7 +62,6 @@ fn regex_internal(
 
     let pat_str = pat.value();
 
-    // TODO: remember to fill cap 0 with the whole match
     let (type_expr_byte_str, groups) = syntax::parse_with(&pat_str, &config)
         .expect("failed to parse regex")
         .into_matcher::<u8>();
@@ -133,9 +132,9 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
     }
 
     let inner = groups.iter().map(|cap| if cap.required {
-        quote!(pub #Capture)
+        quote!(#Capture)
     } else {
-        quote!(pub #Option<#Capture>)
+        quote!(#Option<#Capture>)
     });
 
     let numbered_groups = groups.iter().enumerate().map(
@@ -161,7 +160,7 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
 
     quote! {
         #[derive(Debug, Clone)]
-        #vis struct #name<'a, I: #haystack_mod::HaystackItem>(pub &'a Haystack<'a, I>, #(#inner),*);
+        #vis struct #name<'a, I: #haystack_mod::HaystackItem>(pub Haystack<'a, I>, #(#inner),*);
 
         impl<'a, I: #haystack_mod::HaystackItem> #name<'a, I> {
             #(#numbered_groups)*
@@ -170,7 +169,7 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
         }
 
         impl<'a, I: #haystack_mod::HaystackItem> #general_mod::FromCaptures<'a, I, #captures_len> for #name<'a, I> {
-            fn from_captures(captures: [#Option<#general_mod::Capture>; #captures_len], hay: &'a Haystack<'a, I>) -> #Option<Self> {
+            fn from_captures(captures: [#Option<#general_mod::Capture>; #captures_len], hay: Haystack<'a, I>) -> #Option<Self> {
                 let [#(#capture_destructure),*] = captures;
                 #Option::Some(Self(
                     hay, #(#capture_constructor),*

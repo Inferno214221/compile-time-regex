@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 
-use crate::{haystack::{Haystack, HaystackItem, HaystackIter}, matcher::Matcher};
+use crate::{general::FromCaptures, haystack::{Haystack, HaystackItem, HaystackIter}, matcher::Matcher};
 
-pub trait Regex<I: HaystackItem> {
+pub trait Regex<I: HaystackItem, const N: usize> {
     type Pattern: Matcher<I>;
-    type Captures<'a>;
+
+    type Captures<'a>: FromCaptures<'a, I, N>;
 
     fn is_match(hay: &mut Haystack<I>) -> bool {
         Self::Pattern::matches(hay) && hay.is_end()
@@ -49,9 +50,9 @@ pub trait Regex<I: HaystackItem> {
     }
 }
 
-pub trait AnonRegex<I: HaystackItem> {
+pub trait AnonRegex<I: HaystackItem, const N: usize> {
     type Pattern: Matcher<I>;
-    type Captures<'a>;
+    type Captures<'a>: FromCaptures<'a, I, N>;
 
     fn is_match(&self, hay: &mut Haystack<I>) -> bool {
         Self::Pattern::matches(hay) && hay.is_end()

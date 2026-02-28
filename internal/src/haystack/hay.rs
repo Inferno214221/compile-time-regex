@@ -55,7 +55,7 @@ impl<'a, I: HaystackItem> Haystack<'a, I> {
 pub trait HaystackItem: Copy + WriteMatcher + CastClass {
     type Iter<'a>: HaystackIter<'a, Item = Self> + Clone;
 
-    type Slice<'a>;
+    type Slice<'a>: Copy;
 
     fn iter_from_str<'a>(value: &'a str) -> Self::Iter<'a>;
 

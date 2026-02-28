@@ -1,9 +1,9 @@
-use std::ops::Range;
+use std::{fmt::Debug, ops::Range};
 
 use crate::haystack::util;
 
-pub trait HaystackIter<'a>: Iterator {
-    type Slice<'s> where Self: 's;
+pub trait HaystackIter<'a>: Iterator + Debug {
+    type Slice<'s>: Debug + Copy where Self: 's;
 
     fn current_item(&self) -> Option<Self::Item>;
 

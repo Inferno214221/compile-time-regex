@@ -45,7 +45,7 @@ impl Parse for RegexArgType {
 #[proc_macro]
 pub fn regex(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     match parse_macro_input!(input as RegexArgType) {
-        RegexArgType::Regex(args) => regex_internal(args, quote!(ct_regex_internal::general::Regex)).into(),
+        RegexArgType::Regex(args) => regex_internal(args, quote!(::ct_regex::internal::general::Regex)).into(),
         RegexArgType::Anon(pat) => anon_regex_internal(pat).into(),
     }
 }
@@ -79,22 +79,22 @@ fn regex_internal(
         .expect("failed to parse type expression");
 
     let captures_name = format_ident!("{}Captures", name);
-
+    let captures_len = Literal::usize_unsuffixed(groups.len());
     let captures_impl = impl_captures(&vis, &captures_name, groups);
 
     quote! {
         #vis struct #name;
 
-        impl #regex_trait<u8> for #name {
+        impl #regex_trait<u8, #captures_len> for #name {
             type Pattern = #type_expr_byte;
 
-            type Captures<'a> = #captures_name<'a>;
+            type Captures<'a> = #captures_name<'a, u8>;
         }
 
-        impl #regex_trait<char> for #name {
+        impl #regex_trait<char, #captures_len> for #name {
             type Pattern = #type_expr_scalar;
 
-            type Captures<'a> = #captures_name<'a>;
+            type Captures<'a> = #captures_name<'a, char>;
         }
 
         #captures_impl
@@ -120,16 +120,22 @@ fn anon_regex_internal(pat: LitStr) -> TokenStream {
 }
 
 fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStream {
+    #![allow(nonstandard_style)]
     if groups.is_empty() {
         panic!("empty groups")
     }
 
-    let capture_ty: TokenStream = quote!(ct_regex_internal::general::Capture);
+    let haystack_mod = quote!(::ct_regex::internal::haystack);
+    let general_mod = quote!(::ct_regex::internal::general);
+    let Capture = quote!(#general_mod::Capture);
+    let Option = quote!(::std::option::Option);
+    let Slice = quote!(<I::Iter<'a> as #haystack_mod::HaystackIter<'a>>::Slice<'a>);
+    let captures_len = Literal::usize_unsuffixed(groups.len());
 
     let inner = groups.iter().map(|cap| if cap.required {
-        quote!(pub #capture_ty<'a>)
+        quote!(pub #Capture<'a, I>)
     } else {
-        quote!(pub Option<#capture_ty<'a>>)
+        quote!(pub #Option<#Capture<'a, I>>)
     });
 
     let named_groups = groups.iter().enumerate().filter_map(|(index, cap)|
@@ -140,21 +146,21 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
 
             if cap.required {
                 quote! {
-                    pub fn #cap_name(&'a self) -> &'a str {
+                    pub fn #cap_name(&'a self) -> #Slice {
                         self.#index_name.content
                     }
 
-                    pub fn #cap_name_full(&'a self) -> &'a #capture_ty<'a> {
+                    pub fn #cap_name_full(&'a self) -> &'a #Capture<'a, I> {
                         &self.#index_name
                     }
                 }
             } else {
                 quote! { 
-                    pub fn #cap_name(&'a self) -> Option<&'a str> {
-                        self.#index_name.as_ref().map(#capture_ty::content)
+                    pub fn #cap_name(&'a self) -> #Option<#Slice> {
+                        self.#index_name.as_ref().map(#Capture::content)
                     }
 
-                    pub fn #cap_name_full(&'a self) -> Option<&'a #capture_ty<'a>> {
+                    pub fn #cap_name_full(&'a self) -> #Option<&'a #Capture<'a, I>> {
                         self.#index_name.as_ref()
                     }
                 }
@@ -162,12 +168,32 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
         })
     );
 
+    let capture_destructure = (0..groups.len()).map(|i| format_ident!("c{}", i));
+
+    let capture_constructor = groups.iter().enumerate().map(|(index, cap)| {
+        let ident = format_ident!("c{}", index);
+        if cap.required {
+            quote!(#ident?)
+        } else {
+            quote!(#ident)
+        }
+    });
+
     quote! {
         #[derive(Debug, Clone)]
-        #vis struct #name<'a>(#(#inner),*);
+        #vis struct #name<'a, I: #haystack_mod::HaystackItem>(#(#inner),*);
 
-        impl<'a> #name<'a> {
+        impl<'a, I: #haystack_mod::HaystackItem> #name<'a, I> {
             #(#named_groups)*
+        }
+
+        impl<'a, I: #haystack_mod::HaystackItem> #general_mod::FromCaptures<'a, I, #captures_len> for #name<'a, I> {
+            fn from_captures(captures: [#Option<#general_mod::Capture<'a, I>>; #captures_len]) -> #Option<Self> {
+                let [#(#capture_destructure),*] = captures;
+                #Option::Some(Self(
+                    #(#capture_constructor),*
+                ))
+            }
         }
     }
 }

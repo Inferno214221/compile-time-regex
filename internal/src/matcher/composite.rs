@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{haystack::{Haystack, HaystackItem}, matcher::Matcher};
+use crate::{general::IndexedCaptures, haystack::{Haystack, HaystackItem}, matcher::Matcher};
 
 #[derive(Debug, Default)]
 pub struct Or<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
@@ -29,6 +29,16 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
         vec.append(&mut A::all_matches(&mut fork));
         vec
     }
+
+    fn capture(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
+        let rollback = (hay.clone(), caps.clone());
+        if A::matches(hay) {
+            true
+        } else {
+            (*hay, *caps) = rollback;
+            B::matches(hay)
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -51,6 +61,14 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B>
         A::all_matches(hay).into_iter().flat_map(|mut m| {
             B::all_matches(&mut m)
         }).collect()
+    }
+
+    fn capture(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
+        if A::capture(hay, caps) {
+            B::capture(hay, caps)
+        } else {
+            false
+        }
     }
 }
 
@@ -84,6 +102,10 @@ macro_rules! define_paired_n {
 
             fn all_matches<'a>(hay: &mut Haystack<'a, Z>) -> Vec<Haystack<'a, Z>> {
                 $combiner::<Z, $($pair<Z, $a, $b>),+>::all_matches(hay)
+            }
+
+            fn capture(hay: &mut Haystack<Z>, caps: &mut IndexedCaptures) -> bool {
+                $combiner::<Z, $($pair<Z, $a, $b>),+>::capture(hay, caps)
             }
         }
     };

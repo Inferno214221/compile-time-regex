@@ -1,4 +1,4 @@
-use crate::haystack::{Haystack, HaystackItem};
+use crate::{general::IndexedCaptures, haystack::{Haystack, HaystackItem}};
 
 pub trait Matcher<I: HaystackItem> {
     fn matches(hay: &mut Haystack<I>) -> bool;
@@ -14,6 +14,10 @@ pub trait Matcher<I: HaystackItem> {
         } else {
             vec![]
         }
+    }
+
+    fn capture(hay: &mut Haystack<I>, _caps: &mut IndexedCaptures) -> bool {
+        Self::matches(hay)
     }
 }
 
@@ -77,7 +81,7 @@ impl<const A: char, const B: char> Matcher<char> for ScalarRange<A, B> {
 pub struct Always;
 
 impl<I: HaystackItem> Matcher<I> for Always {
-    fn matches(_: &mut Haystack<I>) -> bool {
+    fn matches(_hay: &mut Haystack<I>) -> bool {
         true
     }
 }

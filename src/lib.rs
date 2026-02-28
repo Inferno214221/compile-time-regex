@@ -4,6 +4,8 @@ extern crate self as ct_regex;
 pub use ct_regex_internal::{haystack::{Haystack, HaystackItem}, general::{AnonRegex, Regex}};
 pub use ct_regex_macro::{regex};
 
+pub mod demo;
+
 #[doc(hidden)]
 pub mod internal {
     pub use ct_regex_internal::*;

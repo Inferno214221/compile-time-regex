@@ -169,7 +169,10 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
 
     quote! {
         #[derive(Debug, Clone)]
-        #vis struct #name<'a, I: #haystack_mod::HaystackItem>(pub Haystack<'a, I>, #(#inner),*);
+        #vis struct #name<'a, I: #haystack_mod::HaystackItem>(
+            pub #haystack_mod::Haystack<'a, I>,
+            #(#inner),*
+        );
 
         impl<'a, I: #haystack_mod::HaystackItem> #name<'a, I> {
             #(#numbered_groups)*

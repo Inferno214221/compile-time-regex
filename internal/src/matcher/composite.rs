@@ -32,11 +32,11 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
 
     fn capture(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
         let rollback = (hay.clone(), caps.clone());
-        if A::matches(hay) {
+        if A::capture(hay, caps) {
             true
         } else {
             (*hay, *caps) = rollback;
-            B::matches(hay)
+            B::capture(hay, caps)
         }
     }
 }

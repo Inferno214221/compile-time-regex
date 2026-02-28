@@ -36,7 +36,12 @@ impl IndexedCaptures {
         while let IndexedCaptures(Some(item)) = next {
             // We're traversing captures backwards, so we need to keep the value written into the
             // array first.
-            if res[item.index].is_none() {
+            match res.get(item.index) {
+                None => panic!("capture index exceeds maximum group number"),
+                Some(None) => res[item.index] = Some(item.cap.clone()),
+                Some(_) => (),
+            }
+            if let Some(None) | None = res.get(item.index) {
                 res[item.index] = Some(item.cap.clone());
             }
 

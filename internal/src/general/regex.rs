@@ -7,11 +7,13 @@ pub trait Regex<I: HaystackItem, const N: usize> {
 
     fn is_match<'a>(hay: impl Into<Haystack<'a, I>>) -> bool {
         let mut hay = hay.into();
+
         Self::Pattern::matches(&mut hay) && hay.is_end()
     }
 
     fn contains_match<'a>(hay: impl Into<Haystack<'a, I>>) -> bool {
         let mut hay = hay.into();
+
         while hay.item().is_some() {
             if Self::Pattern::matches(&mut hay.clone()) {
                 return true;
@@ -21,12 +23,18 @@ pub trait Regex<I: HaystackItem, const N: usize> {
         false
     }
 
-    fn find_match<'a>(hay: impl Into<Haystack<'a, I>>) -> Option<<I::Iter<'a> as HaystackIter<'a>>::Slice<'a>> {
+    // TODO: Is hay.progress really the right semantics?
+    fn find_match<'a>(
+        hay: impl Into<Haystack<'a, I>>
+    ) -> Option<<I::Iter<'a> as HaystackIter<'a>>::Slice<'a>> {
         let mut hay = hay.into();
+
         while hay.item().is_some() {
             let start = hay.index();
-            if Self::Pattern::matches(&mut hay) {
-                let cap = Capture(start..hay.index());
+            let mut fork = hay.clone();
+
+            if Self::Pattern::matches(&mut fork) {
+                let cap = Capture(start..fork.index());
                 return Some(hay.slice(cap));
             }
             hay.progress()
@@ -34,19 +42,26 @@ pub trait Regex<I: HaystackItem, const N: usize> {
         None
     }
 
-    fn find_all_matches<'a>(hay: impl Into<Haystack<'a, I>>) -> Vec<<I::Iter<'a> as HaystackIter<'a>>::Slice<'a>> {
+    fn find_all_matches<'a>(
+        hay: impl Into<Haystack<'a, I>>,
+        overlapping: bool
+    ) -> Vec<<I::Iter<'a> as HaystackIter<'a>>::Slice<'a>> {
         let mut hay = hay.into();
+
         let mut all_matches = vec![];
 
         while hay.item().is_some() {
             let start = hay.index();
-            let mut rollback = hay.clone();
+            let rollback = hay.clone();
 
-            if Self::Pattern::matches(&mut rollback) {
-                all_matches.push(Capture(start..rollback.index()));
+            if Self::Pattern::matches(&mut hay) {
+                all_matches.push(Capture(start..hay.index()));
             }
 
-            hay.progress()
+            if overlapping {
+                hay = rollback;
+                hay.progress();
+            }
         }
 
         all_matches.into_iter().map(|m| hay.slice(m)).collect()
@@ -54,20 +69,29 @@ pub trait Regex<I: HaystackItem, const N: usize> {
 
     fn captures<'a>(hay: impl Into<Haystack<'a, I>>) -> Option<Self::Captures<'a>> {
         let mut hay = hay.into();
+
         let mut caps = IndexedCaptures::default();
 
         let start = hay.index();
-        Self::Pattern::capture(&mut hay, &mut caps);
-        caps.push(0, Capture(start..hay.index()));
-
-        Self::Captures::from_captures(caps.into_array(), hay)
+        if Self::Pattern::captures(&mut hay, &mut caps) {
+            caps.push(0, Capture(start..hay.index()));
+            Some(
+                Self::Captures::from_captures(caps.into_array(), hay)
+                    .expect("failed to convert captures despite matching correctly")
+            )
+        } else {
+            None
+        }
     }
 
     fn find_captures<'a>(_hay: impl Into<Haystack<'a, I>>) -> Option<Self::Captures<'a>> {
-        todo!("find_matches equivalent")
+        todo!("contains_match equivalent")
     }
 
-    fn find_all_captures<'a>(_hay: impl Into<Haystack<'a, I>>) -> Vec<Self::Captures<'a>> {
+    fn find_all_captures<'a>(
+        _hay: impl Into<Haystack<'a, I>>,
+        _overlapping: bool
+    ) -> Vec<Self::Captures<'a>> {
         todo!("find_all_matches equivalent")
     }
 }
@@ -78,6 +102,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize> {
 
     fn is_match<'a>(&self, hay: impl Into<Haystack<'a, I>>) -> bool {
         let mut hay = hay.into();
+        
         Self::Pattern::matches(&mut hay) && hay.is_end()
     }
 
@@ -92,8 +117,12 @@ pub trait AnonRegex<I: HaystackItem, const N: usize> {
         false
     }
 
-    fn find_match<'a>(&self, hay: impl Into<Haystack<'a, I>>) -> Option<<I::Iter<'a> as HaystackIter<'a>>::Slice<'a>> {
+    fn find_match<'a>(
+        &self,
+        hay: impl Into<Haystack<'a, I>>
+    ) -> Option<<I::Iter<'a> as HaystackIter<'a>>::Slice<'a>> {
         let mut hay = hay.into();
+
         while hay.item().is_some() {
             let start = hay.index();
             if Self::Pattern::matches(&mut hay) {
@@ -105,22 +134,58 @@ pub trait AnonRegex<I: HaystackItem, const N: usize> {
         None
     }
 
+    fn find_all_matches<'a>(
+        &self,
+        hay: impl Into<Haystack<'a, I>>,
+        overlapping: bool
+    ) -> Vec<<I::Iter<'a> as HaystackIter<'a>>::Slice<'a>> {
+        let mut hay = hay.into();
+
+        let mut all_matches = vec![];
+
+        while hay.item().is_some() {
+            let start = hay.index();
+            let rollback = hay.clone();
+
+            if Self::Pattern::matches(&mut hay) {
+                all_matches.push(Capture(start..hay.index()));
+            }
+
+            if overlapping {
+                hay = rollback;
+                hay.progress();
+            }
+        }
+
+        all_matches.into_iter().map(|m| hay.slice(m)).collect()
+    }
+
     fn captures<'a>(&self, hay: impl Into<Haystack<'a, I>>) -> Option<Self::Captures<'a>> {
         let mut hay = hay.into();
+
         let mut caps = IndexedCaptures::default();
 
         let start = hay.index();
-        Self::Pattern::capture(&mut hay, &mut caps);
-        caps.push(0, Capture(start..hay.index()));
-
-        Self::Captures::from_captures(caps.into_array(), hay)
+        if Self::Pattern::captures(&mut hay, &mut caps) {
+            caps.push(0, Capture(start..hay.index()));
+            Some(
+                Self::Captures::from_captures(caps.into_array(), hay)
+                    .expect("failed to convert captures despite matching correctly")
+            )
+        } else {
+            None
+        }
     }
 
     fn find_captures<'a>(&self, _hay: impl Into<Haystack<'a, I>>) -> Option<Self::Captures<'a>> {
         todo!("find_matches equivalent")
     }
 
-    fn find_all_captures<'a>(&self, _hay: impl Into<Haystack<'a, I>>) -> Vec<Self::Captures<'a>> {
+    fn find_all_captures<'a>(
+        &self,
+        _hay: impl Into<Haystack<'a, I>>,
+        _overlapping: bool
+    ) -> Vec<Self::Captures<'a>> {
         todo!("find_all_matches equivalent")
     }
 }

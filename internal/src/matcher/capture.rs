@@ -12,13 +12,27 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for CaptureGroup
         A::matches(hay)
     }
 
-    fn capture(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
+    fn captures(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
         let start = hay.index();
-        if A::capture(hay, caps) {
+        if A::captures(hay, caps) {
             caps.push(N, Capture(start..hay.index()));
             true
         } else {
             false
         }
+    }
+
+    fn all_captures<'a>(
+        hay: &mut Haystack<'a, I>,
+        caps: &mut IndexedCaptures
+    ) -> Vec<(Haystack<'a, I>, IndexedCaptures)> {
+        let start = hay.index();
+        let captures = A::all_captures(hay, caps);
+
+        for (mut h, mut c) in A::all_captures(hay, caps) {
+            c.push(N, Capture(start..h.index()));
+        }
+
+        captures
     }
 }

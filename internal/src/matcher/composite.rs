@@ -30,14 +30,25 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
         vec
     }
 
-    fn capture(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
+    fn captures(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
         let rollback = (hay.clone(), caps.clone());
-        if A::capture(hay, caps) {
+        if A::captures(hay, caps) {
             true
         } else {
             (*hay, *caps) = rollback;
-            B::capture(hay, caps)
+            B::captures(hay, caps)
         }
+    }
+
+    fn all_captures<'a>(
+        hay: &mut Haystack<'a, I>,
+        caps: &mut IndexedCaptures
+    ) -> Vec<(Haystack<'a, I>, IndexedCaptures)> {
+        let mut fork = (hay.clone(), caps.clone());
+        // We match B first because the output needs to be reversed for greedy matching.
+        let mut vec = B::all_captures(hay, caps);
+        vec.append(&mut A::all_captures(&mut fork.0, &mut fork.1));
+        vec
     }
 }
 
@@ -63,12 +74,21 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B>
         }).collect()
     }
 
-    fn capture(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
-        if A::capture(hay, caps) {
-            B::capture(hay, caps)
+    fn captures(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
+        if A::captures(hay, caps) {
+            B::captures(hay, caps)
         } else {
             false
         }
+    }
+
+    fn all_captures<'a>(
+        hay: &mut Haystack<'a, I>,
+        caps: &mut IndexedCaptures
+    ) -> Vec<(Haystack<'a, I>, IndexedCaptures)> {
+        A::all_captures(hay, caps).into_iter().flat_map(|mut m| {
+            B::all_captures(&mut m.0, &mut m.1)
+        }).collect()
     }
 }
 
@@ -104,8 +124,15 @@ macro_rules! define_paired_n {
                 $combiner::<Z, $($pair<Z, $a, $b>),+>::all_matches(hay)
             }
 
-            fn capture(hay: &mut Haystack<Z>, caps: &mut IndexedCaptures) -> bool {
-                $combiner::<Z, $($pair<Z, $a, $b>),+>::capture(hay, caps)
+            fn captures(hay: &mut Haystack<Z>, caps: &mut IndexedCaptures) -> bool {
+                $combiner::<Z, $($pair<Z, $a, $b>),+>::captures(hay, caps)
+            }
+
+            fn all_captures<'a>(
+                hay: &mut Haystack<'a, Z>,
+                caps: &mut IndexedCaptures
+            ) -> Vec<(Haystack<'a, Z>, IndexedCaptures)> {
+                $combiner::<Z, $($pair<Z, $a, $b>),+>::all_captures(hay, caps)
             }
         }
     };

@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, vec};
 
 use crate::{general::IndexedCaptures, haystack::{Haystack, HaystackItem}, matcher::{Matcher, Then}};
 
@@ -17,9 +17,9 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierN<
         count == N
     }
     
-    fn capture(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
+    fn captures(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
         let mut count = 0;
-        while A::capture(hay, caps) {
+        while A::captures(hay, caps) {
             count += 1;
         }
         count == N
@@ -59,15 +59,34 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNO
         matches
     }
 
-    fn capture(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
+    fn captures(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
         let mut count = 0;
-        while A::capture(hay, caps) {
+        while A::captures(hay, caps) {
             count += 1;
         }
         count >= N
     }
 
-    // TODO: Has implications for all_captures
+    fn all_captures<'a>(
+        hay: &mut Haystack<'a, I>,
+        caps: &mut IndexedCaptures
+    ) -> Vec<(Haystack<'a, I>, IndexedCaptures)> {
+        let mut captures = vec![];
+        let mut count = 0;
+
+        // Include zero-match position when N=0
+        if N == 0 {
+            captures.push((hay.clone(), caps.clone()));
+        }
+
+        while A::captures(hay, caps) {
+            count += 1;
+            if count >= N {
+                captures.push((hay.clone(), caps.clone()));
+            }
+        }
+        captures
+    }
 }
 
 #[derive(Debug, Default)]
@@ -90,7 +109,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
     }
     
     fn all_matches<'a>(hay: &mut Haystack<'a, I>) -> Vec<Haystack<'a, I>> {
-        let mut matches = Vec::new();
+        let mut matches = vec![];
         let mut count = 0;
         
         // Include zero-match position when N=0
@@ -111,9 +130,9 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
         matches
     }
 
-    fn capture(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
+    fn captures(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
         let mut count = 0;
-        while A::capture(hay, caps) {
+        while A::captures(hay, caps) {
             count += 1;
 
             if count == M && count >= N {
@@ -123,7 +142,30 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
         N <= count && count <= M
     }
 
-    // TODO: Has implications for all_captures
+    fn all_captures<'a>(
+        hay: &mut Haystack<'a, I>,
+        caps: &mut IndexedCaptures
+    ) -> Vec<(Haystack<'a, I>, IndexedCaptures)> {
+        let mut captures = vec![];
+        let mut count = 0;
+        
+        // Include zero-match position when N=0
+        if N == 0 {
+            captures.push((hay.clone(), caps.clone()));
+        }
+        
+        while A::captures(hay, caps) {
+            count += 1;
+            if N <= count && count <= M {
+                captures.push((hay.clone(), caps.clone()));
+                
+                if count == M {
+                    return captures;
+                }
+            }
+        }
+        captures
+    }
 }
 
 #[derive(Debug, Default)]
@@ -157,23 +199,22 @@ impl<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>> Matcher<I> for QuantifierThe
         Then::<I, Q, T>::all_matches(hay)
     }
 
-    fn capture(_hay: &mut Haystack<I>, _caps: &mut IndexedCaptures) -> bool {
-        todo!("Needs a Q::all_captures");
-        // let mut rollback = (hay.clone(), caps.clone());
-        // if Then::<I, Q, T>::matches(hay) {
-        //     true
-        // } else {
-        //     // Try all valid match points for Q in reverse order (greedy).
-        //     let match_points = Q::all_matches(&mut rollback);
+    fn captures(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
+        let mut rollback = (hay.clone(), caps.clone());
+        if Then::<I, Q, T>::captures(hay, caps) {
+            true
+        } else {
+            // Try all valid match points for Q in reverse order (greedy).
+            let match_points = Q::all_captures(&mut rollback.0, &mut rollback.1);
 
-        //     for mut point in match_points.into_iter().rev() {
-        //         if T::matches(&mut point) {
-        //             // Overwrite the provided haystack with the progressed version.
-        //             *hay = point;
-        //             return true;
-        //         }
-        //     }
-        //     false
-        // }
+            for mut point in match_points.into_iter().rev() {
+                if T::captures(&mut point.0, &mut point.1) {
+                    // Overwrite the provided haystack with the progressed version.
+                    (*hay, *caps) = point;
+                    return true;
+                }
+            }
+            false
+        }
     }
 }

@@ -1,13 +1,22 @@
 use crate::{general::IndexedCaptures, haystack::{Haystack, HaystackItem}};
 
 pub trait Matcher<I: HaystackItem> {
+    /// Checks if the start of the haystack contains a match for this [`Matcher`].
     fn matches(hay: &mut Haystack<I>) -> bool;
 
-    // It would be nice to use a customer Iterator here rather than a Vec, but reversing an
-    // arbitrary match is not easy, so we just progress through linearly and store them all.
+    // It would be nice to use a custom Iterator here rather than a Vec, but reversing an arbitrary
+    // match is not easy, so we just progress through linearly and store them all.
     // This could cause issues with huge haystacks, but: all regexes need to be compiled at compile
     // time and are hence controlled by the author. If their pattern will be operating on huge
     // haystacks and need backtracking, that's up to them.
+
+    /// Produces a Vec of all valid matches present at the start of `hay`, used to implement
+    /// backtracking. The Vec is produced in reverse priority order, so the last match has the
+    /// highest priority.
+    /// 
+    /// # Required
+    /// This method needs to be implemented by all [`Matchers`] that can match more than one string
+    /// of characters from a haystack.
     fn all_matches<'a>(hay: &mut Haystack<'a, I>) -> Vec<Haystack<'a, I>> {
         if Self::matches(hay) {
             vec![hay.clone()]
@@ -16,8 +25,34 @@ pub trait Matcher<I: HaystackItem> {
         }
     }
 
-    fn capture(hay: &mut Haystack<I>, _caps: &mut IndexedCaptures) -> bool {
+    /// Checks if the start of the haystack contains a match for this Matcher, writing any groups
+    /// to `caps`.
+    /// 
+    /// # Required
+    /// This method needs to be implemented for capturing groups or any type that holds other
+    /// [`Matcher`]s, so that it can redirect to the relevant `capture` methods.
+    fn captures(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
+        let _ = caps;
         Self::matches(hay)
+    }
+
+    /// Produces a Vec of all valid captures (and accompanying haystack states) present at the start
+    /// of `hay`. Used to implement backtracking for capturing methods. As with
+    /// [`all_matches`](Matcher::all_matches), the resulting Vec is produced in reverse priority
+    /// order.
+    /// 
+    /// # Required
+    /// This method needs to be implemented for any type that also implements
+    /// [`capture`](Matcher::capture) and [`all_matches`](Matcher::all_matches).
+    fn all_captures<'a>(
+        hay: &mut Haystack<'a, I>,
+        caps: &mut IndexedCaptures
+    ) -> Vec<(Haystack<'a, I>, IndexedCaptures)> {
+        if Self::captures(hay, caps) {
+            vec![(hay.clone(), caps.clone())]
+        } else {
+            vec![]
+        }
     }
 }
 

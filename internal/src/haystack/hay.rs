@@ -1,6 +1,4 @@
-use std::ops::Range;
-
-use crate::haystack::{HaystackItem, HaystackIter};
+use crate::{general::Capture, haystack::{HaystackItem, HaystackIter}};
 
 #[derive(Debug, Clone)]
 pub struct Haystack<'a, I: HaystackItem> {
@@ -47,7 +45,7 @@ impl<'a, I: HaystackItem> Haystack<'a, I> {
         self.item().is_none()
     }
 
-    pub fn slice(&'a self, range: Range<usize>) -> <I::Iter<'a> as HaystackIter<'a>>::Slice<'a> {
-        self.inner.slice_with(range)
+    pub fn slice(&'a self, cap: Capture) -> <I::Iter<'a> as HaystackIter<'a>>::Slice<'a> {
+        self.inner.slice_with(cap.0)
     }
 }

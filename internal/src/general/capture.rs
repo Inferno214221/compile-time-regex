@@ -1,33 +1,20 @@
 use std::{mem, ops::Range, rc::Rc};
 
-use crate::haystack::{HaystackItem, HaystackIter};
+use crate::haystack::{Haystack, HaystackItem};
 
 #[derive(Debug, Clone)]
-pub struct Capture<'a, I: HaystackItem + 'a> {
-    pub range: Range<usize>,
-    pub content: <I::Iter<'a> as HaystackIter<'a>>::Slice<'a>,
-}
-
-impl<'a, I: HaystackItem> Capture<'a, I> {
-    pub fn content(&'a self) -> <I::Iter<'a> as HaystackIter<'a>>::Slice<'a> {
-        self.content
-    }
-
-    pub fn range(&self) -> &Range<usize> {
-        &self.range
-    }
-}
+pub struct Capture(pub Range<usize>);
 
 #[derive(Debug, Clone)]
 pub struct IndexedCaptures {
     pub index: usize,
-    pub range: Range<usize>,
+    pub range: Capture,
     // Tada: A reference counted cones list for hydra-style head clones and an auto Drop impl.
     pub prev: Option<Rc<IndexedCaptures>>,
 }
 
 impl IndexedCaptures {
-    pub fn push(&mut self, index: usize, range: Range<usize>) {
+    pub fn push(&mut self, index: usize, range: Capture) {
         let old = mem::replace(self, IndexedCaptures {
             index,
             range,
@@ -38,7 +25,7 @@ impl IndexedCaptures {
 
     // May contain duplicates for a certain index. To avoid backtracking and overriding, we deal
     // with this here.
-    pub fn into_array<const N: usize>(&self) -> [Option<Range<usize>>; N] {
+    pub fn into_array<const N: usize>(&self) -> [Option<Capture>; N] {
         let mut res = [const { None }; N];
 
         let mut item = self;
@@ -60,5 +47,5 @@ impl IndexedCaptures {
 }
 
 pub trait FromCaptures<'a, I: HaystackItem, const N: usize>: Sized {
-    fn from_captures(captures: [Option<Capture<'a, I>>; N]) -> Option<Self>;
+    fn from_captures(captures: [Option<Capture>; N], hay: &'a Haystack<'a, I>) -> Option<Self>;
 }

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{general::FromCaptures, haystack::{Haystack, HaystackItem, HaystackIter}, matcher::Matcher};
+use crate::{general::{Capture, FromCaptures}, haystack::{Haystack, HaystackItem, HaystackIter}, matcher::Matcher};
 
 pub trait Regex<I: HaystackItem, const N: usize> {
     type Pattern: Matcher<I>;
@@ -26,7 +26,7 @@ pub trait Regex<I: HaystackItem, const N: usize> {
             let start = hay.index();
             if Self::Pattern::matches(hay) {
                 let end = hay.index();
-                return Some(hay.slice(start..end));
+                return Some(hay.slice(Capture(start..end)));
             }
             hay.progress()
         }
@@ -73,7 +73,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize> {
             let start = hay.index();
             if Self::Pattern::matches(hay) {
                 let end = hay.index();
-                return Some(hay.slice(start..end));
+                return Some(hay.slice(Capture(start..end)));
             }
             hay.progress()
         }

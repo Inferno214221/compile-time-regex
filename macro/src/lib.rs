@@ -126,7 +126,7 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
     #![allow(nonstandard_style)]
     let haystack_mod = quote!(::ct_regex::internal::haystack);
     let general_mod = quote!(::ct_regex::internal::general);
-    let Capture = quote!(#general_mod::Capture);
+    let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
     let captures_len = Literal::usize_unsuffixed(groups.len());
 
@@ -135,9 +135,9 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
     }
 
     let inner = groups.iter().map(|cap| if cap.required {
-        quote!(#Capture)
+        quote!(#Range)
     } else {
-        quote!(#Option<#Capture>)
+        quote!(#Option<#Range>)
     });
 
     let numbered_groups = groups.iter().enumerate().map(
@@ -173,7 +173,7 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
 
         impl<'a, I: #haystack_mod::HaystackItem> #general_mod::FromCaptures<'a, I, #captures_len> for #name<'a, I> {
             fn from_captures(
-                captures: [#Option<#general_mod::Capture>; #captures_len],
+                captures: [#Option<#Range>; #captures_len],
                 hay: #haystack_mod::Haystack<'a, I>
             ) -> #Option<Self> {
                 let [#(#capture_destructure),*] = captures;
@@ -189,7 +189,7 @@ fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStre
     // Aliases
     #![allow(nonstandard_style)]
     let general_mod = quote!(::ct_regex::internal::general);
-    let Capture = quote!(#general_mod::Capture);
+    let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
 
     let index = index + 1;
@@ -202,7 +202,7 @@ fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStre
                 self.0.slice(self.#index_name.clone())
             }
 
-            pub fn #cap_name_full(&'a self) -> &'a #Capture {
+            pub fn #cap_name_full(&'a self) -> &'a #Range {
                 &self.#index_name
             }
         }
@@ -212,7 +212,7 @@ fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStre
                 self.#index_name.as_ref().map(|c| self.0.slice(c.clone()))
             }
 
-            pub fn #cap_name_full(&'a self) -> #Option<&'a #Capture> {
+            pub fn #cap_name_full(&'a self) -> #Option<&'a #Range> {
                 self.#index_name.as_ref()
             }
         }

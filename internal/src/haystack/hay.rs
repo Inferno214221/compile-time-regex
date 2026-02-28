@@ -1,4 +1,6 @@
-use crate::{general::Capture, haystack::{HaystackItem, HaystackIter}};
+use std::ops::Range;
+
+use crate::haystack::{HaystackItem, HaystackIter};
 
 // TODO: It needs to be noted that a haystack can only be matched against once.
 
@@ -45,7 +47,7 @@ impl<'a, I: HaystackItem> Haystack<'a, I> {
         self.item().is_none()
     }
 
-    pub fn slice(&self, cap: Capture) -> I::Slice<'a> {
-        self.inner.slice_with(cap.0)
+    pub fn slice(&self, cap: Range<usize>) -> I::Slice<'a> {
+        self.inner.slice_with(cap)
     }
 }

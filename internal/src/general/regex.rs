@@ -1,4 +1,4 @@
-use crate::{general::{Capture, FromCaptures, IndexedCaptures}, haystack::{Haystack, HaystackItem}, matcher::Matcher};
+use crate::{general::{FromCaptures, IndexedCaptures}, haystack::{Haystack, HaystackItem}, matcher::Matcher};
 
 pub trait Regex<I: HaystackItem, const N: usize> {
     type Pattern: Matcher<I>;
@@ -32,7 +32,7 @@ pub trait Regex<I: HaystackItem, const N: usize> {
             let mut fork = hay.clone();
 
             if Self::Pattern::matches(&mut fork) {
-                let cap = Capture(start..fork.index());
+                let cap = start..fork.index();
                 return Some(hay.slice(cap));
             }
             hay.progress()
@@ -53,7 +53,7 @@ pub trait Regex<I: HaystackItem, const N: usize> {
             let rollback = hay.clone();
 
             if Self::Pattern::matches(&mut hay) {
-                all_matches.push(Capture(start..hay.index()));
+                all_matches.push(start..hay.index());
             }
 
             if overlapping {
@@ -72,7 +72,7 @@ pub trait Regex<I: HaystackItem, const N: usize> {
 
         let start = hay.index();
         if Self::Pattern::captures(&mut hay, &mut caps) {
-            caps.push(0, Capture(start..hay.index()));
+            caps.push(0, start..hay.index());
             Some(
                 Self::Captures::from_captures(caps.into_array(), hay)
                     .expect("failed to convert captures despite matching correctly")
@@ -122,7 +122,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize> {
             let start = hay.index();
             if Self::Pattern::matches(&mut hay) {
                 let end = hay.index();
-                return Some(hay.slice(Capture(start..end)));
+                return Some(hay.slice(start..end));
             }
             hay.progress()
         }
@@ -143,7 +143,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize> {
             let rollback = hay.clone();
 
             if Self::Pattern::matches(&mut hay) {
-                all_matches.push(Capture(start..hay.index()));
+                all_matches.push(start..hay.index());
             }
 
             if overlapping {
@@ -162,7 +162,8 @@ pub trait AnonRegex<I: HaystackItem, const N: usize> {
 
         let start = hay.index();
         if Self::Pattern::captures(&mut hay, &mut caps) {
-            caps.push(0, Capture(start..hay.index()));
+            // Capture the "whole_match" group at index 0.
+            caps.push(0, start..hay.index());
             Some(
                 Self::Captures::from_captures(caps.into_array(), hay)
                     .expect("failed to convert captures despite matching correctly")

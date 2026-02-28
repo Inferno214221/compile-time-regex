@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{general::{Capture, IndexedCaptures}, haystack::{Haystack, HaystackItem}, matcher::Matcher};
+use crate::{general::IndexedCaptures, haystack::{Haystack, HaystackItem}, matcher::Matcher};
 
 pub struct CaptureGroup<I: HaystackItem, A: Matcher<I>, const N: usize>(
     pub PhantomData<I>,
@@ -15,7 +15,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for CaptureGroup
     fn captures(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
         let start = hay.index();
         if A::captures(hay, caps) {
-            caps.push(N, Capture(start..hay.index()));
+            caps.push(N, start..hay.index());
             true
         } else {
             false
@@ -30,7 +30,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for CaptureGroup
         let captures = A::all_captures(hay, caps);
 
         for (mut h, mut c) in A::all_captures(hay, caps) {
-            c.push(N, Capture(start..h.index()));
+            c.push(N, start..h.index());
         }
 
         captures

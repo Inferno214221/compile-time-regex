@@ -5,6 +5,8 @@ regex!(MyOtherPattern = r"word\n");
 regex!(PhoneNum = r"(0|(?<country_code>\+\d+ ))(?<number>\d{9})");
 // FIXME: grouped rollback so that this     ^ space isn't required
 
+// TODO: regex flags
+
 fn main() {
     dbg!(MyPattern::is_match("word"));
     dbg!(MyPattern::is_match("word123"));

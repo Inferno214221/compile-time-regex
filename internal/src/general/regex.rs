@@ -73,7 +73,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         let mut caps = IndexedCaptures::default();
 
         let start = hay.index();
-        if Self::Pattern::captures(&mut hay, &mut caps) {
+        if Self::Pattern::captures(&mut hay, &mut caps) && hay.is_end() {
             caps.push(0, start..hay.index());
             Some(
                 Self::Captures::from_captures(caps.into_array(), hay)

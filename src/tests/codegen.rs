@@ -15,18 +15,18 @@ fn test_regex_macro_creates_struct() {
 fn test_regex_macro_implements_regex_trait_for_char() {
     regex!(TestCharRegex = "abc");
 
-    // Should implement Regex<char>
-    fn assert_implements_regex<T: Regex<char>>() {}
-    assert_implements_regex::<TestCharRegex>();
+    // Should implement Regex<char, N>
+    fn assert_implements_regex<const N: usize, T: Regex<char, N>>() {}
+    assert_implements_regex::<1, TestCharRegex>();
 }
 
 #[test]
 fn test_regex_macro_implements_regex_trait_for_u8() {
     regex!(TestByteRegex = "xyz");
 
-    // Should implement Regex<u8>
-    fn assert_implements_regex<T: Regex<u8>>() {}
-    assert_implements_regex::<TestByteRegex>();
+    // Should implement Regex<u8, N>
+    fn assert_implements_regex<const N: usize, T: Regex<u8, N>>() {}
+    assert_implements_regex::<1, TestByteRegex>();
 }
 
 #[test]
@@ -59,24 +59,24 @@ fn test_regex_macro_with_pub_crate_visibility() {
 fn test_anon_regex_implements_anon_regex_trait_char() {
     let pattern = regex!("test");
 
-    // Should implement AnonRegex<char>
-    fn assert_anon_regex<T: AnonRegex<char>>(_: &T) {}
-    assert_anon_regex(&pattern);
+    // Should implement AnonRegex<char, N>
+    fn assert_anon_regex<const N: usize, T: AnonRegex<char, N>>(_: &T) {}
+    assert_anon_regex::<1, _>(&pattern);
 }
 
 #[test]
 fn test_anon_regex_implements_anon_regex_trait_u8() {
     let pattern = regex!("test");
 
-    // Should implement AnonRegex<u8>
-    fn assert_anon_regex<T: AnonRegex<u8>>(_: &T) {}
-    assert_anon_regex(&pattern);
+    // Should implement AnonRegex<u8, N>
+    fn assert_anon_regex<const N: usize, T: AnonRegex<u8, N>>(_: &T) {}
+    assert_anon_regex::<1, _>(&pattern);
 }
 
 #[test]
 fn test_anon_regex_is_expression() {
     // regex! should be usable directly in expressions (anonymous form)
-    let result = regex!("x").is_match(&mut Haystack::from("x"));
+    let result = regex!("x").is_match("x");
     assert!(result);
 }
 
@@ -192,9 +192,9 @@ fn test_anon_regex_type_is_zero_sized() {
     assert_eq!(std::mem::size_of_val(&pattern), 0);
 }
 
-// Test that regex! can be used in const contexts
+// Test that the generated types can be instantiated as const
 #[test]
-fn test_regex_in_const_context() {
+fn test_regex_const_instantiation() {
     regex!(ConstPattern = "const");
 
     const _PATTERN: ConstPattern = ConstPattern;
@@ -212,22 +212,15 @@ fn test_pattern_with_metacharacters() {
 fn test_both_implementations_exist() {
     regex!(DualImpl = "test");
 
-    // Can create haystacks for both types
-    let mut hay_char = Haystack::from("test");
-    let mut hay_byte = Haystack::from(b"test" as &[u8]);
-
     // Both should work
-    let _matches_char = DualImpl::is_match(&mut hay_char);
-    let _matches_byte = DualImpl::is_match(&mut hay_byte);
+    let _matches_char = DualImpl::is_match("test");
+    let _matches_byte = DualImpl::is_match(b"test" as &[u8]);
 }
 
 #[test]
 fn test_anon_regex_both_implementations() {
     let pattern = regex!("test");
 
-    let mut hay_char = Haystack::from("test");
-    let mut hay_byte = Haystack::from(b"test" as &[u8]);
-
-    let _matches_char = pattern.is_match(&mut hay_char);
-    let _matches_byte = pattern.is_match(&mut hay_byte);
+    let _matches_char = pattern.is_match("test");
+    let _matches_byte = pattern.is_match(b"test" as &[u8]);
 }

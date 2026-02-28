@@ -1,230 +1,186 @@
 use super::*;
-use crate::haystack::Haystack;
+use crate::haystack::{Haystack, HaystackItem};
 use crate::matcher::{Scalar, Then, Byte};
+
+// Stub captures type for testing - doesn't capture anything
+struct NoCaptures;
+
+impl<'a, I: HaystackItem> FromCaptures<'a, I, 1> for NoCaptures {
+    fn from_captures(_captures: [Option<Capture>; 1], _hay: Haystack<'a, I>) -> Option<Self> {
+        Some(NoCaptures)
+    }
+}
 
 // Test struct implementing Regex trait
 struct TestRegexChar;
 
-impl Regex<char> for TestRegexChar {
+impl Regex<char, 1> for TestRegexChar {
     type Pattern = Scalar<'a'>;
-    type Captures<'a> = ();
+    type Captures<'a> = NoCaptures;
 }
 
 // Test struct implementing Regex trait with bytes
 struct TestRegexByte;
 
-impl Regex<u8> for TestRegexByte {
+impl Regex<u8, 1> for TestRegexByte {
     type Pattern = Byte<b'x'>;
-    type Captures<'a> = ();
+    type Captures<'a> = NoCaptures;
 }
 
 // Test struct implementing Regex trait with complex pattern
 struct TestRegexComplex;
 
-impl Regex<char> for TestRegexComplex {
+impl Regex<char, 1> for TestRegexComplex {
     type Pattern = Then<char, Scalar<'h'>, Scalar<'i'>>;
-    type Captures<'a> = ();
+    type Captures<'a> = NoCaptures;
 }
 
 // Test struct implementing AnonRegex trait
 struct TestAnonRegexChar;
 
-impl AnonRegex<char> for TestAnonRegexChar {
+impl AnonRegex<char, 1> for TestAnonRegexChar {
     type Pattern = Scalar<'b'>;
-    type Captures<'a> = ();
+    type Captures<'a> = NoCaptures;
 }
 
 // Test struct implementing AnonRegex trait with bytes
 struct TestAnonRegexByte;
 
-impl AnonRegex<u8> for TestAnonRegexByte {
+impl AnonRegex<u8, 1> for TestAnonRegexByte {
     type Pattern = Byte<b'y'>;
-    type Captures<'a> = ();
+    type Captures<'a> = NoCaptures;
 }
 
 // Tests for Regex trait with chars
 #[test]
 fn test_regex_char_matches() {
-    let mut hay = Haystack::from("a");
-    assert!(TestRegexChar::is_match(&mut hay));
-    assert!(hay.is_end());
+    assert!(TestRegexChar::is_match("a"));
 }
 
 #[test]
 fn test_regex_char_no_match() {
-    let mut hay = Haystack::from("b");
-    assert!(!TestRegexChar::is_match(&mut hay));
-    assert!(!hay.is_end());
+    assert!(!TestRegexChar::is_match("b"));
 }
 
 #[test]
 fn test_regex_char_empty() {
-    let mut hay = Haystack::from("");
-    assert!(!TestRegexChar::is_match(&mut hay));
+    assert!(!TestRegexChar::is_match(""));
 }
 
 // Tests for Regex trait with bytes
 #[test]
 fn test_regex_byte_matches() {
-    let mut hay = Haystack::from(b"x" as &[u8]);
-    assert!(TestRegexByte::is_match(&mut hay));
-    assert!(hay.is_end());
+    assert!(TestRegexByte::is_match(b"x" as &[u8]));
 }
 
 #[test]
 fn test_regex_byte_no_match() {
-    let mut hay = Haystack::from(b"z" as &[u8]);
-    assert!(!TestRegexByte::is_match(&mut hay));
-    assert!(!hay.is_end());
+    assert!(!TestRegexByte::is_match(b"z" as &[u8]));
 }
 
 #[test]
 fn test_regex_byte_empty() {
-    let mut hay = Haystack::from(b"" as &[u8]);
-    assert!(!TestRegexByte::is_match(&mut hay));
+    assert!(!TestRegexByte::is_match(b"" as &[u8]));
 }
 
 // Tests for Regex trait with complex patterns
 #[test]
 fn test_regex_complex_matches() {
-    let mut hay = Haystack::from("hi");
-    assert!(TestRegexComplex::is_match(&mut hay));
-    assert!(hay.is_end());
+    assert!(TestRegexComplex::is_match("hi"));
 }
 
 #[test]
 fn test_regex_complex_partial_match() {
-    let mut hay = Haystack::from("h");
-    assert!(!TestRegexComplex::is_match(&mut hay));
+    assert!(!TestRegexComplex::is_match("h"));
 }
 
 #[test]
 fn test_regex_complex_no_match() {
-    let mut hay = Haystack::from("hello");
-    assert!(!TestRegexComplex::is_match(&mut hay));
+    assert!(!TestRegexComplex::is_match("hello"));
 }
 
 #[test]
 fn test_regex_complex_wrong_order() {
-    let mut hay = Haystack::from("ih");
-    assert!(!TestRegexComplex::is_match(&mut hay));
+    assert!(!TestRegexComplex::is_match("ih"));
 }
 
 // Tests for AnonRegex trait with chars
 #[test]
 fn test_anon_regex_char_matches() {
     let regex = TestAnonRegexChar;
-    let mut hay = Haystack::from("b");
-    assert!(regex.is_match(&mut hay));
-    assert!(hay.is_end());
+    assert!(regex.is_match("b"));
 }
 
 #[test]
 fn test_anon_regex_char_no_match() {
     let regex = TestAnonRegexChar;
-    let mut hay = Haystack::from("a");
-    assert!(!regex.is_match(&mut hay));
-    assert!(!hay.is_end());
+    assert!(!regex.is_match("a"));
 }
 
 #[test]
 fn test_anon_regex_char_empty() {
     let regex = TestAnonRegexChar;
-    let mut hay = Haystack::from("");
-    assert!(!regex.is_match(&mut hay));
+    assert!(!regex.is_match(""));
 }
 
 // Tests for AnonRegex trait with bytes
 #[test]
 fn test_anon_regex_byte_matches() {
     let regex = TestAnonRegexByte;
-    let mut hay = Haystack::from(b"y" as &[u8]);
-    assert!(regex.is_match(&mut hay));
-    assert!(hay.is_end());
+    assert!(regex.is_match(b"y" as &[u8]));
 }
 
 #[test]
 fn test_anon_regex_byte_no_match() {
     let regex = TestAnonRegexByte;
-    let mut hay = Haystack::from(b"z" as &[u8]);
-    assert!(!regex.is_match(&mut hay));
-    assert!(!hay.is_end());
+    assert!(!regex.is_match(b"z" as &[u8]));
 }
 
 #[test]
 fn test_anon_regex_byte_empty() {
     let regex = TestAnonRegexByte;
-    let mut hay = Haystack::from(b"" as &[u8]);
-    assert!(!regex.is_match(&mut hay));
+    assert!(!regex.is_match(b"" as &[u8]));
 }
 
 // Tests for behavior differences between Regex and AnonRegex
 #[test]
 fn test_regex_is_static_method() {
-    let mut hay = Haystack::from("a");
     // Regex is called as a static method
-    assert!(TestRegexChar::is_match(&mut hay));
+    assert!(TestRegexChar::is_match("a"));
 }
 
 #[test]
 fn test_anon_regex_is_instance_method() {
-    let mut hay = Haystack::from("b");
     let regex = TestAnonRegexChar;
     // AnonRegex is called as an instance method
-    assert!(regex.is_match(&mut hay));
+    assert!(regex.is_match("b"));
 }
 
-// Tests for multiple matches on same haystack
+// Tests for multiple matches on same pattern
 #[test]
 fn test_regex_multiple_attempts() {
-    let mut hay1 = Haystack::from("a");
-    let mut hay2 = Haystack::from("a");
-
-    assert!(TestRegexChar::is_match(&mut hay1));
-    assert!(TestRegexChar::is_match(&mut hay2));
+    assert!(TestRegexChar::is_match("a"));
+    assert!(TestRegexChar::is_match("a"));
 }
 
 #[test]
 fn test_anon_regex_multiple_attempts() {
     let regex = TestAnonRegexChar;
-    let mut hay1 = Haystack::from("b");
-    let mut hay2 = Haystack::from("b");
 
-    assert!(regex.is_match(&mut hay1));
-    assert!(regex.is_match(&mut hay2));
+    assert!(regex.is_match("b"));
+    assert!(regex.is_match("b"));
 }
 
-// Tests for haystack state after matching
+// Tests for partial matches (full haystack not consumed)
 #[test]
-fn test_regex_consumes_on_match() {
-    let mut hay = Haystack::from("abc");
-    TestRegexChar::is_match(&mut hay);
-    // 'a' should be consumed, leaving 'bc'
-    assert_eq!(hay.item(), Some('b'));
+fn test_regex_requires_full_match() {
+    // "abc" contains 'a' but is_match requires entire haystack to match
+    assert!(!TestRegexChar::is_match("abc"));
 }
 
 #[test]
-fn test_regex_does_not_consume_on_failure() {
-    let mut hay = Haystack::from("bcd");
-    TestRegexChar::is_match(&mut hay);
-    // Nothing should be consumed since match failed
-    assert_eq!(hay.item(), Some('b'));
-}
-
-#[test]
-fn test_anon_regex_consumes_on_match() {
+fn test_anon_regex_requires_full_match() {
     let regex = TestAnonRegexChar;
-    let mut hay = Haystack::from("bcd");
-    regex.is_match(&mut hay);
-    // 'b' should be consumed, leaving 'cd'
-    assert_eq!(hay.item(), Some('c'));
-}
-
-#[test]
-fn test_anon_regex_does_not_consume_on_failure() {
-    let regex = TestAnonRegexChar;
-    let mut hay = Haystack::from("acd");
-    regex.is_match(&mut hay);
-    // Nothing should be consumed since match failed
-    assert_eq!(hay.item(), Some('a'));
+    // "bcd" contains 'b' but is_match requires entire haystack to match
+    assert!(!regex.is_match("bcd"));
 }

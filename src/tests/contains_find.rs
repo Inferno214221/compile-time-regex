@@ -9,120 +9,89 @@ use crate::*;
 #[test]
 fn test_contains_match_literal_present() {
     regex!(Literal = "hello");
-
-    let mut hay = Haystack::from("say hello world");
-    assert!(Literal::contains_match(&mut hay));
+    assert!(Literal::contains_match("say hello world"));
 }
 
 #[test]
 fn test_contains_match_literal_absent() {
     regex!(Literal = "hello");
-
-    let mut hay = Haystack::from("goodbye world");
-    assert!(!Literal::contains_match(&mut hay));
+    assert!(!Literal::contains_match("goodbye world"));
 }
 
 #[test]
 fn test_contains_match_at_start() {
     regex!(Pattern = "abc");
-
-    let mut hay = Haystack::from("abcdef");
-    assert!(Pattern::contains_match(&mut hay));
+    assert!(Pattern::contains_match("abcdef"));
 }
 
 #[test]
 fn test_contains_match_at_end() {
     regex!(Pattern = "xyz");
-
-    let mut hay = Haystack::from("abcxyz");
-    assert!(Pattern::contains_match(&mut hay));
+    assert!(Pattern::contains_match("abcxyz"));
 }
 
 #[test]
 fn test_contains_match_in_middle() {
     regex!(Pattern = "middle");
-
-    let mut hay = Haystack::from("start middle end");
-    assert!(Pattern::contains_match(&mut hay));
+    assert!(Pattern::contains_match("start middle end"));
 }
 
 #[test]
 fn test_contains_match_exact_string() {
     regex!(Pattern = "exact");
-
-    let mut hay = Haystack::from("exact");
-    assert!(Pattern::contains_match(&mut hay));
+    assert!(Pattern::contains_match("exact"));
 }
 
 #[test]
 fn test_contains_match_empty_pattern() {
     regex!(Empty = "");
-
-    let mut hay = Haystack::from("anything");
-    assert!(Empty::contains_match(&mut hay));
+    assert!(Empty::contains_match("anything"));
 }
 
 #[test]
 fn test_contains_match_empty_haystack() {
     regex!(Pattern = "test");
-
-    let mut hay = Haystack::from("");
-    assert!(!Pattern::contains_match(&mut hay));
+    assert!(!Pattern::contains_match(""));
 }
 
 #[test]
 fn test_contains_match_pattern_with_quantifier() {
     regex!(Digits = "[0-9]+");
 
-    let mut hay_has_digits = Haystack::from("abc123def");
-    let mut hay_no_digits = Haystack::from("abcdef");
-
-    assert!(Digits::contains_match(&mut hay_has_digits));
-    assert!(!Digits::contains_match(&mut hay_no_digits));
+    assert!(Digits::contains_match("abc123def"));
+    assert!(!Digits::contains_match("abcdef"));
 }
 
 #[test]
 fn test_contains_match_alternation() {
     regex!(Alt = "foo|bar");
 
-    let mut hay_foo = Haystack::from("prefix foo suffix");
-    let mut hay_bar = Haystack::from("prefix bar suffix");
-    let mut hay_none = Haystack::from("prefix baz suffix");
-
-    assert!(Alt::contains_match(&mut hay_foo));
-    assert!(Alt::contains_match(&mut hay_bar));
-    assert!(!Alt::contains_match(&mut hay_none));
+    assert!(Alt::contains_match("prefix foo suffix"));
+    assert!(Alt::contains_match("prefix bar suffix"));
+    assert!(!Alt::contains_match("prefix baz suffix"));
 }
 
 #[test]
 fn test_contains_match_multiple_occurrences() {
     regex!(Pattern = "ab");
-
-    let mut hay = Haystack::from("ab ab ab");
     // Should find the first occurrence
-    assert!(Pattern::contains_match(&mut hay));
+    assert!(Pattern::contains_match("ab ab ab"));
 }
 
 #[test]
 fn test_contains_match_bytes() {
     regex!(BytePattern = "test");
 
-    let mut hay_match = Haystack::from(b"this is a test string" as &[u8]);
-    let mut hay_no_match = Haystack::from(b"nothing here" as &[u8]);
-
-    assert!(BytePattern::contains_match(&mut hay_match));
-    assert!(!BytePattern::contains_match(&mut hay_no_match));
+    assert!(BytePattern::contains_match(b"this is a test string" as &[u8]));
+    assert!(!BytePattern::contains_match(b"nothing here" as &[u8]));
 }
 
 #[test]
 fn test_contains_match_unicode() {
     regex!(Unicode = "🦀");
 
-    let mut hay_has_crab = Haystack::from("Hello 🦀 World");
-    let mut hay_no_crab = Haystack::from("Hello World");
-
-    assert!(Unicode::contains_match(&mut hay_has_crab));
-    assert!(!Unicode::contains_match(&mut hay_no_crab));
+    assert!(Unicode::contains_match("Hello 🦀 World"));
+    assert!(!Unicode::contains_match("Hello World"));
 }
 
 // ============================================================================
@@ -133,16 +102,13 @@ fn test_contains_match_unicode() {
 fn test_anon_contains_match_literal() {
     let pattern = regex!("hello");
 
-    let mut hay_match = Haystack::from("say hello world");
-    let mut hay_no_match = Haystack::from("goodbye world");
-
-    assert!(pattern.contains_match(&mut hay_match));
-    assert!(!pattern.contains_match(&mut hay_no_match));
+    assert!(pattern.contains_match("say hello world"));
+    assert!(!pattern.contains_match("goodbye world"));
 }
 
 #[test]
 fn test_anon_contains_match_in_expression() {
-    let result = regex!("needle").contains_match(&mut Haystack::from("haystack needle here"));
+    let result = regex!("needle").contains_match("haystack needle here");
     assert!(result);
 }
 
@@ -150,11 +116,8 @@ fn test_anon_contains_match_in_expression() {
 fn test_anon_contains_match_pattern() {
     let pattern = regex!("[a-z]+@[a-z]+");
 
-    let mut hay_has_email = Haystack::from("contact us at user@example for info");
-    let mut hay_no_email = Haystack::from("no email here");
-
-    assert!(pattern.contains_match(&mut hay_has_email));
-    assert!(!pattern.contains_match(&mut hay_no_email));
+    assert!(pattern.contains_match("contact us at user@example for info"));
+    assert!(!pattern.contains_match("no email here"));
 }
 
 // ============================================================================
@@ -164,174 +127,106 @@ fn test_anon_contains_match_pattern() {
 #[test]
 fn test_find_match_literal_present() {
     regex!(Literal = "hello");
-
-    let mut hay = Haystack::from("say hello world");
-    let result = Literal::find_match(&mut hay);
-
-    assert_eq!(result, Some("hello"));
+    assert_eq!(Literal::find_match("say hello world"), Some("hello"));
 }
 
 #[test]
 fn test_find_match_literal_absent() {
     regex!(Literal = "hello");
-
-    let mut hay = Haystack::from("goodbye world");
-    let result = Literal::find_match(&mut hay);
-
-    assert_eq!(result, None);
+    assert_eq!(Literal::find_match("goodbye world"), None);
 }
 
 #[test]
 fn test_find_match_at_start() {
     regex!(Pattern = "abc");
-
-    let mut hay = Haystack::from("abcdef");
-    let result = Pattern::find_match(&mut hay);
-
-    assert_eq!(result, Some("abc"));
+    assert_eq!(Pattern::find_match("abcdef"), Some("abc"));
 }
 
 #[test]
 fn test_find_match_at_end() {
     regex!(Pattern = "xyz");
-
-    let mut hay = Haystack::from("abcxyz");
-    let result = Pattern::find_match(&mut hay);
-
-    assert_eq!(result, Some("xyz"));
+    assert_eq!(Pattern::find_match("abcxyz"), Some("xyz"));
 }
 
 #[test]
 fn test_find_match_in_middle() {
     regex!(Pattern = "middle");
-
-    let mut hay = Haystack::from("start middle end");
-    let result = Pattern::find_match(&mut hay);
-
-    assert_eq!(result, Some("middle"));
+    assert_eq!(Pattern::find_match("start middle end"), Some("middle"));
 }
 
 #[test]
 fn test_find_match_exact_string() {
     regex!(Pattern = "exact");
-
-    let mut hay = Haystack::from("exact");
-    let result = Pattern::find_match(&mut hay);
-
-    assert_eq!(result, Some("exact"));
+    assert_eq!(Pattern::find_match("exact"), Some("exact"));
 }
 
 #[test]
 fn test_find_match_empty_pattern() {
     regex!(Empty = "");
-
-    let mut hay = Haystack::from("anything");
-    let result = Empty::find_match(&mut hay);
-
     // Empty pattern matches at the start with empty slice
-    assert_eq!(result, Some(""));
+    assert_eq!(Empty::find_match("anything"), Some(""));
 }
 
 #[test]
 fn test_find_match_empty_haystack() {
     regex!(Pattern = "test");
-
-    let mut hay = Haystack::from("");
-    let result = Pattern::find_match(&mut hay);
-
-    assert_eq!(result, None);
+    assert_eq!(Pattern::find_match(""), None);
 }
 
 #[test]
 fn test_find_match_pattern_with_quantifier() {
     regex!(Digits = "[0-9]+");
-
-    let mut hay = Haystack::from("abc123def");
-    let result = Digits::find_match(&mut hay);
-
-    assert_eq!(result, Some("123"));
+    assert_eq!(Digits::find_match("abc123def"), Some("123"));
 }
 
 #[test]
 fn test_find_match_alternation() {
     regex!(Alt = "foo|bar");
-
-    let mut hay = Haystack::from("prefix bar suffix");
-    let result = Alt::find_match(&mut hay);
-
-    assert_eq!(result, Some("bar"));
+    assert_eq!(Alt::find_match("prefix bar suffix"), Some("bar"));
 }
 
 #[test]
 fn test_find_match_first_occurrence() {
     regex!(Pattern = "ab");
-
-    let mut hay = Haystack::from("xxabyyabzz");
-    let result = Pattern::find_match(&mut hay);
-
     // Should find the first occurrence
-    assert_eq!(result, Some("ab"));
+    assert_eq!(Pattern::find_match("xxabyyabzz"), Some("ab"));
 }
 
 #[test]
 fn test_find_match_greedy_quantifier() {
     regex!(Greedy = "a+");
-
-    let mut hay = Haystack::from("xaaaay");
-    let result = Greedy::find_match(&mut hay);
-
     // Should match all consecutive 'a's
-    assert_eq!(result, Some("aaaa"));
+    assert_eq!(Greedy::find_match("xaaaay"), Some("aaaa"));
 }
 
 #[test]
 fn test_find_match_bytes() {
     regex!(BytePattern = "test");
-
-    let mut hay = Haystack::from(b"this is a test string" as &[u8]);
-    let result = BytePattern::find_match(&mut hay);
-
-    assert_eq!(result, Some(b"test" as &[u8]));
+    assert_eq!(BytePattern::find_match(b"this is a test string" as &[u8]), Some(b"test" as &[u8]));
 }
 
 #[test]
 fn test_find_match_bytes_no_match() {
     regex!(BytePattern = "test");
-
-    let mut hay = Haystack::from(b"nothing here" as &[u8]);
-    let result = BytePattern::find_match(&mut hay);
-
-    assert_eq!(result, None);
+    assert_eq!(BytePattern::find_match(b"nothing here" as &[u8]), None);
 }
 
 #[test]
 fn test_find_match_unicode() {
     regex!(Unicode = "🦀+");
-
-    let mut hay = Haystack::from("Hello 🦀🦀🦀 World");
-    let result = Unicode::find_match(&mut hay);
-
-    assert_eq!(result, Some("🦀🦀🦀"));
+    assert_eq!(Unicode::find_match("Hello 🦀🦀🦀 World"), Some("🦀🦀🦀"));
 }
 
 #[test]
 fn test_find_match_complex_pattern() {
     regex!(Email = r"[a-z]+@[a-z]+\.[a-z]+");
-
-    let mut hay = Haystack::from("Contact us at user@example.com for info");
-    let result = Email::find_match(&mut hay);
-
-    assert_eq!(result, Some("user@example.com"));
+    assert_eq!(Email::find_match("Contact us at user@example.com for info"), Some("user@example.com"));
 }
 
 #[test]
 fn test_find_match_char_class() {
     regex!(Word = "[a-zA-Z]+");
-
-    let mut hay = Haystack::from("123 Hello 456");
-    let result = Word::find_match(&mut hay);
-
-    assert_eq!(result, Some("Hello"));
+    assert_eq!(Word::find_match("123 Hello 456"), Some("Hello"));
 }
 
 // ============================================================================
@@ -341,31 +236,19 @@ fn test_find_match_char_class() {
 #[test]
 fn test_anon_find_match_literal() {
     let pattern = regex!("hello");
-
-    let mut hay = Haystack::from("say hello world");
-    let result = pattern.find_match(&mut hay);
-
-    assert_eq!(result, Some("hello"));
+    assert_eq!(pattern.find_match("say hello world"), Some("hello"));
 }
 
 #[test]
 fn test_anon_find_match_pattern() {
     let pattern = regex!("[0-9]+");
-
-    let mut hay = Haystack::from("item 42 in stock");
-    let result = pattern.find_match(&mut hay);
-
-    assert_eq!(result, Some("42"));
+    assert_eq!(pattern.find_match("item 42 in stock"), Some("42"));
 }
 
 #[test]
 fn test_anon_find_match_no_match() {
     let pattern = regex!("xyz");
-
-    let mut hay = Haystack::from("abc def");
-    let result = pattern.find_match(&mut hay);
-
-    assert_eq!(result, None);
+    assert_eq!(pattern.find_match("abc def"), None);
 }
 
 // ============================================================================
@@ -375,96 +258,67 @@ fn test_anon_find_match_no_match() {
 #[test]
 fn test_contains_match_overlapping_patterns() {
     regex!(Pattern = "aa");
-
-    let mut hay = Haystack::from("aaa");
     // Should find "aa" starting at position 0
-    assert!(Pattern::contains_match(&mut hay));
+    assert!(Pattern::contains_match("aaa"));
 }
 
 #[test]
 fn test_find_match_overlapping_patterns() {
     regex!(Pattern = "aa");
-
-    let mut hay = Haystack::from("baaa");
-    let result = Pattern::find_match(&mut hay);
-
     // Should find first "aa" match
-    assert_eq!(result, Some("aa"));
+    assert_eq!(Pattern::find_match("baaa"), Some("aa"));
 }
 
 #[test]
 fn test_contains_match_partial_match_then_full() {
     regex!(Pattern = "abc");
-
     // "ab" is a partial match, then "abc" is found
-    let mut hay = Haystack::from("ab abc");
-    assert!(Pattern::contains_match(&mut hay));
+    assert!(Pattern::contains_match("ab abc"));
 }
 
 #[test]
 fn test_find_match_partial_match_then_full() {
     regex!(Pattern = "abc");
-
-    let mut hay = Haystack::from("ab abc");
-    let result = Pattern::find_match(&mut hay);
-
-    assert_eq!(result, Some("abc"));
+    assert_eq!(Pattern::find_match("ab abc"), Some("abc"));
 }
 
 #[test]
 fn test_contains_match_with_anchored_pattern() {
     regex!(Anchored = "^start");
 
-    let mut hay_at_start = Haystack::from("start of string");
-    let mut hay_not_at_start = Haystack::from("not start of string");
-
-    assert!(Anchored::contains_match(&mut hay_at_start));
+    assert!(Anchored::contains_match("start of string"));
     // The pattern requires ^ anchor, so it won't match in the middle
-    assert!(!Anchored::contains_match(&mut hay_not_at_start));
+    assert!(!Anchored::contains_match("not start of string"));
 }
 
 #[test]
 fn test_find_match_with_end_anchor() {
     regex!(EndAnchored = "end$");
-
-    let mut hay_at_end = Haystack::from("this is the end");
-    let result = EndAnchored::find_match(&mut hay_at_end);
-
-    assert_eq!(result, Some("end"));
+    assert_eq!(EndAnchored::find_match("this is the end"), Some("end"));
 }
 
 #[test]
 fn test_find_match_range_quantifier() {
     regex!(Range = "a{2,4}");
-
-    let mut hay = Haystack::from("xaaaaay");
-    let result = Range::find_match(&mut hay);
-
     // Should match greedily up to 4 'a's
-    assert_eq!(result, Some("aaaa"));
+    assert_eq!(Range::find_match("xaaaaay"), Some("aaaa"));
 }
 
 #[test]
 fn test_find_match_optional() {
     regex!(Optional = "colou?r");
 
-    let mut hay_us = Haystack::from("my favorite color is blue");
-    let mut hay_uk = Haystack::from("my favourite colour is blue");
-
-    assert_eq!(Optional::find_match(&mut hay_us), Some("color"));
-    assert_eq!(Optional::find_match(&mut hay_uk), Some("colour"));
+    assert_eq!(Optional::find_match("my favorite color is blue"), Some("color"));
+    assert_eq!(Optional::find_match("my favourite colour is blue"), Some("colour"));
 }
 
 #[test]
 fn test_contains_and_find_consistency() {
     regex!(Pattern = "test");
 
-    let mut hay1 = Haystack::from("this is a test");
-    let mut hay2 = Haystack::from("this is a test");
-
     // If contains_match returns true, find_match should return Some
-    let contains = Pattern::contains_match(&mut hay1);
-    let found = Pattern::find_match(&mut hay2);
+    let contains = Pattern::contains_match("this is a test");
+    let found = Pattern::find_match("this is a test");
 
     assert!(contains);
     assert!(found.is_some());
@@ -474,12 +328,9 @@ fn test_contains_and_find_consistency() {
 fn test_contains_and_find_consistency_no_match() {
     regex!(Pattern = "xyz");
 
-    let mut hay1 = Haystack::from("abc def");
-    let mut hay2 = Haystack::from("abc def");
-
     // If contains_match returns false, find_match should return None
-    let contains = Pattern::contains_match(&mut hay1);
-    let found = Pattern::find_match(&mut hay2);
+    let contains = Pattern::contains_match("abc def");
+    let found = Pattern::find_match("abc def");
 
     assert!(!contains);
     assert!(found.is_none());

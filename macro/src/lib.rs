@@ -45,7 +45,10 @@ impl Parse for RegexArgType {
 #[proc_macro]
 pub fn regex(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     match parse_macro_input!(input as RegexArgType) {
-        RegexArgType::Regex(args) => regex_internal(args, quote!(::ct_regex::internal::general::Regex)).into(),
+        RegexArgType::Regex(args) => regex_internal(
+            args,
+            quote!(::ct_regex::internal::general::Regex)
+        ).into(),
         RegexArgType::Anon(pat) => anon_regex_internal(pat).into(),
     }
 }
@@ -169,7 +172,10 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
         }
 
         impl<'a, I: #haystack_mod::HaystackItem> #general_mod::FromCaptures<'a, I, #captures_len> for #name<'a, I> {
-            fn from_captures(captures: [#Option<#general_mod::Capture>; #captures_len], hay: Haystack<'a, I>) -> #Option<Self> {
+            fn from_captures(
+                captures: [#Option<#general_mod::Capture>; #captures_len],
+                hay: #haystack_mod::Haystack<'a, I>
+            ) -> #Option<Self> {
                 let [#(#capture_destructure),*] = captures;
                 #Option::Some(Self(
                     hay, #(#capture_constructor),*
@@ -182,11 +188,9 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
 fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStream {
     // Aliases
     #![allow(nonstandard_style)]
-    let haystack_mod = quote!(::ct_regex::internal::haystack);
     let general_mod = quote!(::ct_regex::internal::general);
     let Capture = quote!(#general_mod::Capture);
     let Option = quote!(::std::option::Option);
-    let Slice = quote!(<I::Iter<'a> as #haystack_mod::HaystackIter<'a>>::Slice<'a>);
 
     let index = index + 1;
     let cap_name_full = format_ident!("{}_range", cap_name);
@@ -194,7 +198,7 @@ fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStre
 
     if cap.required {
         quote! {
-            pub fn #cap_name(&'a self) -> #Slice {
+            pub fn #cap_name(&'a self) -> I::Slice<'a> {
                 self.0.slice(self.#index_name.clone())
             }
 
@@ -204,7 +208,7 @@ fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStre
         }
     } else {
         quote! { 
-            pub fn #cap_name(&'a self) -> #Option<#Slice> {
+            pub fn #cap_name(&'a self) -> #Option<I::Slice<'a>> {
                 self.#index_name.as_ref().map(|c| self.0.slice(c.clone()))
             }
 

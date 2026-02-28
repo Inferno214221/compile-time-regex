@@ -1,10 +1,8 @@
 use std::{fmt::Debug, ops::Range};
 
-use crate::haystack::util;
+use crate::haystack::{HaystackItem, util};
 
-pub trait HaystackIter<'a>: Iterator + Debug {
-    type Slice<'s>: Debug + Copy where Self: 's;
-
+pub trait HaystackIter<'a>: Iterator<Item: HaystackItem> + Debug {
     fn current_item(&self) -> Option<Self::Item>;
 
     fn current_index(&self) -> usize;
@@ -13,11 +11,11 @@ pub trait HaystackIter<'a>: Iterator + Debug {
         self.current_index() == 0
     }
 
-    fn as_slice<'s>(&'s self) -> Self::Slice<'s>;
+    fn as_slice<'s>(&'s self) -> <Self::Item as HaystackItem>::Slice<'s>;
 
-    fn rem_as_slice<'s>(&'s self) -> Self::Slice<'s>;
+    fn rem_as_slice<'s>(&'s self) -> <Self::Item as HaystackItem>::Slice<'s>;
 
-    fn slice_with(&self, range: Range<usize>) -> Self::Slice<'a>;
+    fn slice_with(&self, range: Range<usize>) -> <Self::Item as HaystackItem>::Slice<'a>;
 }
 
 #[derive(Debug, Clone)]
@@ -55,8 +53,6 @@ impl<'a> Iterator for StrIter<'a> {
 }
 
 impl<'a> HaystackIter<'a> for StrIter<'a> {
-    type Slice<'s> = &'s str where Self: 's;
-
     fn current_item(&self) -> Option<Self::Item> {
         util::get_item(self.get_first_char())
     }
@@ -65,15 +61,15 @@ impl<'a> HaystackIter<'a> for StrIter<'a> {
         self.index
     }
     
-    fn as_slice<'s>(&'s self) -> Self::Slice<'s> {
+    fn as_slice<'s>(&'s self) -> <Self::Item as HaystackItem>::Slice<'s> {
         self.inner
     }
 
-    fn rem_as_slice<'s>(&'s self) -> Self::Slice<'s> {
+    fn rem_as_slice<'s>(&'s self) -> <Self::Item as HaystackItem>::Slice<'s> {
         &self.inner[self.index..]
     }
 
-    fn slice_with(&self, range: Range<usize>) -> Self::Slice<'a> {
+    fn slice_with(&self, range: Range<usize>) -> <Self::Item as HaystackItem>::Slice<'a> {
         &self.inner[range]
     }
 }
@@ -108,8 +104,6 @@ impl<'a> Iterator for ByteIter<'a> {
 }
 
 impl<'a> HaystackIter<'a> for ByteIter<'a> {
-    type Slice<'s> = &'s [u8] where Self: 's;
-
     fn current_item(&self) -> Option<Self::Item> {
         if self.index >= self.inner.len() {
             None
@@ -122,15 +116,15 @@ impl<'a> HaystackIter<'a> for ByteIter<'a> {
         self.index
     }
 
-    fn as_slice<'s>(&'s self) -> Self::Slice<'s> {
+    fn as_slice<'s>(&'s self) -> <Self::Item as HaystackItem>::Slice<'s> {
         self.inner
     }
 
-    fn rem_as_slice<'s>(&'s self) -> Self::Slice<'s> {
+    fn rem_as_slice<'s>(&'s self) -> <Self::Item as HaystackItem>::Slice<'s> {
         &self.inner[self.index..]
     }
 
-    fn slice_with(&self, range: Range<usize>) -> Self::Slice<'a> {
+    fn slice_with(&self, range: Range<usize>) -> <Self::Item as HaystackItem>::Slice<'a> {
         &self.inner[range]
     }
 }

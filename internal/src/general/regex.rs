@@ -1,4 +1,4 @@
-use crate::{general::{Capture, FromCaptures, IndexedCaptures}, haystack::{Haystack, HaystackItem, HaystackIter}, matcher::Matcher};
+use crate::{general::{Capture, FromCaptures, IndexedCaptures}, haystack::{Haystack, HaystackItem}, matcher::Matcher};
 
 pub trait Regex<I: HaystackItem, const N: usize> {
     type Pattern: Matcher<I>;
@@ -24,9 +24,7 @@ pub trait Regex<I: HaystackItem, const N: usize> {
     }
 
     // TODO: Is hay.progress really the right semantics?
-    fn find_match<'a>(
-        hay: impl Into<Haystack<'a, I>>
-    ) -> Option<<I::Iter<'a> as HaystackIter<'a>>::Slice<'a>> {
+    fn find_match<'a>(hay: impl Into<Haystack<'a, I>>) -> Option<I::Slice<'a>> {
         let mut hay = hay.into();
 
         while hay.item().is_some() {
@@ -45,7 +43,7 @@ pub trait Regex<I: HaystackItem, const N: usize> {
     fn find_all_matches<'a>(
         hay: impl Into<Haystack<'a, I>>,
         overlapping: bool
-    ) -> Vec<<I::Iter<'a> as HaystackIter<'a>>::Slice<'a>> {
+    ) -> Vec<I::Slice<'a>> {
         let mut hay = hay.into();
 
         let mut all_matches = vec![];
@@ -117,10 +115,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize> {
         false
     }
 
-    fn find_match<'a>(
-        &self,
-        hay: impl Into<Haystack<'a, I>>
-    ) -> Option<<I::Iter<'a> as HaystackIter<'a>>::Slice<'a>> {
+    fn find_match<'a>(&self, hay: impl Into<Haystack<'a, I>>) -> Option<I::Slice<'a>> {
         let mut hay = hay.into();
 
         while hay.item().is_some() {
@@ -138,7 +133,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize> {
         &self,
         hay: impl Into<Haystack<'a, I>>,
         overlapping: bool
-    ) -> Vec<<I::Iter<'a> as HaystackIter<'a>>::Slice<'a>> {
+    ) -> Vec<I::Slice<'a>> {
         let mut hay = hay.into();
 
         let mut all_matches = vec![];

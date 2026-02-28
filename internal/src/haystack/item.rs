@@ -1,9 +1,11 @@
+use std::fmt::Debug;
+    
 use crate::{haystack::{ByteIter, HaystackIter, StrIter}, hir::{CastClass, WriteMatcher}};
 
 pub trait HaystackItem: Copy + WriteMatcher + CastClass {
     type Iter<'a>: HaystackIter<'a, Item = Self> + Clone;
 
-    type Slice<'a>: Copy;
+    type Slice<'a>: Debug + Copy;
 
     fn iter_from_str<'a>(value: &'a str) -> Self::Iter<'a>;
 
@@ -15,7 +17,7 @@ pub trait HaystackItem: Copy + WriteMatcher + CastClass {
 impl HaystackItem for u8 {
     type Iter<'a> = ByteIter<'a>;
 
-    type Slice<'a> = <Self::Iter<'a> as HaystackIter<'a>>::Slice<'a>;
+    type Slice<'a> = &'a [u8];
     
     fn iter_from_str<'a>(value: &'a str) -> Self::Iter<'a> {
         Self::iter_from_slice(value.as_bytes())
@@ -33,7 +35,7 @@ impl HaystackItem for u8 {
 impl HaystackItem for char {
     type Iter<'a> = StrIter<'a>;
 
-    type Slice<'a> = <Self::Iter<'a> as HaystackIter<'a>>::Slice<'a>;
+    type Slice<'a> = &'a str;
     
     fn iter_from_str<'a>(value: &'a str) -> Self::Iter<'a> {
         StrIter::from(value)

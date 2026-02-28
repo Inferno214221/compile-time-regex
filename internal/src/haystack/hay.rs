@@ -45,7 +45,7 @@ impl<'a, I: HaystackItem> Haystack<'a, I> {
         self.item().is_none()
     }
 
-    pub fn slice(&self, cap: Capture) -> <I::Iter<'a> as HaystackIter<'a>>::Slice<'a> {
+    pub fn slice(&self, cap: Capture) -> I::Slice<'a> {
         self.inner.slice_with(cap.0)
     }
 }

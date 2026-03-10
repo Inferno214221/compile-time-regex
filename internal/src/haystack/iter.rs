@@ -1,4 +1,4 @@
-use std::{fmt::Debug, ops::Range};
+use std::{fmt::{self, Debug}, ops::Range};
 
 use crate::haystack::{HaystackItem, util};
 
@@ -18,7 +18,7 @@ pub trait HaystackIter<'a>: Iterator<Item: HaystackItem> + Debug {
     fn slice_with(&self, range: Range<usize>) -> <Self::Item as HaystackItem>::Slice<'a>;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct StrIter<'a> {
     inner: &'a str,
     index: usize,
@@ -74,7 +74,26 @@ impl<'a> HaystackIter<'a> for StrIter<'a> {
     }
 }
 
-#[derive(Debug, Clone)]
+impl<'a> Debug for StrIter<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut len = 0;
+        write!(f, "\"")?;
+
+        self.inner.char_indices().try_for_each(|(index, ch)| {
+            let mut debug = ch.escape_debug();
+            if index < self.index  {
+                len += debug.len();
+            }
+            debug.try_for_each(|debug_ch| write!(f, "{debug_ch}"))
+        })?;
+
+        write!(f, "\"\n ")?;
+        (0..len).try_for_each(|_| write!(f, " "))?;
+        write!(f, "^")
+    }
+}
+
+#[derive(Clone)]
 pub struct ByteIter<'a> {
     inner: &'a [u8],
     index: usize,
@@ -126,5 +145,17 @@ impl<'a> HaystackIter<'a> for ByteIter<'a> {
 
     fn slice_with(&self, range: Range<usize>) -> <Self::Item as HaystackItem>::Slice<'a> {
         &self.inner[range]
+    }
+}
+
+impl<'a> Debug for ByteIter<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "b\"")?;
+
+        self.inner.iter().try_for_each(|byte| write!(f, "{:02x}", byte))?;
+
+        write!(f, "\"\n  ")?;
+        (0..self.index).try_for_each(|_| write!(f, "  "))?;
+        write!(f, "^")
     }
 }

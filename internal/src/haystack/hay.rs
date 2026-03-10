@@ -1,10 +1,10 @@
-use std::ops::Range;
+use std::{fmt::{self, Debug}, ops::Range};
 
 use crate::haystack::{HaystackItem, HaystackIter};
 
 // TODO: It needs to be noted that a haystack can only be matched against once.
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Haystack<'a, I: HaystackItem> {
     inner: I::Iter<'a>,
 }
@@ -49,5 +49,11 @@ impl<'a, I: HaystackItem> Haystack<'a, I> {
 
     pub fn slice(&self, cap: Range<usize>) -> I::Slice<'a> {
         self.inner.slice_with(cap)
+    }
+}
+
+impl<'a, I: HaystackItem> Debug for Haystack<'a, I> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Haystack(\n{:?}\n)", self.inner)
     }
 }

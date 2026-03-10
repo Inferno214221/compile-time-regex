@@ -1,36 +1,30 @@
-use std::{mem, ops::Range, rc::Rc};
+use std::ops::Range;
 
-use crate::haystack::{Haystack, HaystackItem};
-
-#[derive(Debug, Clone)]
-pub struct IndexedCapturesInner {
-    pub index: usize,
-    pub cap: Range<usize>,
-    // Tada: A reference counted cones list for hydra-style head clones and an auto Drop impl.
-    pub prev: Rc<IndexedCaptures>,
-}
+use crate::{haystack::{Haystack, HaystackItem}, util::cons_tree::ConsTree};
 
 #[derive(Debug, Default, Clone)]
-pub struct IndexedCaptures(pub Option<IndexedCapturesInner>);
+pub struct IndexedCaptures(pub ConsTree<IndexedCapture>);
+
+#[derive(Debug, Clone)]
+pub struct IndexedCapture {
+    pub index: usize,
+    pub cap: Range<usize>,
+}
 
 impl IndexedCaptures {
     pub fn push(&mut self, index: usize, cap: Range<usize>) {
-        let old = mem::replace(self, IndexedCaptures(None));
-        *self = IndexedCaptures(Some(IndexedCapturesInner {
+        self.0.push(IndexedCapture {
             index,
-            cap,
-            prev: Rc::new(old),
-        }));
+            cap
+        });
     }
 
     // May contain duplicates for a certain index. To avoid backtracking and overriding, we deal
     // with this here.
-    pub fn into_array<const N: usize>(&self) -> [Option<Range<usize>>; N] {
+    pub fn into_array<const N: usize>(self) -> [Option<Range<usize>>; N] {
         let mut res = [const { None }; N];
 
-        let mut next = self;
-
-        while let IndexedCaptures(Some(item)) = next {
+        for item in self.0.into_iter_unique() {
             // We're traversing captures backwards, so we need to keep the value written into the
             // array first.
             match res.get(item.index) {
@@ -41,8 +35,6 @@ impl IndexedCaptures {
             if let Some(None) | None = res.get(item.index) {
                 res[item.index] = Some(item.cap.clone());
             }
-
-            next = &*item.prev;
         }
 
         res

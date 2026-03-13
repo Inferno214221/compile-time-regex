@@ -24,16 +24,13 @@ impl IndexedCaptures {
     pub fn into_array<const N: usize>(self) -> [Option<Range<usize>>; N] {
         let mut res = [const { None }; N];
 
-        for item in self.0.into_iter_unique() {
-            // We're traversing captures backwards, so we need to keep the value written into the
-            // array first.
+        for item in self.0.into_iter_owned() {
             match res.get(item.index) {
                 None => panic!("capture index exceeds maximum group number"),
                 Some(None) => res[item.index] = Some(item.cap.clone()),
+                // We're traversing captures backwards, so we need to keep the value written into
+                // the array first.
                 Some(_) => (),
-            }
-            if let Some(None) | None = res.get(item.index) {
-                res[item.index] = Some(item.cap.clone());
             }
         }
 

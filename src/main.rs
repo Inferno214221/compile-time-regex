@@ -29,7 +29,7 @@ fn main() {
 
     let hay = "0123456789";
     dbg!(PhoneNum::is_match(hay));
-    let caps = PhoneNum::captures(hay).unwrap();
+    let caps = PhoneNum::do_capture(hay).unwrap();
     dbg!(caps.whole_match());
     dbg!(caps.country_code());
     dbg!(caps.number());
@@ -40,7 +40,7 @@ fn main() {
 
     let hay = "+61 123456789";
     dbg!(PhoneNum::is_match(hay));
-    let caps = PhoneNum::captures(hay).unwrap();
+    let caps = PhoneNum::do_capture(hay).unwrap();
     dbg!(caps.whole_match());
     dbg!(caps.country_code());
     dbg!(caps.number());

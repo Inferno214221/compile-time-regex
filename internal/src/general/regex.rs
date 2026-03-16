@@ -1,11 +1,10 @@
 use std::fmt::Debug;
 
-use crate::{general::{FromCaptures, IndexedCaptures}, haystack::{Haystack, HaystackItem}, matcher::Matcher};
+use crate::{general::{CaptureFromRanges, IndexedCaptures}, haystack::{Haystack, HaystackItem}, matcher::Matcher};
 
 pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     type Pattern: Matcher<I>;
-
-    type Captures<'a>: FromCaptures<'a, I, N> where I: 'a;
+    type Capture<'a>: CaptureFromRanges<'a, I, N> where I: 'a;
 
     fn is_match<'a>(hay: impl Into<Haystack<'a, I>>) -> bool {
         let mut hay = hay.into();
@@ -67,7 +66,10 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         all_matches.into_iter().map(|m| hay.slice(m)).collect()
     }
 
-    fn captures<'a>(hay: impl Into<Haystack<'a, I>>) -> Option<Self::Captures<'a>> {
+    // TODO: switch capture methods to rollback enabled versions
+    // TODO: switch to lazy rollback via iterators
+
+    fn do_capture<'a>(hay: impl Into<Haystack<'a, I>>) -> Option<Self::Capture<'a>> {
         let mut hay = hay.into();
 
         let mut caps = IndexedCaptures::default();
@@ -76,7 +78,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         if Self::Pattern::captures(&mut hay, &mut caps) && hay.is_end() {
             caps.push(0, start..hay.index());
             Some(
-                Self::Captures::from_captures(caps.into_array(), hay)
+                Self::Capture::from_ranges(caps.into_array(), hay)
                     .expect("failed to convert captures despite matching correctly")
             )
         } else {
@@ -84,21 +86,38 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         }
     }
 
-    fn find_captures<'a>(_hay: impl Into<Haystack<'a, I>>) -> Option<Self::Captures<'a>> {
-        todo!("contains_match equivalent")
+    fn find_capture<'a>(hay: impl Into<Haystack<'a, I>>) -> Option<Self::Capture<'a>> {
+        let mut hay = hay.into();
+
+        let mut caps = IndexedCaptures::default();
+
+        while hay.item().is_some() {
+            let start = hay.index();
+            let mut fork = hay.clone();
+
+            if Self::Pattern::captures(&mut fork, &mut caps) {
+                caps.push(0, start..fork.index());
+                return Some(
+                    Self::Capture::from_ranges(caps.into_array(), hay)
+                        .expect("failed to convert captures despite matching correctly")
+                );
+            }
+            hay.progress()
+        }
+        None
     }
 
     fn find_all_captures<'a>(
         _hay: impl Into<Haystack<'a, I>>,
         _overlapping: bool
-    ) -> Vec<Self::Captures<'a>> {
+    ) -> Vec<Self::Capture<'a>> {
         todo!("find_all_matches equivalent")
     }
 }
 
 pub trait AnonRegex<I: HaystackItem, const N: usize>: Debug {
     type Pattern: Matcher<I>;
-    type Captures<'a>: FromCaptures<'a, I, N>;
+    type Capture<'a>: CaptureFromRanges<'a, I, N>;
 
     fn is_match<'a>(&self, hay: impl Into<Haystack<'a, I>>) -> bool {
         let mut hay = hay.into();
@@ -157,7 +176,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Debug {
         all_matches.into_iter().map(|m| hay.slice(m)).collect()
     }
 
-    fn captures<'a>(&self, hay: impl Into<Haystack<'a, I>>) -> Option<Self::Captures<'a>> {
+    fn captures<'a>(&self, hay: impl Into<Haystack<'a, I>>) -> Option<Self::Capture<'a>> {
         let mut hay = hay.into();
 
         let mut caps = IndexedCaptures::default();
@@ -167,7 +186,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Debug {
             // Capture the "whole_match" group at index 0.
             caps.push(0, start..hay.index());
             Some(
-                Self::Captures::from_captures(caps.into_array(), hay)
+                Self::Capture::from_ranges(caps.into_array(), hay)
                     .expect("failed to convert captures despite matching correctly")
             )
         } else {
@@ -175,7 +194,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Debug {
         }
     }
 
-    fn find_captures<'a>(&self, _hay: impl Into<Haystack<'a, I>>) -> Option<Self::Captures<'a>> {
+    fn find_captures<'a>(&self, _hay: impl Into<Haystack<'a, I>>) -> Option<Self::Capture<'a>> {
         todo!("find_matches equivalent")
     }
 
@@ -183,7 +202,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Debug {
         &self,
         _hay: impl Into<Haystack<'a, I>>,
         _overlapping: bool
-    ) -> Vec<Self::Captures<'a>> {
+    ) -> Vec<Self::Capture<'a>> {
         todo!("find_all_matches equivalent")
     }
 }

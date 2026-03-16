@@ -80,7 +80,7 @@ fn regex_internal(
         .parse()
         .expect("failed to parse type expression");
 
-    let captures_name = format_ident!("{}Captures", name);
+    let captures_name = format_ident!("{}Capture", name);
     let captures_len = Literal::usize_unsuffixed(groups.len());
     let captures_impl = impl_captures(&vis, &captures_name, groups);
 
@@ -90,13 +90,13 @@ fn regex_internal(
         impl #regex_trait<u8, #captures_len> for #name {
             type Pattern = #type_expr_byte;
 
-            type Captures<'a> = #captures_name<'a, u8>;
+            type Capture<'a> = #captures_name<'a, u8>;
         }
 
         impl #regex_trait<char, #captures_len> for #name {
             type Pattern = #type_expr_scalar;
 
-            type Captures<'a> = #captures_name<'a, char>;
+            type Capture<'a> = #captures_name<'a, char>;
         }
 
         impl ::std::fmt::Debug for #name {
@@ -180,12 +180,12 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
             #(#named_groups)*
         }
 
-        impl<'a, I: #haystack_mod::HaystackItem> #general_mod::FromCaptures<'a, I, #captures_len> for #name<'a, I> {
-            fn from_captures(
-                captures: [#Option<#Range>; #captures_len],
+        impl<'a, I: #haystack_mod::HaystackItem> #general_mod::CaptureFromRanges<'a, I, #captures_len> for #name<'a, I> {
+            fn from_ranges(
+                ranges: [#Option<#Range>; #captures_len],
                 hay: #haystack_mod::Haystack<'a, I>
             ) -> #Option<Self> {
-                let [#(#capture_destructure),*] = captures;
+                let [#(#capture_destructure),*] = ranges;
                 #Option::Some(Self(
                     hay, #(#capture_constructor),*
                 ))

@@ -26,11 +26,11 @@ impl<'a> From<&'a [u8]> for Haystack<'a, u8> {
 }
 
 impl<'a, I: HaystackItem> Haystack<'a, I> {
-    pub fn item(&mut self) -> Option<I> {
+    pub fn item(&self) -> Option<I> {
         self.inner.current_item()
     }
 
-    pub fn index(&mut self) -> usize {
+    pub fn index(&self) -> usize {
         self.inner.current_index()
     }
 
@@ -39,11 +39,11 @@ impl<'a, I: HaystackItem> Haystack<'a, I> {
         self.inner.next();
     }
 
-    pub fn is_start(&mut self) -> bool {
+    pub fn is_start(&self) -> bool {
         self.inner.is_start()
     }
 
-    pub fn is_end(&mut self) -> bool {
+    pub fn is_end(&self) -> bool {
         self.item().is_none()
     }
 

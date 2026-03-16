@@ -7,8 +7,8 @@ use crate::matcher::{Scalar, Then, Byte};
 // Stub captures type for testing - doesn't capture anything
 struct NoCaptures;
 
-impl<'a, I: HaystackItem> FromCaptures<'a, I, 1> for NoCaptures {
-    fn from_captures(_captures: [Option<Range<usize>>; 1], _hay: Haystack<'a, I>) -> Option<Self> {
+impl<'a, I: HaystackItem> CaptureFromRanges<'a, I, 1> for NoCaptures {
+    fn from_ranges(_captures: [Option<Range<usize>>; 1], _hay: Haystack<'a, I>) -> Option<Self> {
         Some(NoCaptures)
     }
 }
@@ -19,7 +19,7 @@ struct TestRegexChar;
 
 impl Regex<char, 1> for TestRegexChar {
     type Pattern = Scalar<'a'>;
-    type Captures<'a> = NoCaptures;
+    type Capture<'a> = NoCaptures;
 }
 
 // Test struct implementing Regex trait with bytes
@@ -28,7 +28,7 @@ struct TestRegexByte;
 
 impl Regex<u8, 1> for TestRegexByte {
     type Pattern = Byte<b'x'>;
-    type Captures<'a> = NoCaptures;
+    type Capture<'a> = NoCaptures;
 }
 
 // Test struct implementing Regex trait with complex pattern
@@ -37,7 +37,7 @@ struct TestRegexComplex;
 
 impl Regex<char, 1> for TestRegexComplex {
     type Pattern = Then<char, Scalar<'h'>, Scalar<'i'>>;
-    type Captures<'a> = NoCaptures;
+    type Capture<'a> = NoCaptures;
 }
 
 // Test struct implementing AnonRegex trait
@@ -46,7 +46,7 @@ struct TestAnonRegexChar;
 
 impl AnonRegex<char, 1> for TestAnonRegexChar {
     type Pattern = Scalar<'b'>;
-    type Captures<'a> = NoCaptures;
+    type Capture<'a> = NoCaptures;
 }
 
 // Test struct implementing AnonRegex trait with bytes
@@ -55,7 +55,7 @@ struct TestAnonRegexByte;
 
 impl AnonRegex<u8, 1> for TestAnonRegexByte {
     type Pattern = Byte<b'y'>;
-    type Captures<'a> = NoCaptures;
+    type Capture<'a> = NoCaptures;
 }
 
 // Tests for Regex trait with chars
@@ -304,8 +304,8 @@ struct TestCaptures<'a> {
     cap1: Option<Range<usize>>,
 }
 
-impl<'a> FromCaptures<'a, char, 2> for TestCaptures<'a> {
-    fn from_captures(captures: [Option<Range<usize>>; 2], hay: Haystack<'a, char>) -> Option<Self> {
+impl<'a> CaptureFromRanges<'a, char, 2> for TestCaptures<'a> {
+    fn from_ranges(captures: [Option<Range<usize>>; 2], hay: Haystack<'a, char>) -> Option<Self> {
         Some(TestCaptures {
             hay,
             cap0: captures[0].clone()?,
@@ -319,7 +319,7 @@ fn test_from_captures_basic() {
     let hay = Haystack::from("hello");
     let captures = [Some(0..5), Some(0..3)];
 
-    let result = TestCaptures::from_captures(captures, hay);
+    let result = TestCaptures::from_ranges(captures, hay);
     assert!(result.is_some());
 
     let caps = result.unwrap();
@@ -332,7 +332,7 @@ fn test_from_captures_with_none() {
     let hay = Haystack::from("hello");
     let captures = [Some(0..5), None];
 
-    let result = TestCaptures::from_captures(captures, hay);
+    let result = TestCaptures::from_ranges(captures, hay);
     assert!(result.is_some());
 
     let caps = result.unwrap();
@@ -345,7 +345,7 @@ fn test_from_captures_required_missing_returns_none() {
     let hay = Haystack::from("hello");
     let captures = [None, Some(0..3)];  // cap0 is required but None
 
-    let result = TestCaptures::from_captures(captures, hay);
+    let result = TestCaptures::from_ranges(captures, hay);
     assert!(result.is_none());
 }
 
@@ -354,7 +354,7 @@ fn test_from_captures_slicing() {
     let hay = Haystack::from("hello world");
     let captures = [Some(0..5), Some(6..11)];
 
-    let result = TestCaptures::from_captures(captures, hay);
+    let result = TestCaptures::from_ranges(captures, hay);
     let caps = result.unwrap();
 
     assert_eq!(caps.hay.slice(caps.cap0.clone()), "hello");
@@ -378,8 +378,8 @@ struct TwoGroupCaptures<'a> {
     group1: Range<usize>,
 }
 
-impl<'a> FromCaptures<'a, char, 2> for TwoGroupCaptures<'a> {
-    fn from_captures(captures: [Option<Range<usize>>; 2], hay: Haystack<'a, char>) -> Option<Self> {
+impl<'a> CaptureFromRanges<'a, char, 2> for TwoGroupCaptures<'a> {
+    fn from_ranges(captures: [Option<Range<usize>>; 2], hay: Haystack<'a, char>) -> Option<Self> {
         Some(TwoGroupCaptures {
             hay,
             whole_match: captures[0].clone()?,
@@ -401,12 +401,12 @@ impl<'a> TwoGroupCaptures<'a> {
 impl Regex<char, 2> for TestRegexWithCaptures {
     // Pattern: (a+) - matches one or more 'a' and captures it
     type Pattern = CaptureGroup<char, crate::matcher::QuantifierNOrMore<char, Scalar<'a'>, 1>, 1>;
-    type Captures<'a> = TwoGroupCaptures<'a>;
+    type Capture<'a> = TwoGroupCaptures<'a>;
 }
 
 #[test]
 fn test_regex_captures_method() {
-    let caps = TestRegexWithCaptures::captures("aaa");
+    let caps = TestRegexWithCaptures::do_capture("aaa");
 
     assert!(caps.is_some());
     let caps = caps.unwrap();
@@ -417,14 +417,14 @@ fn test_regex_captures_method() {
 
 #[test]
 fn test_regex_captures_no_match() {
-    let caps = TestRegexWithCaptures::captures("bbb");
+    let caps = TestRegexWithCaptures::do_capture("bbb");
     assert!(caps.is_none());
 }
 
 #[test]
 fn test_regex_captures_finds_substring() {
     // Unlike is_match, captures finds matches within the haystack
-    let caps = TestRegexWithCaptures::captures("aaab");
+    let caps = TestRegexWithCaptures::do_capture("aaab");
 
     assert!(caps.is_some());
     let caps = caps.unwrap();

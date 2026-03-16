@@ -38,6 +38,6 @@ impl IndexedCaptures {
     }
 }
 
-pub trait FromCaptures<'a, I: HaystackItem, const N: usize>: Sized {
-    fn from_captures(captures: [Option<Range<usize>>; N], hay: Haystack<'a, I>) -> Option<Self>;
+pub trait CaptureFromRanges<'a, I: HaystackItem, const N: usize>: Sized {
+    fn from_ranges(ranges: [Option<Range<usize>>; N], hay: Haystack<'a, I>) -> Option<Self>;
 }

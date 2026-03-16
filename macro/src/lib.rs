@@ -45,10 +45,7 @@ impl Parse for RegexArgType {
 #[proc_macro]
 pub fn regex(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     match parse_macro_input!(input as RegexArgType) {
-        RegexArgType::Regex(args) => regex_internal(
-            args,
-            quote!(::ct_regex::internal::general::Regex)
-        ).into(),
+        RegexArgType::Regex(args) => regex_internal(args, false).into(),
         RegexArgType::Anon(pat) => anon_regex_internal(pat).into(),
     }
 }
@@ -59,8 +56,13 @@ fn regex_internal(
         name,
         pat
     }: RegexArgs,
-    regex_trait: TokenStream
+    impl_anon: bool
 ) -> TokenStream {
+    // Aliases
+    #![allow(nonstandard_style)]
+    let Regex = quote!(::ct_regex::internal::general::Regex);
+    let AnonRegex = quote!(::ct_regex::internal::general::AnonRegex);
+
     let config = Config::new().unicode(false).utf8(false);
 
     let pat_str = pat.value();
@@ -84,24 +86,36 @@ fn regex_internal(
     let captures_len = Literal::usize_unsuffixed(groups.len());
     let captures_impl = impl_captures(&vis, &captures_name, groups);
 
+    let anon_impl = if impl_anon {
+        quote! {
+            impl #AnonRegex<u8, #captures_len> for #name {}
+
+            impl #AnonRegex<char, #captures_len> for #name {}
+        }
+    } else {
+        quote!()
+    };
+
     quote! {
         #vis struct #name;
 
-        impl #regex_trait<u8, #captures_len> for #name {
+        impl #Regex<u8, #captures_len> for #name {
             type Pattern = #type_expr_byte;
 
             type Capture<'a> = #captures_name<'a, u8>;
         }
 
-        impl #regex_trait<char, #captures_len> for #name {
+        impl #Regex<char, #captures_len> for #name {
             type Pattern = #type_expr_scalar;
 
             type Capture<'a> = #captures_name<'a, char>;
         }
 
+        #anon_impl
+
         impl ::std::fmt::Debug for #name {
             fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-                write!(f, "/{:?}/", <Self as #regex_trait<char, #captures_len>>::Pattern::default())
+                write!(f, "/{:?}/", <Self as #Regex<char, #captures_len>>::Pattern::default())
             }
         }
 
@@ -116,7 +130,7 @@ fn anon_regex_internal(pat: LitStr) -> TokenStream {
             name: Ident::new("__AnonRegex", Span::call_site()),
             pat
         },
-        quote!(ct_regex_internal::general::AnonRegex)
+        true
     );
     quote! {
         {
@@ -134,6 +148,7 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
     let general_mod = quote!(::ct_regex::internal::general);
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
+
     let captures_len = Literal::usize_unsuffixed(groups.len());
 
     if groups.is_empty() {

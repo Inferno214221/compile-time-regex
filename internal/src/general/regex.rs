@@ -6,12 +6,27 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     type Pattern: Matcher<I>;
     type Capture<'a>: CaptureFromRanges<'a, I, N> where I: 'a;
 
+    /// Returns true if this Regex matches the **entire** haystack provided. This should probably be
+    /// the default _matching_ function to use.
+    /// 
+    /// A similar behavior can be achieved by using start and end anchors in an expression and then
+    /// calling [`contains_match`](Self::contains_match). This function should be prefered however,
+    /// because it fails fast if the first character doesn't match.
+    /// 
+    /// To check if this Regex matches and perform capturing, use [`do_capture`](Self::do_capture)
+    /// instead.
     fn is_match<'a>(hay: impl Into<Haystack<'a, I>>) -> bool {
         let mut hay = hay.into();
 
         Self::Pattern::matches(&mut hay) && hay.is_end()
     }
 
+    /// Returns true if this Regex matches any substring of the haystack provided. To retrieve the
+    /// actual substring itself, use [`slice_matching`](Self::slice_matching) or
+    /// [`find_capture`](Self::find_capture).
+    /// 
+    /// Anchors can be used as a part of this Regex to perform more complex behaviors, but if you're
+    /// just wrapping an expression with `^` and `$`, see [`is_match`](Self::is_match) instead.
     fn contains_match<'a>(hay: impl Into<Haystack<'a, I>>) -> bool {
         let mut hay = hay.into();
 
@@ -19,13 +34,21 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
             if Self::Pattern::matches(&mut hay.clone()) {
                 return true;
             }
+            // TODO: Is hay.progress really the right semantics?
             hay.progress()
         }
         false
     }
 
-    // TODO: Is hay.progress really the right semantics?
-    fn find_match<'a>(hay: impl Into<Haystack<'a, I>>) -> Option<I::Slice<'a>> {
+    /// Returns the slice that matches this Regex first. This is the slicing variant of
+    /// [`contains_match`](Self::contains_match).
+    /// 
+    /// This function runs through the Regex first and then the haystack. This has a slight semantic
+    /// difference in some scenarios.
+    /// 
+    /// Note that there is no slicing equivalent of [`is_match`](Self::is_match), because any match
+    /// has to be the entire haystack.
+    fn slice_matching<'a>(hay: impl Into<Haystack<'a, I>>) -> Option<I::Slice<'a>> {
         let mut hay = hay.into();
 
         while hay.item().is_some() {
@@ -41,7 +64,12 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         None
     }
 
-    fn find_all_matches<'a>(
+    // TODO: Use iterator rather than Vec for return type.
+
+    /// Returns all slices of the provided haystack that match this Regex, optionally `overlapping`.
+    /// 
+    /// This is the only match function that returns more than one result.
+    fn slice_all_matching<'a>(
         hay: impl Into<Haystack<'a, I>>,
         overlapping: bool
     ) -> Vec<I::Slice<'a>> {
@@ -66,9 +94,16 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         all_matches.into_iter().map(|m| hay.slice(m)).collect()
     }
 
-    // TODO: switch capture methods to rollback enabled versions
-    // TODO: switch to lazy rollback via iterators
+    // TODO: Switch capture methods to rollback enabled versions.
+    // TODO: Switch to lazy rollback via iterators.
 
+    /// Returns a [`Self::Capture`] representing the provided haystack matched against this Regex.
+    /// This includes any named or numbered capturing groups in the expression. As with
+    /// [`is_match`](Self::is_match), this function acts on the entire haystack, and needs to match
+    /// every character.
+    /// 
+    /// Provides the same result as [`find_capture`](Self::find_capture) with start and end anchors,
+    /// although without needing to check any non-starting substring.
     fn do_capture<'a>(hay: impl Into<Haystack<'a, I>>) -> Option<Self::Capture<'a>> {
         let mut hay = hay.into();
 
@@ -86,6 +121,11 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         }
     }
 
+    /// Returns the [`Self::Capture`] that matches this Regex first, similar to
+    /// [`slice_matching`](Self::slice_matching) but with any named or numbered groups included.
+    /// 
+    /// Anchors should be used for complex behavior, beyond unconditional start and end matches. See
+    /// [`do_capture`](Self::do_capture) instead to capture a full haystack.
     fn find_capture<'a>(hay: impl Into<Haystack<'a, I>>) -> Option<Self::Capture<'a>> {
         let mut hay = hay.into();
 
@@ -107,11 +147,14 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         None
     }
 
+    /// Returns a [`Self::Capture`] representing every full match of this Regex in the provided
+    /// haystack, similar to [`slice_all_matching`](Self::slice_all_matching). This can optionally
+    /// include `overlapping` matches.
     fn find_all_captures<'a>(
-        _hay: impl Into<Haystack<'a, I>>,
-        _overlapping: bool
+        hay: impl Into<Haystack<'a, I>>,
+        overlapping: bool
     ) -> Vec<Self::Capture<'a>> {
-        todo!("find_all_matches equivalent")
+        todo!("find_all_matches equivalent ({:?}, {:?})", hay.into(), overlapping)
     }
 }
 

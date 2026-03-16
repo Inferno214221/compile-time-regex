@@ -127,106 +127,106 @@ fn test_anon_contains_match_pattern() {
 #[test]
 fn test_find_match_literal_present() {
     regex!(Literal = "hello");
-    assert_eq!(Literal::find_match("say hello world"), Some("hello"));
+    assert_eq!(Literal::slice_matching("say hello world"), Some("hello"));
 }
 
 #[test]
 fn test_find_match_literal_absent() {
     regex!(Literal = "hello");
-    assert_eq!(Literal::find_match("goodbye world"), None);
+    assert_eq!(Literal::slice_matching("goodbye world"), None);
 }
 
 #[test]
 fn test_find_match_at_start() {
     regex!(Pattern = "abc");
-    assert_eq!(Pattern::find_match("abcdef"), Some("abc"));
+    assert_eq!(Pattern::slice_matching("abcdef"), Some("abc"));
 }
 
 #[test]
 fn test_find_match_at_end() {
     regex!(Pattern = "xyz");
-    assert_eq!(Pattern::find_match("abcxyz"), Some("xyz"));
+    assert_eq!(Pattern::slice_matching("abcxyz"), Some("xyz"));
 }
 
 #[test]
 fn test_find_match_in_middle() {
     regex!(Pattern = "middle");
-    assert_eq!(Pattern::find_match("start middle end"), Some("middle"));
+    assert_eq!(Pattern::slice_matching("start middle end"), Some("middle"));
 }
 
 #[test]
 fn test_find_match_exact_string() {
     regex!(Pattern = "exact");
-    assert_eq!(Pattern::find_match("exact"), Some("exact"));
+    assert_eq!(Pattern::slice_matching("exact"), Some("exact"));
 }
 
 #[test]
 fn test_find_match_empty_pattern() {
     regex!(Empty = "");
     // Empty pattern matches at the start with empty slice
-    assert_eq!(Empty::find_match("anything"), Some(""));
+    assert_eq!(Empty::slice_matching("anything"), Some(""));
 }
 
 #[test]
 fn test_find_match_empty_haystack() {
     regex!(Pattern = "test");
-    assert_eq!(Pattern::find_match(""), None);
+    assert_eq!(Pattern::slice_matching(""), None);
 }
 
 #[test]
 fn test_find_match_pattern_with_quantifier() {
     regex!(Digits = "[0-9]+");
-    assert_eq!(Digits::find_match("abc123def"), Some("123"));
+    assert_eq!(Digits::slice_matching("abc123def"), Some("123"));
 }
 
 #[test]
 fn test_find_match_alternation() {
     regex!(Alt = "foo|bar");
-    assert_eq!(Alt::find_match("prefix bar suffix"), Some("bar"));
+    assert_eq!(Alt::slice_matching("prefix bar suffix"), Some("bar"));
 }
 
 #[test]
 fn test_find_match_first_occurrence() {
     regex!(Pattern = "ab");
     // Should find the first occurrence
-    assert_eq!(Pattern::find_match("xxabyyabzz"), Some("ab"));
+    assert_eq!(Pattern::slice_matching("xxabyyabzz"), Some("ab"));
 }
 
 #[test]
 fn test_find_match_greedy_quantifier() {
     regex!(Greedy = "a+");
     // Should match all consecutive 'a's
-    assert_eq!(Greedy::find_match("xaaaay"), Some("aaaa"));
+    assert_eq!(Greedy::slice_matching("xaaaay"), Some("aaaa"));
 }
 
 #[test]
 fn test_find_match_bytes() {
     regex!(BytePattern = "test");
-    assert_eq!(BytePattern::find_match(b"this is a test string" as &[u8]), Some(b"test" as &[u8]));
+    assert_eq!(BytePattern::slice_matching(b"this is a test string" as &[u8]), Some(b"test" as &[u8]));
 }
 
 #[test]
 fn test_find_match_bytes_no_match() {
     regex!(BytePattern = "test");
-    assert_eq!(BytePattern::find_match(b"nothing here" as &[u8]), None);
+    assert_eq!(BytePattern::slice_matching(b"nothing here" as &[u8]), None);
 }
 
 #[test]
 fn test_find_match_unicode() {
     regex!(Unicode = "🦀+");
-    assert_eq!(Unicode::find_match("Hello 🦀🦀🦀 World"), Some("🦀🦀🦀"));
+    assert_eq!(Unicode::slice_matching("Hello 🦀🦀🦀 World"), Some("🦀🦀🦀"));
 }
 
 #[test]
 fn test_find_match_complex_pattern() {
     regex!(Email = r"[a-z]+@[a-z]+\.[a-z]+");
-    assert_eq!(Email::find_match("Contact us at user@example.com for info"), Some("user@example.com"));
+    assert_eq!(Email::slice_matching("Contact us at user@example.com for info"), Some("user@example.com"));
 }
 
 #[test]
 fn test_find_match_char_class() {
     regex!(Word = "[a-zA-Z]+");
-    assert_eq!(Word::find_match("123 Hello 456"), Some("Hello"));
+    assert_eq!(Word::slice_matching("123 Hello 456"), Some("Hello"));
 }
 
 // ============================================================================
@@ -266,7 +266,7 @@ fn test_contains_match_overlapping_patterns() {
 fn test_find_match_overlapping_patterns() {
     regex!(Pattern = "aa");
     // Should find first "aa" match
-    assert_eq!(Pattern::find_match("baaa"), Some("aa"));
+    assert_eq!(Pattern::slice_matching("baaa"), Some("aa"));
 }
 
 #[test]
@@ -279,7 +279,7 @@ fn test_contains_match_partial_match_then_full() {
 #[test]
 fn test_find_match_partial_match_then_full() {
     regex!(Pattern = "abc");
-    assert_eq!(Pattern::find_match("ab abc"), Some("abc"));
+    assert_eq!(Pattern::slice_matching("ab abc"), Some("abc"));
 }
 
 #[test]
@@ -294,22 +294,22 @@ fn test_contains_match_with_anchored_pattern() {
 #[test]
 fn test_find_match_with_end_anchor() {
     regex!(EndAnchored = "end$");
-    assert_eq!(EndAnchored::find_match("this is the end"), Some("end"));
+    assert_eq!(EndAnchored::slice_matching("this is the end"), Some("end"));
 }
 
 #[test]
 fn test_find_match_range_quantifier() {
     regex!(Range = "a{2,4}");
     // Should match greedily up to 4 'a's
-    assert_eq!(Range::find_match("xaaaaay"), Some("aaaa"));
+    assert_eq!(Range::slice_matching("xaaaaay"), Some("aaaa"));
 }
 
 #[test]
 fn test_find_match_optional() {
     regex!(Optional = "colou?r");
 
-    assert_eq!(Optional::find_match("my favorite color is blue"), Some("color"));
-    assert_eq!(Optional::find_match("my favourite colour is blue"), Some("colour"));
+    assert_eq!(Optional::slice_matching("my favorite color is blue"), Some("color"));
+    assert_eq!(Optional::slice_matching("my favourite colour is blue"), Some("colour"));
 }
 
 #[test]
@@ -318,7 +318,7 @@ fn test_contains_and_find_consistency() {
 
     // If contains_match returns true, find_match should return Some
     let contains = Pattern::contains_match("this is a test");
-    let found = Pattern::find_match("this is a test");
+    let found = Pattern::slice_matching("this is a test");
 
     assert!(contains);
     assert!(found.is_some());
@@ -330,7 +330,7 @@ fn test_contains_and_find_consistency_no_match() {
 
     // If contains_match returns false, find_match should return None
     let contains = Pattern::contains_match("abc def");
-    let found = Pattern::find_match("abc def");
+    let found = Pattern::slice_matching("abc def");
 
     assert!(!contains);
     assert!(found.is_none());

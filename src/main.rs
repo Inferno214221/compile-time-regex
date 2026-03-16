@@ -25,7 +25,7 @@ fn main() {
     dbg!(regex!(r"a|b|c").is_match("c"));
     dbg!(regex!(r"^(a|b)+c$").is_match("abc"));
 
-    dbg!(regex!(r"bc*").find_match("abcccd"));
+    dbg!(regex!(r"bc*").slice_matching("abcccd"));
 
     let hay = "0123456789";
     dbg!(PhoneNum::is_match(hay));

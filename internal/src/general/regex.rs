@@ -97,7 +97,6 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         all_matches.into_iter().map(|m| hay.slice(m)).collect()
     }
 
-    // TODO: Switch capture methods to rollback enabled versions.
     // TODO: Switch to lazy rollback via iterators.
 
     /// Returns a [`Self::Capture`] representing the provided haystack matched against this Regex.

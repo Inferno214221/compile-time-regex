@@ -23,7 +23,7 @@ pub struct OwnedIter<T: Clone> {
 
 impl<T: Clone> Iterator for OwnedIter<T> {
     type Item = T;
-    
+
     fn next(&mut self) -> Option<Self::Item> {
         self.inner.pop_to_owned()
     }
@@ -63,7 +63,7 @@ impl<T> Iterator for RcIter<T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let inner = mem::take(&mut self.inner.inner);
-        
+
         match inner {
             Some(rc) => {
                 self.inner.inner = rc.next.inner.clone();

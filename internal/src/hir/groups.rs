@@ -24,7 +24,7 @@ impl Groups {
             required: true
         }
     }
-    
+
     pub fn insert(&mut self, index: u32, name: Option<Box<str>>) {
         self.map.insert(index, Group {
             name,

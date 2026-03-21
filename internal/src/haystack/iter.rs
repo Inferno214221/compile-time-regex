@@ -60,7 +60,7 @@ impl<'a> HaystackIter<'a> for StrIter<'a> {
     fn current_index(&self) -> usize {
         self.index
     }
-    
+
     fn as_slice<'s>(&'s self) -> <Self::Item as HaystackItem>::Slice<'s> {
         self.inner
     }

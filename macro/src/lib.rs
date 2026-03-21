@@ -60,8 +60,8 @@ fn regex_internal(
 ) -> TokenStream {
     // Aliases
     #![allow(nonstandard_style)]
-    let Regex = quote!(::ct_regex::internal::general::Regex);
-    let AnonRegex = quote!(::ct_regex::internal::general::AnonRegex);
+    let Regex = quote!(::ct_regex::internal::expr::Regex);
+    let AnonRegex = quote!(::ct_regex::internal::expr::AnonRegex);
 
     let config = Config::new().unicode(false).utf8(false);
 
@@ -145,7 +145,7 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
     // Aliases
     #![allow(nonstandard_style)]
     let haystack_mod = quote!(::ct_regex::internal::haystack);
-    let general_mod = quote!(::ct_regex::internal::general);
+    let expr_mod = quote!(::ct_regex::internal::expr);
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
 
@@ -195,7 +195,7 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
             #(#named_groups)*
         }
 
-        impl<'a, I: #haystack_mod::HaystackItem> #general_mod::CaptureFromRanges<'a, I, #captures_len> for #name<'a, I> {
+        impl<'a, I: #haystack_mod::HaystackItem> #expr_mod::CaptureFromRanges<'a, I, #captures_len> for #name<'a, I> {
             fn from_ranges(
                 ranges: [#Option<#Range>; #captures_len],
                 hay: #haystack_mod::Haystack<'a, I>
@@ -230,7 +230,7 @@ fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStre
             }
         }
     } else {
-        quote! { 
+        quote! {
             pub fn #cap_name(&'a self) -> #Option<I::Slice<'a>> {
                 self.#index_name.as_ref().map(|c| self.0.slice(c.clone()))
             }

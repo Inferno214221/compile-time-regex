@@ -5,7 +5,7 @@ use crate::haystack::{HaystackItem, HaystackIter};
 // TODO: Create a HatstackState(usize) for even cheaper clones.
 
 /// A type used to reference the haystack when matching of capturing against a
-/// [`Regex`](crate::general::Regex), in addition to tracking progression.
+/// [`Regex`](crate::expr::Regex), in addition to tracking progression.
 ///
 /// It is rare that users will have to interact with this trait, appart from Trait bounds. All
 /// public methods will take an `impl Into<Haystack<'a, I>>` as an argument.
@@ -15,7 +15,7 @@ use crate::haystack::{HaystackItem, HaystackIter};
 /// finished.
 ///
 /// The `Haystack` type is accompanied by a helper trait, [`HaystackItem`], representing an item
-/// that can be matched against a [`Regex`](crate::general::Regex).
+/// that can be matched against a [`Regex`](crate::expr::Regex).
 #[derive(Clone)]
 pub struct Haystack<'a, I: HaystackItem> {
     inner: I::Iter<'a>,

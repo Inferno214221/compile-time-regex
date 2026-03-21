@@ -1,11 +1,10 @@
 use std::fmt::Debug;
 
-use crate::{general::{CaptureFromRanges, IndexedCaptures}, haystack::{Haystack, HaystackItem}, matcher::Matcher};
+use crate::{expr::{CaptureFromRanges, IndexedCaptures}, haystack::{Haystack, HaystackItem}, matcher::Matcher};
 
 // TODO: Use iterator rather than Vec for return type.
 // TODO: Provide a method that returns a range too, not just a slice.
 // TODO: Switch to lazy rollback via iterators.
-// TODO: Should this be dyn-compatible? Would splitting match and capture make that happen?
 
 /// A trait that is automatically implemented for types produced by the `regex!()` macro. Various
 /// function are included that test this pattern against a provided [`Haystack`].

@@ -1,6 +1,6 @@
 use std::{fmt::{self, Debug}, marker::PhantomData};
 
-use crate::{general::IndexedCaptures, haystack::{Haystack, HaystackItem}, matcher::Matcher};
+use crate::{expr::IndexedCaptures, haystack::{Haystack, HaystackItem}, matcher::Matcher};
 
 #[derive(Default)]
 pub struct CaptureGroup<I: HaystackItem, A: Matcher<I>, const N: usize>(

@@ -15,7 +15,7 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
     /// Produces a Vec of all valid matches present at the start of `hay`, used to implement
     /// backtracking. The Vec is produced in reverse priority order, so the last match has the
     /// highest priority.
-    /// 
+    ///
     /// # Required
     /// This method needs to be implemented by all [`Matcher`]s that can match more than one string
     /// of characters from a haystack.
@@ -29,7 +29,7 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
 
     /// Checks if the start of the haystack contains a match for this Matcher, writing any groups
     /// to `caps`.
-    /// 
+    ///
     /// # Required
     /// This method needs to be implemented for capturing groups or any type that holds other
     /// [`Matcher`]s, so that it can redirect to the relevant `capture` methods.
@@ -42,7 +42,7 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
     /// of `hay`. Used to implement backtracking for capturing methods. As with
     /// [`all_matches`](Matcher::all_matches), the resulting Vec is produced in reverse priority
     /// order.
-    /// 
+    ///
     /// # Required
     /// This method needs to be implemented for any type that also implements
     /// [`captures`](Matcher::captures) and [`all_matches`](Matcher::all_matches).

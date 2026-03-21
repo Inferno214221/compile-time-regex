@@ -2,8 +2,20 @@ use std::{fmt::{self, Debug}, ops::Range};
 
 use crate::haystack::{HaystackItem, HaystackIter};
 
-// TODO: It needs to be noted that a haystack can only be matched against once.
+// TODO: Create a HatstackState(usize) for even cheaper clones.
 
+/// A type used to reference the haystack when matching of capturing against a
+/// [`Regex`](crate::general::Regex), in addition to tracking progression.
+///
+/// It is rare that users will have to interact with this trait, appart from Trait bounds. All
+/// public methods will take an `impl Into<Haystack<'a, I>>` as an argument.
+///
+/// Because of the progression tracking, a `Haystack` can't be matched against multiple times
+/// without [`reset`](Self::reset)ting it first, or it will continue where the first pattern
+/// finished.
+///
+/// The `Haystack` type is accompanied by a helper trait, [`HaystackItem`], representing an item
+/// that can be matched against a [`Regex`](crate::general::Regex).
 #[derive(Clone)]
 pub struct Haystack<'a, I: HaystackItem> {
     inner: I::Iter<'a>,
@@ -49,6 +61,10 @@ impl<'a, I: HaystackItem> Haystack<'a, I> {
 
     pub fn slice(&self, cap: Range<usize>) -> I::Slice<'a> {
         self.inner.slice_with(cap)
+    }
+
+    pub fn reset(&mut self) {
+        self.inner.rollback(0);
     }
 }
 

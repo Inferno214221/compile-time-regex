@@ -5,7 +5,15 @@ use crate::{general::{CaptureFromRanges, IndexedCaptures}, haystack::{Haystack, 
 // TODO: Use iterator rather than Vec for return type.
 // TODO: Provide a method that returns a range too, not just a slice.
 // TODO: Switch to lazy rollback via iterators.
+// TODO: Should this be dyn-compatible? Would splitting match and capture make that happen?
 
+/// A trait that is automatically implemented for types produced by the `regex!()` macro. Various
+/// function are included that test this pattern against a provided [`Haystack`].
+///
+/// Altough rarely encountered, this trait's generic parameter, `I` refers to the item that can be
+/// matched individually from the provided `I::Slice`. This is used so that the same expression can
+/// be used to match various haystack types, including `&str` (`I = char`) and `&[u8]` (`I = u8`).
+/// Implementations for both of these slice/item pairs will be implemented by the macro.
 pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     type Pattern: Matcher<I>;
     type Capture<'a>: CaptureFromRanges<'a, I, N> where I: 'a;
@@ -158,43 +166,5 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         overlapping: bool
     ) -> Vec<Self::Capture<'a>> {
         todo!("find_all_matches equivalent ({:?}, {:?})", hay.into(), overlapping)
-    }
-}
-
-pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
-    fn is_match<'a>(&self, hay: impl Into<Haystack<'a, I>>) -> bool {
-        <Self as Regex<I, N>>::is_match(hay)
-    }
-
-    fn contains_match<'a>(&self, hay: impl Into<Haystack<'a, I>>) -> bool {
-        <Self as Regex<I, N>>::contains_match(hay)
-    }
-
-    fn slice_matching<'a>(&self, hay: impl Into<Haystack<'a, I>>) -> Option<I::Slice<'a>> {
-        <Self as Regex<I, N>>::slice_matching(hay)
-    }
-
-    fn slice_all_matching<'a>(
-        &self,
-        hay: impl Into<Haystack<'a, I>>,
-        overlapping: bool
-    ) -> Vec<I::Slice<'a>> {
-        <Self as Regex<I, N>>::slice_all_matching(hay, overlapping)
-    }
-
-    fn do_capture<'a>(&self, hay: impl Into<Haystack<'a, I>>) -> Option<Self::Capture<'a>> {
-        <Self as Regex<I, N>>::do_capture(hay)
-    }
-
-    fn find_capture<'a>(&self, hay: impl Into<Haystack<'a, I>>) -> Option<Self::Capture<'a>> {
-        <Self as Regex<I, N>>::find_capture(hay)
-    }
-
-    fn find_all_captures<'a>(
-        &self,
-        hay: impl Into<Haystack<'a, I>>,
-        overlapping: bool
-    ) -> Vec<Self::Capture<'a>> {
-        <Self as Regex<I, N>>::find_all_captures(hay, overlapping)
     }
 }

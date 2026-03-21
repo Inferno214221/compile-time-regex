@@ -3,7 +3,9 @@ use std::fmt::{self, Debug};
 use crate::{general::IndexedCaptures, haystack::{Haystack, HaystackItem}};
 
 pub trait Matcher<I: HaystackItem>: Debug + Default {
-    /// Checks if the start of the haystack contains a match for this [`Matcher`].
+    /// Checks if the start of the haystack contains a match for this [`Matcher`]. If this method
+    /// successfully matches the start of the haystack, `hay` is progressed so that `hay.item()`
+    /// hasn't been matched yet. On a fail, the state of hay is undefined.
     fn matches(hay: &mut Haystack<I>) -> bool;
 
     // It would be nice to use a custom Iterator here rather than a Vec, but reversing an arbitrary
@@ -12,9 +14,10 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
     // time and are hence controlled by the author. If their pattern will be operating on huge
     // haystacks and need backtracking, that's up to them.
 
-    /// Produces a Vec of all valid matches present at the start of `hay`, used to implement
-    /// backtracking. The Vec is produced in reverse priority order, so the last match has the
-    /// highest priority.
+    /// Produces a Vec of all valid haystack states produced as the result of a valid match at the
+    /// start of `hay`, used to implement backtracking. The Vec is produced in reverse priority
+    /// order, so the last match has the highest priority. After calling all_matches, the state of
+    /// `hay` itself is undefined.
     ///
     /// # Required
     /// This method needs to be implemented by all [`Matcher`]s that can match more than one string
@@ -28,7 +31,8 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
     }
 
     /// Checks if the start of the haystack contains a match for this Matcher, writing any groups
-    /// to `caps`.
+    /// to `caps`. Similar to [`matches`], this method progresses `hay` and `caps` on a success. On
+    /// a fail, they have undefined states.
     ///
     /// # Required
     /// This method needs to be implemented for capturing groups or any type that holds other
@@ -41,7 +45,7 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
     /// Produces a Vec of all valid captures (and accompanying haystack states) present at the start
     /// of `hay`. Used to implement backtracking for capturing methods. As with
     /// [`all_matches`](Matcher::all_matches), the resulting Vec is produced in reverse priority
-    /// order.
+    /// order. After calling all_captures, the state of `hay` and `caps` are undefined.
     ///
     /// # Required
     /// This method needs to be implemented for any type that also implements

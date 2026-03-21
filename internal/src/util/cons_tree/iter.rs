@@ -21,6 +21,13 @@ pub struct OwnedIter<T: Clone> {
     pub(crate) inner: ConsTree<T>,
 }
 
+impl<T: Clone> OwnedIter<T> {
+    /// Returns all remaining elements of this iterator, as a `ConsTree`.
+    pub fn remainder(self) -> ConsTree<T> {
+        self.inner
+    }
+}
+
 impl<T: Clone> Iterator for OwnedIter<T> {
     type Item = T;
 
@@ -33,29 +40,32 @@ pub struct UniqueIter<T> {
     pub(crate) inner: ConsTree<T>,
 }
 
+impl<T> UniqueIter<T> {
+    /// Returns all remaining elements of this iterator, as a [`ConsTree`]. When used on an
+    /// exhausted `UniqueIter`, the list returned will contain all the shared items (of which there
+    /// may be none).
+    pub fn remainder(self) -> ConsTree<T> {
+        self.inner
+    }
+}
+
 impl<T> Iterator for UniqueIter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let inner = mem::take(&mut self.inner.inner);
-
-        match inner {
-            Some(rc) => {
-                // If this returns here, self.inner.inner has been replaced with a None.
-                let ConsTreeNode { value, next } = Rc::into_inner(rc)?;
-                self.inner.inner = next.inner;
-                Some(value)
-            },
-            None => {
-                self.inner.inner = inner;
-                None
-            },
-        }
+        self.inner.pop_if_unique()
     }
 }
 
 pub struct RcIter<T> {
     pub(crate) inner: ConsTree<T>,
+}
+
+impl<T> RcIter<T> {
+    /// Returns all remaining elements of this iterator, as a `ConsTree`.
+    pub fn remainder(self) -> ConsTree<T> {
+        self.inner
+    }
 }
 
 impl<T> Iterator for RcIter<T> {

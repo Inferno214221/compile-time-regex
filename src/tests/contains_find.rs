@@ -236,19 +236,19 @@ fn test_find_match_char_class() {
 #[test]
 fn test_anon_find_match_literal() {
     let pattern = regex!("hello");
-    assert_eq!(pattern.find_match("say hello world"), Some("hello"));
+    assert_eq!(pattern.slice_matching("say hello world"), Some("hello"));
 }
 
 #[test]
 fn test_anon_find_match_pattern() {
     let pattern = regex!("[0-9]+");
-    assert_eq!(pattern.find_match("item 42 in stock"), Some("42"));
+    assert_eq!(pattern.slice_matching("item 42 in stock"), Some("42"));
 }
 
 #[test]
 fn test_anon_find_match_no_match() {
     let pattern = regex!("xyz");
-    assert_eq!(pattern.find_match("abc def"), None);
+    assert_eq!(pattern.slice_matching("abc def"), None);
 }
 
 // ============================================================================

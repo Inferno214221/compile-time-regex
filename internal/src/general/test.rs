@@ -5,6 +5,7 @@ use crate::haystack::{Haystack, HaystackItem};
 use crate::matcher::{Scalar, Then, Byte};
 
 // Stub captures type for testing - doesn't capture anything
+#[derive(Debug)]
 struct NoCaptures;
 
 impl<'a, I: HaystackItem> CaptureFromRanges<'a, I, 1> for NoCaptures {
@@ -44,19 +45,23 @@ impl Regex<char, 1> for TestRegexComplex {
 #[derive(Debug)]
 struct TestAnonRegexChar;
 
-impl AnonRegex<char, 1> for TestAnonRegexChar {
+impl Regex<char, 1> for TestAnonRegexChar {
     type Pattern = Scalar<'b'>;
     type Capture<'a> = NoCaptures;
 }
+
+impl AnonRegex<char, 1> for TestAnonRegexChar {}
 
 // Test struct implementing AnonRegex trait with bytes
 #[derive(Debug)]
 struct TestAnonRegexByte;
 
-impl AnonRegex<u8, 1> for TestAnonRegexByte {
+impl Regex<u8, 1> for TestAnonRegexByte {
     type Pattern = Byte<b'y'>;
     type Capture<'a> = NoCaptures;
 }
+
+impl AnonRegex<u8, 1> for TestAnonRegexByte {}
 
 // Tests for Regex trait with chars
 #[test]
@@ -199,7 +204,7 @@ fn test_anon_regex_requires_full_match() {
 #[test]
 fn test_indexed_captures_default_is_empty() {
     let caps = IndexedCaptures::default();
-    assert!(caps.0.is_none());
+    assert!(caps.0.is_empty());
 }
 
 #[test]
@@ -207,8 +212,8 @@ fn test_indexed_captures_push_single() {
     let mut caps = IndexedCaptures::default();
     caps.push(0, 0..5);
 
-    assert!(caps.0.is_some());
-    let inner = caps.0.as_ref().unwrap();
+    assert!(!caps.0.is_empty());
+    let inner = caps.0.inner.as_ref().unwrap();
     assert_eq!(inner.index, 0);
     assert_eq!(inner.cap, 0..5);
 }
@@ -221,7 +226,7 @@ fn test_indexed_captures_push_multiple() {
     caps.push(2, 5..10);
 
     // Most recent push should be at the front
-    let inner = caps.0.as_ref().unwrap();
+    let inner = caps.0.inner.as_ref().unwrap();
     assert_eq!(inner.index, 2);
     assert_eq!(inner.cap, 5..10);
 }
@@ -298,6 +303,7 @@ fn test_indexed_captures_clone_independence() {
 // ============================================================================
 
 // Test captures struct that stores actual capture data
+#[derive(Debug)]
 struct TestCaptures<'a> {
     hay: Haystack<'a, char>,
     cap0: Range<usize>,
@@ -372,6 +378,7 @@ use crate::matcher::CaptureGroup;
 struct TestRegexWithCaptures;
 
 // Captures struct for TestRegexWithCaptures
+#[derive(Debug)]
 struct TwoGroupCaptures<'a> {
     hay: Haystack<'a, char>,
     whole_match: Range<usize>,
@@ -422,13 +429,8 @@ fn test_regex_captures_no_match() {
 }
 
 #[test]
-fn test_regex_captures_finds_substring() {
-    // Unlike is_match, captures finds matches within the haystack
+fn test_regex_captures_requires_full_match() {
+    // do_capture requires the entire haystack to be consumed, so "aaab" doesn't match (a+)
     let caps = TestRegexWithCaptures::do_capture("aaab");
-
-    assert!(caps.is_some());
-    let caps = caps.unwrap();
-    // Should capture "aaa" (the a+ portion before 'b')
-    assert_eq!(caps.whole_match(), "aaa");
-    assert_eq!(caps.group1(), "aaa");
+    assert!(caps.is_none());
 }

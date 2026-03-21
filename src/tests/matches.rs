@@ -419,16 +419,20 @@ fn test_alternation_precedence() {
     regex!(AltPrec = "ab|abc");
 
     // is_match() requires the entire haystack to match
-    // "ab" matches the first alternative exactly
     assert!(AltPrec::is_match("ab"));
-    // "abc" - first alternative "ab" matches but leaves "c", and alternation
-    // doesn't backtrack to try "abc", so this fails with current implementation
-    assert!(!AltPrec::is_match("abc"));
-    // FIXME: Is this a bug?
+    // all_matches explores all alternatives, so "abc" is correctly matched
+    // even though "ab" is listed first
+    assert!(AltPrec::is_match("abc"));
+}
 
-    // To match "abc", put the longer alternative first
-    regex!(AltPrecFixed = "abc|ab");
-    assert!(AltPrecFixed::is_match("abc"));
+#[test]
+fn test_alternation_precedence_do_capture() {
+    regex!(AltPrec = "ab|abc");
+
+    // do_capture must consume the entire haystack, so it finds the "abc" match
+    assert!(AltPrec::do_capture("abc").is_some());
+    assert!(AltPrec::do_capture("ab").is_some());
+    assert!(AltPrec::do_capture("a").is_none());
 }
 
 // ============================================================================

@@ -3,70 +3,70 @@ use super::*;
 // Tests for Haystack creation from &str
 #[test]
 fn test_haystack_from_str() {
-    let mut hay = Haystack::from("test");
+    let hay = Haystack::from("test");
     assert!(!hay.is_end());
 }
 
 #[test]
 fn test_haystack_from_empty_str() {
-    let mut hay = Haystack::from("");
+    let hay = Haystack::from("");
     assert!(hay.is_end());
 }
 
 #[test]
 fn test_haystack_from_unicode_str() {
-    let mut hay = Haystack::from("Hello 🦀 World");
+    let hay = Haystack::from("Hello 🦀 World");
     assert!(!hay.is_end());
 }
 
 // Tests for Haystack creation from &[u8]
 #[test]
 fn test_haystack_from_bytes() {
-    let mut hay = Haystack::from(b"test" as &[u8]);
+    let hay = Haystack::from(b"test" as &[u8]);
     assert!(!hay.is_end());
 }
 
 #[test]
 fn test_haystack_from_empty_bytes() {
-    let mut hay = Haystack::from(b"" as &[u8]);
+    let hay = Haystack::from(b"" as &[u8]);
     assert!(hay.is_end());
 }
 
 // Tests for item() method with chars
 #[test]
 fn test_item_char_some() {
-    let mut hay = Haystack::from("a");
+    let hay = Haystack::from("a");
     assert_eq!(hay.item(), Some('a'));
 }
 
 #[test]
 fn test_item_char_none() {
-    let mut hay = Haystack::from("");
+    let hay = Haystack::from("");
     assert_eq!(hay.item(), None);
 }
 
 #[test]
 fn test_item_char_unicode() {
-    let mut hay = Haystack::from("🦀");
+    let hay = Haystack::from("🦀");
     assert_eq!(hay.item(), Some('🦀'));
 }
 
 #[test]
 fn test_item_char_multibyte() {
-    let mut hay = Haystack::from("é");
+    let hay = Haystack::from("é");
     assert_eq!(hay.item(), Some('é'));
 }
 
 // Tests for item() method with bytes
 #[test]
 fn test_item_byte_some() {
-    let mut hay = Haystack::from(b"a" as &[u8]);
+    let hay = Haystack::from(b"a" as &[u8]);
     assert_eq!(hay.item(), Some(b'a'));
 }
 
 #[test]
 fn test_item_byte_none() {
-    let mut hay = Haystack::from(b"" as &[u8]);
+    let hay = Haystack::from(b"" as &[u8]);
     assert_eq!(hay.item(), None);
 }
 
@@ -113,13 +113,13 @@ fn test_progress_byte() {
 // Tests for is_start() method
 #[test]
 fn test_is_start_initially_true() {
-    let mut hay = Haystack::from("test");
+    let hay = Haystack::from("test");
     assert!(hay.is_start());
 }
 
 #[test]
 fn test_is_start_initially_true_empty() {
-    let mut hay = Haystack::from("");
+    let hay = Haystack::from("");
     assert!(hay.is_start());
 }
 
@@ -141,13 +141,13 @@ fn test_is_start_with_bytes() {
 // Tests for is_end() method with chars
 #[test]
 fn test_is_end_empty() {
-    let mut hay = Haystack::from("");
+    let hay = Haystack::from("");
     assert!(hay.is_end());
 }
 
 #[test]
 fn test_is_end_not_empty() {
-    let mut hay = Haystack::from("a");
+    let hay = Haystack::from("a");
     assert!(!hay.is_end());
 }
 
@@ -172,13 +172,13 @@ fn test_is_end_after_partial_consuming() {
 // Tests for is_end() method with bytes
 #[test]
 fn test_is_end_bytes_empty() {
-    let mut hay = Haystack::from(b"" as &[u8]);
+    let hay = Haystack::from(b"" as &[u8]);
     assert!(hay.is_end());
 }
 
 #[test]
 fn test_is_end_bytes_not_empty() {
-    let mut hay = Haystack::from(b"a" as &[u8]);
+    let hay = Haystack::from(b"a" as &[u8]);
     assert!(!hay.is_end());
 }
 
@@ -193,7 +193,7 @@ fn test_is_end_bytes_after_consuming() {
 #[test]
 fn test_clone_independence() {
     let mut hay1 = Haystack::from("abc");
-    let mut hay2 = hay1.clone();
+    let hay2 = hay1.clone();
 
     hay1.progress();
     assert_eq!(hay1.item(), Some('b'));
@@ -205,7 +205,7 @@ fn test_clone_preserves_state() {
     let mut hay1 = Haystack::from("abc");
     hay1.progress();
 
-    let mut hay2 = hay1.clone();
+    let hay2 = hay1.clone();
     assert_eq!(hay1.item(), hay2.item());
 }
 
@@ -214,11 +214,11 @@ fn test_clone_start_flag() {
     let mut hay1 = Haystack::from("abc");
     assert!(hay1.is_start());
 
-    let mut hay2 = hay1.clone();
+    let hay2 = hay1.clone();
     assert!(hay2.is_start());
 
     hay1.progress();
-    let mut hay3 = hay1.clone();
+    let hay3 = hay1.clone();
     assert!(!hay3.is_start());
 }
 
@@ -268,7 +268,7 @@ fn test_multiple_operations() {
 
 #[test]
 fn test_peek_does_not_consume() {
-    let mut hay = Haystack::from("test");
+    let hay = Haystack::from("test");
     let first = hay.item();
     let second = hay.item();
     let third = hay.item();

@@ -205,7 +205,7 @@ fn test_captures_bytes_range() {
 fn test_anon_captures_basic() {
     let pattern = regex!("(a+)(b+)");
 
-    let caps = pattern.captures("aaabbb").expect("should match");
+    let caps = pattern.do_capture("aaabbb").expect("should match");
     assert_eq!(caps.cap_0(), "aaabbb");
     assert_eq!(caps.cap_1(), "aaa");
     assert_eq!(caps.cap_2(), "bbb");
@@ -215,7 +215,7 @@ fn test_anon_captures_basic() {
 fn test_anon_captures_no_match() {
     let pattern = regex!("(a+)(b+)");
 
-    let caps = pattern.captures("ccc");
+    let caps = pattern.do_capture("ccc");
     assert!(caps.is_none());
 }
 
@@ -223,10 +223,10 @@ fn test_anon_captures_no_match() {
 fn test_anon_captures_optional() {
     let pattern = regex!("a(b)?c");
 
-    let caps_present = pattern.captures("abc").expect("should match");
+    let caps_present = pattern.do_capture("abc").expect("should match");
     assert_eq!(caps_present.cap_1(), Some("b"));
 
-    let caps_absent = pattern.captures("ac").expect("should match");
+    let caps_absent = pattern.do_capture("ac").expect("should match");
     assert_eq!(caps_absent.cap_1(), None);
 }
 

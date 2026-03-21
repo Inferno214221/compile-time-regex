@@ -67,33 +67,25 @@ pub struct Then<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
 
 impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B> {
     fn matches(hay: &mut Haystack<I>) -> bool {
-        if A::matches(hay) {
-            B::matches(hay)
-        } else {
-            false
-        }
+        Self::all_matches(hay).pop().is_some()
     }
 
     fn all_matches<'a>(hay: &mut Haystack<'a, I>) -> Vec<Haystack<'a, I>> {
-        A::all_matches(hay).into_iter().flat_map(|mut m| {
-            B::all_matches(&mut m)
+        A::all_matches(hay).into_iter().flat_map(|mut h| {
+            B::all_matches(&mut h)
         }).collect()
     }
 
     fn captures(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
-        if A::captures(hay, caps) {
-            B::captures(hay, caps)
-        } else {
-            false
-        }
+        Self::all_captures(hay, caps).pop().is_some()
     }
 
     fn all_captures<'a>(
         hay: &mut Haystack<'a, I>,
         caps: &mut IndexedCaptures
     ) -> Vec<(Haystack<'a, I>, IndexedCaptures)> {
-        A::all_captures(hay, caps).into_iter().flat_map(|mut m| {
-            B::all_captures(&mut m.0, &mut m.1)
+        A::all_captures(hay, caps).into_iter().flat_map(|(mut h, mut c)| {
+            B::all_captures(&mut h, &mut c)
         }).collect()
     }
 }

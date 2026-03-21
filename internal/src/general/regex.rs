@@ -18,7 +18,10 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     fn is_match<'a>(hay: impl Into<Haystack<'a, I>>) -> bool {
         let mut hay = hay.into();
 
-        Self::Pattern::matches(&mut hay) && hay.is_end()
+        // should update this so that ab|abc matches "abc"
+
+        // Self::Pattern::matches(&mut hay) && hay.is_end()
+        Self::Pattern::all_matches(&mut hay).iter().any(Haystack::is_end)
     }
 
     /// Returns true if this Regex matches any substring of the haystack provided. To retrieve the
@@ -31,7 +34,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         let mut hay = hay.into();
 
         while hay.item().is_some() {
-            if Self::Pattern::matches(&mut hay.clone()) {
+            if Self::Pattern::all_matches(&mut hay.clone()).pop().is_some() {
                 return true;
             }
             // TODO: Is hay.progress really the right semantics?
@@ -53,9 +56,8 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
 
         while hay.item().is_some() {
             let start = hay.index();
-            let mut fork = hay.clone();
 
-            if Self::Pattern::matches(&mut fork) {
+            if let Some(fork) = Self::Pattern::all_matches(&mut hay.clone()).pop() {
                 let cap = start..fork.index();
                 return Some(hay.slice(cap));
             }
@@ -82,8 +84,8 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
             let start = hay.index();
             let rollback = hay.clone();
 
-            if Self::Pattern::matches(&mut hay) {
-                all_matches.push(start..hay.index());
+            if let Some(fork) = Self::Pattern::all_matches(&mut hay).pop() {
+                all_matches.push(start..fork.index());
             }
 
             if overlapping {
@@ -101,7 +103,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// Returns a [`Self::Capture`] representing the provided haystack matched against this Regex.
     /// This includes any named or numbered capturing groups in the expression. As with
     /// [`is_match`](Self::is_match), this function acts on the entire haystack, and needs to match
-    /// every character.
+    /// every character from start to end.
     ///
     /// Provides the same result as [`find_capture`](Self::find_capture) with start and end anchors,
     /// although without needing to check any non-starting substring.
@@ -111,15 +113,17 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         let mut caps = IndexedCaptures::default();
 
         let start = hay.index();
-        if Self::Pattern::captures(&mut hay, &mut caps) && hay.is_end() {
-            caps.push(0, start..hay.index());
-            Some(
+
+        Self::Pattern::all_captures(&mut hay, &mut caps)
+            .into_iter()
+            .rev()
+            .filter(|(h, _)| h.is_end())
+            .map(|(hay, mut caps)| {
+                caps.push(0, start..hay.index());
                 Self::Capture::from_ranges(caps.into_array(), hay)
                     .expect("failed to convert captures despite matching correctly")
-            )
-        } else {
-            None
-        }
+            })
+            .next()
     }
 
     /// Returns the [`Self::Capture`] that matches this Regex first, similar to
@@ -134,10 +138,14 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
 
         while hay.item().is_some() {
             let start = hay.index();
-            let mut fork = hay.clone();
 
-            if Self::Pattern::captures(&mut fork, &mut caps) {
-                caps.push(0, start..fork.index());
+            let first = Self::Pattern::all_captures(&mut hay.clone(), &mut caps)
+                .into_iter()
+                .rev()
+                .find(|(hay, _)| hay.is_end());
+
+            if let Some((hay, mut caps)) = first {
+                caps.push(0, start..hay.index());
                 return Some(
                     Self::Capture::from_ranges(caps.into_array(), hay)
                         .expect("failed to convert captures despite matching correctly")

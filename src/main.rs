@@ -2,8 +2,7 @@ use ct_regex::*;
 
 regex!(pub MyPattern = r"^(([a-z]+)|([0-9]+))$");
 regex!(MyOtherPattern = r"word\n");
-regex!(PhoneNum = r"(0|(?<country_code>\+\d+ ))(?<number>\d{9})");
-// FIXME: grouped rollback so that this     ^ space isn't required
+regex!(PhoneNum = r"(0|(?<country_code>\+[0-9]+))(?<number>[0-9]{9})");
 
 // TODO: regex flags
 
@@ -27,6 +26,8 @@ fn main() {
 
     dbg!(regex!(r"bc*").slice_matching("abcccd"));
 
+    dbg!(PhoneNum);
+
     let hay = "0123456789";
     dbg!(PhoneNum::is_match(hay));
     let caps = PhoneNum::do_capture(hay).unwrap();
@@ -38,7 +39,7 @@ fn main() {
     dbg!(caps.cap_2());
     dbg!(caps.cap_3());
 
-    let hay = "+61 123456789";
+    let hay = "+61123456789";
     dbg!(PhoneNum::is_match(hay));
     let caps = PhoneNum::do_capture(hay).unwrap();
     dbg!(caps.whole_match());

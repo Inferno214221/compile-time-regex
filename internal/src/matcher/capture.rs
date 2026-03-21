@@ -13,6 +13,10 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for CaptureGroup
         A::matches(hay)
     }
 
+    fn all_matches<'a>(hay: &mut Haystack<'a, I>) -> Vec<Haystack<'a, I>> {
+        A::all_matches(hay)
+    }
+
     fn captures(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
         let start = hay.index();
         if A::captures(hay, caps) {
@@ -28,9 +32,9 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for CaptureGroup
         caps: &mut IndexedCaptures
     ) -> Vec<(Haystack<'a, I>, IndexedCaptures)> {
         let start = hay.index();
-        let captures = A::all_captures(hay, caps);
+        let mut captures = A::all_captures(hay, caps);
 
-        for (mut h, mut c) in A::all_captures(hay, caps) {
+        for (h, c) in captures.iter_mut() {
             c.push(N, start..h.index());
         }
 

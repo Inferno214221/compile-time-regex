@@ -2,7 +2,7 @@ use std::fmt::Debug;
     
 use crate::{haystack::{ByteIter, HaystackIter, StrIter}, hir::{CastClass, WriteMatcher}};
 
-pub trait HaystackItem: Default + Copy + WriteMatcher + CastClass {
+pub trait HaystackItem: Debug + Default + Copy + WriteMatcher + CastClass {
     type Iter<'a>: HaystackIter<'a, Item = Self> + Clone;
 
     type Slice<'a>: Debug + Copy;

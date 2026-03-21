@@ -235,6 +235,13 @@ impl<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>> Matcher<I> for QuantifierThe
             false
         }
     }
+
+    fn all_captures<'a>(
+            hay: &mut Haystack<'a, I>,
+            caps: &mut IndexedCaptures
+        ) -> Vec<(Haystack<'a, I>, IndexedCaptures)> {
+        Then::<I, Q, T>::all_captures(hay, caps)
+    }
 }
 
 impl<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>> Debug for QuantifierThen<I, Q, T> {

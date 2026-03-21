@@ -44,10 +44,10 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
         hay: &mut Haystack<'a, I>,
         caps: &mut IndexedCaptures
     ) -> Vec<(Haystack<'a, I>, IndexedCaptures)> {
-        let mut fork = (hay.clone(), caps.clone());
+        let (mut hay_fork, mut caps_fork) = (hay.clone(), caps.clone());
         // We match B first because the output needs to be reversed for greedy matching.
         let mut vec = B::all_captures(hay, caps);
-        vec.append(&mut A::all_captures(&mut fork.0, &mut fork.1));
+        vec.append(&mut A::all_captures(&mut hay_fork, &mut caps_fork));
         vec
     }
 }
@@ -94,8 +94,8 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B>
         hay: &mut Haystack<'a, I>,
         caps: &mut IndexedCaptures
     ) -> Vec<(Haystack<'a, I>, IndexedCaptures)> {
-        A::all_captures(hay, caps).into_iter().flat_map(|(mut h, mut c)| {
-            B::all_captures(&mut h, &mut c)
+        A::all_captures(hay, caps).into_iter().flat_map(|(mut hay_fork, mut caps_fork)| {
+            B::all_captures(&mut hay_fork, &mut caps_fork)
         }).collect()
     }
 }

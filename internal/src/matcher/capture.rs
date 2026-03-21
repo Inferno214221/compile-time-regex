@@ -34,8 +34,8 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for CaptureGroup
         let start = hay.index();
         let mut captures = A::all_captures(hay, caps);
 
-        for (h, c) in captures.iter_mut() {
-            c.push(N, start..h.index());
+        for (hay_fork, caps_fork) in captures.iter_mut() {
+            caps_fork.push(N, start..hay_fork.index());
         }
 
         captures

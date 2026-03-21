@@ -2,6 +2,10 @@ use std::fmt::Debug;
 
 use crate::{general::{CaptureFromRanges, IndexedCaptures}, haystack::{Haystack, HaystackItem}, matcher::Matcher};
 
+// TODO: Use iterator rather than Vec for return type.
+// TODO: Provide a method that returns a range too, not just a slice.
+// TODO: Switch to lazy rollback via iterators.
+
 pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     type Pattern: Matcher<I>;
     type Capture<'a>: CaptureFromRanges<'a, I, N> where I: 'a;
@@ -18,9 +22,6 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     fn is_match<'a>(hay: impl Into<Haystack<'a, I>>) -> bool {
         let mut hay = hay.into();
 
-        // should update this so that ab|abc matches "abc"
-
-        // Self::Pattern::matches(&mut hay) && hay.is_end()
         Self::Pattern::all_matches(&mut hay).iter().any(Haystack::is_end)
     }
 
@@ -37,7 +38,6 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
             if Self::Pattern::all_matches(&mut hay.clone()).pop().is_some() {
                 return true;
             }
-            // TODO: Is hay.progress really the right semantics?
             hay.progress()
         }
         false
@@ -65,9 +65,6 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         }
         None
     }
-
-    // TODO: Use iterator rather than Vec for return type.
-    // TODO: Provide a method that returns a range too, not just a slice.
 
     /// Returns all slices of the provided haystack that match this Regex, optionally `overlapping`.
     ///
@@ -97,8 +94,6 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         all_matches.into_iter().map(|m| hay.slice(m)).collect()
     }
 
-    // TODO: Switch to lazy rollback via iterators.
-
     /// Returns a [`Self::Capture`] representing the provided haystack matched against this Regex.
     /// This includes any named or numbered capturing groups in the expression. As with
     /// [`is_match`](Self::is_match), this function acts on the entire haystack, and needs to match
@@ -117,9 +112,9 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
             .into_iter()
             .rev()
             .filter(|(h, _)| h.is_end())
-            .map(|(hay, mut caps)| {
-                caps.push(0, start..hay.index());
-                Self::Capture::from_ranges(caps.into_array(), hay)
+            .map(|(hay_fork, mut caps_fork)| {
+                caps_fork.push(0, start..hay_fork.index());
+                Self::Capture::from_ranges(caps_fork.into_array(), hay_fork)
                     .expect("failed to convert captures despite matching correctly")
             })
             .next()
@@ -143,10 +138,10 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
                 .rev()
                 .find(|(hay, _)| hay.is_end());
 
-            if let Some((hay, mut caps)) = first {
-                caps.push(0, start..hay.index());
+            if let Some((hay_fork, mut caps_fork)) = first {
+                caps_fork.push(0, start..hay_fork.index());
                 return Some(
-                    Self::Capture::from_ranges(caps.into_array(), hay)
+                    Self::Capture::from_ranges(caps_fork.into_array(), hay_fork)
                         .expect("failed to convert captures despite matching correctly")
                 );
             }

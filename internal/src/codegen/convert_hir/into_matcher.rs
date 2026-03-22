@@ -1,24 +1,48 @@
-use proc_macro2::TokenStream;
+use std::any;
+
+use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use regex_syntax::hir::{Capture, Class, ClassBytesRange, ClassUnicodeRange, Hir, HirKind, Literal, Look, Repetition};
 
-use crate::{haystack::HaystackItem, hir::{Groups, type_ident, util::type_name}, matcher::{Always as A, Or, Then}};
+use crate::{codegen::{CodegenItem, Group, Groups}, matcher::{Always as A, Or, Then}};
 
-pub trait WriteMatcher {
-    fn write_matcher<I: HaystackItem>(self, caps: &mut Groups) -> TokenStream;
+pub fn type_name<T>() -> &'static str {
+    any::type_name::<T>()
+        .split('<').next().unwrap()
+        .rsplit("::").next().unwrap()
 }
 
-impl WriteMatcher for Hir {
-    fn write_matcher<I: HaystackItem>(self, caps: &mut Groups) -> TokenStream {
+pub fn type_ident<T>() -> Ident {
+    format_ident!("{}", type_name::<T>())
+}
+
+pub trait HirExtension {
+    fn into_matcher<I: CodegenItem>(self) -> (TokenStream, Vec<Group>);
+}
+
+impl HirExtension for Hir {
+    fn into_matcher<I: CodegenItem>(self) -> (TokenStream, Vec<Group>) {
+        let mut caps = Groups::new();
+        let tokens = self.into_matcher_expr::<I>(&mut caps);
+        (tokens, caps.into_vec())
+    }
+}
+
+pub trait IntoMatcherExpr {
+    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream;
+}
+
+impl IntoMatcherExpr for Hir {
+    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
         match self.into_kind() {
-            HirKind::Empty              => Empty.write_matcher::<I>(caps),
-            HirKind::Literal(lit)       => lit.write_matcher::<I>(caps),
-            HirKind::Class(class)       => class.write_matcher::<I>(caps),
-            HirKind::Look(look)         => look.write_matcher::<I>(caps),
-            HirKind::Repetition(rep)    => rep.write_matcher::<I>(caps),
-            HirKind::Capture(cap)       => cap.write_matcher::<I>(caps),
-            HirKind::Concat(hirs)       => Concat(hirs).write_matcher::<I>(caps),
-            HirKind::Alternation(hirs)  => Alternation(hirs).write_matcher::<I>(caps),
+            HirKind::Empty              => Empty.into_matcher_expr::<I>(caps),
+            HirKind::Literal(lit)       => lit.into_matcher_expr::<I>(caps),
+            HirKind::Class(class)       => class.into_matcher_expr::<I>(caps),
+            HirKind::Look(look)         => look.into_matcher_expr::<I>(caps),
+            HirKind::Repetition(rep)    => rep.into_matcher_expr::<I>(caps),
+            HirKind::Capture(cap)       => cap.into_matcher_expr::<I>(caps),
+            HirKind::Concat(hirs)       => Concat(hirs).into_matcher_expr::<I>(caps),
+            HirKind::Alternation(hirs)  => Alternation(hirs).into_matcher_expr::<I>(caps),
         }
     }
 }
@@ -38,18 +62,18 @@ struct Backtrack {
     then: Vec<Hir>,
 }
 
-impl WriteMatcher for u8 {
-    fn write_matcher<I: HaystackItem>(self, _caps: &mut Groups) -> TokenStream {
+impl IntoMatcherExpr for u8 {
+    fn into_matcher_expr<I: CodegenItem>(self, _caps: &mut Groups) -> TokenStream {
         assert_eq!(type_name::<I>(), type_name::<u8>());
         quote!(::ct_regex::internal::matcher::Byte<#self>)
     }
 }
 
-impl WriteMatcher for &ClassBytesRange {
-    fn write_matcher<I: HaystackItem>(self, caps: &mut Groups) -> TokenStream {
+impl IntoMatcherExpr for &ClassBytesRange {
+    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
         assert_eq!(type_name::<I>(), type_name::<u8>());
         if self.start() == self.end() {
-            self.start().write_matcher::<I>(caps)
+            self.start().into_matcher_expr::<I>(caps)
         } else {
             let start = self.start();
             let end = self.end();
@@ -58,18 +82,18 @@ impl WriteMatcher for &ClassBytesRange {
     }
 }
 
-impl WriteMatcher for char {
-    fn write_matcher<I: HaystackItem>(self, _caps: &mut Groups) -> TokenStream {
+impl IntoMatcherExpr for char {
+    fn into_matcher_expr<I: CodegenItem>(self, _caps: &mut Groups) -> TokenStream {
         assert_eq!(type_name::<I>(), type_name::<char>());
         quote!(::ct_regex::internal::matcher::Scalar<#self>)
     }
 }
 
-impl WriteMatcher for &ClassUnicodeRange {
-    fn write_matcher<I: HaystackItem>(self, caps: &mut Groups) -> TokenStream {
+impl IntoMatcherExpr for &ClassUnicodeRange {
+    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
         assert_eq!(type_name::<I>(), type_name::<char>(), "{:?}", self);
         if self.start() == self.end() {
-            self.start().write_matcher::<I>(caps)
+            self.start().into_matcher_expr::<I>(caps)
         } else {
             let start = self.start();
             let end = self.end();
@@ -78,14 +102,14 @@ impl WriteMatcher for &ClassUnicodeRange {
     }
 }
 
-impl WriteMatcher for Empty {
-    fn write_matcher<I: HaystackItem>(self, _caps: &mut Groups) -> TokenStream {
+impl IntoMatcherExpr for Empty {
+    fn into_matcher_expr<I: CodegenItem>(self, _caps: &mut Groups) -> TokenStream {
         quote!(::ct_regex::internal::matcher::Always)
     }
 }
 
-impl WriteMatcher for Literal {
-    fn write_matcher<I: HaystackItem>(self, caps: &mut Groups) -> TokenStream {
+impl IntoMatcherExpr for Literal {
+    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
         write_chunked::<Then<u8, A, A>, I, _>(
             caps,
             I::vec_from_str(
@@ -96,9 +120,9 @@ impl WriteMatcher for Literal {
     }
 }
 
-impl WriteMatcher for Class {
-    fn write_matcher<I: HaystackItem>(self, caps: &mut Groups) -> TokenStream {
-        match I::cast_class(self) {
+impl IntoMatcherExpr for Class {
+    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
+        match I::normalize_class(self) {
             Class::Unicode(unicode) => write_chunked::<Or<u8, A, A>, I, _>(
                 caps,
                 unicode.ranges().iter().collect()
@@ -111,8 +135,8 @@ impl WriteMatcher for Class {
     }
 }
 
-impl WriteMatcher for Look {
-    fn write_matcher<I: HaystackItem>(self, _caps: &mut Groups) -> TokenStream {
+impl IntoMatcherExpr for Look {
+    fn into_matcher_expr<I: CodegenItem>(self, _caps: &mut Groups) -> TokenStream {
         match self {
             Look::Start => quote!(::ct_regex::internal::matcher::Beginning),
             Look::End => quote!(::ct_regex::internal::matcher::End),
@@ -125,8 +149,8 @@ impl WriteMatcher for Look {
     }
 }
 
-impl WriteMatcher for Repetition {
-    fn write_matcher<I: HaystackItem>(self, caps: &mut Groups) -> TokenStream {
+impl IntoMatcherExpr for Repetition {
+    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
         let Repetition { min, max, greedy, sub } = self;
         if !greedy {
             todo!("lazy repetition")
@@ -138,7 +162,7 @@ impl WriteMatcher for Repetition {
         }
 
         let item_type = type_ident::<I>();
-        let sub_matcher = sub.write_matcher::<I>(caps);
+        let sub_matcher = sub.into_matcher_expr::<I>(caps);
         // I need to document this somewhere, might as well be here: usize is used for all generic
         // parameters, even though Hir types use u32, because it is used for arrasy indexing during
         // the conversion process.
@@ -164,19 +188,19 @@ impl WriteMatcher for Repetition {
     }
 }
 
-impl WriteMatcher for Capture {
-    fn write_matcher<I: HaystackItem>(self, caps: &mut Groups) -> TokenStream {
+impl IntoMatcherExpr for Capture {
+    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
         caps.insert(self.index, self.name);
         let item_type = type_ident::<I>();
-        let sub_matcher = self.sub.write_matcher::<I>(caps);
+        let sub_matcher = self.sub.into_matcher_expr::<I>(caps);
         let index = self.index as usize;
 
         quote!(::ct_regex::internal::matcher::CaptureGroup<#item_type, #sub_matcher, #index>)
     }
 }
 
-impl WriteMatcher for Alternation {
-    fn write_matcher<I: HaystackItem>(self, caps: &mut Groups) -> TokenStream {
+impl IntoMatcherExpr for Alternation {
+    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
         let required = caps.required;
         caps.required = false;
         let tokens = write_chunked::<Or<u8, A, A>, I, _>(caps, self.0);
@@ -185,8 +209,8 @@ impl WriteMatcher for Alternation {
     }
 }
 
-impl WriteMatcher for Concat {
-    fn write_matcher<I: HaystackItem>(self, caps: &mut Groups) -> TokenStream {
+impl IntoMatcherExpr for Concat {
+    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
         let mut iter = self.0.into_iter();
         let mut rep_item = None;
         let concat = Concat(
@@ -207,11 +231,11 @@ impl WriteMatcher for Concat {
 
             match (concat.0.len(), backtrack.then.len()) {
                 (0, 0) => unreachable!(),
-                (0, _) => backtrack.write_matcher::<I>(caps),
+                (0, _) => backtrack.into_matcher_expr::<I>(caps),
                 (_, _) => {
                     let item_type = type_ident::<I>();
                     let concat_matcher = concat.write_type_basic::<I>(caps);
-                    let backtrack_matcher = backtrack.write_matcher::<I>(caps);
+                    let backtrack_matcher = backtrack.into_matcher_expr::<I>(caps);
 
                     quote!(::ct_regex::internal::matcher::Then<#item_type, #concat_matcher, #backtrack_matcher>)
                 },
@@ -222,14 +246,14 @@ impl WriteMatcher for Concat {
     }
 }
 
-impl WriteMatcher for Backtrack {
-    fn write_matcher<I: HaystackItem>(mut self, caps: &mut Groups) -> TokenStream {
+impl IntoMatcherExpr for Backtrack {
+    fn into_matcher_expr<I: CodegenItem>(mut self, caps: &mut Groups) -> TokenStream {
         let item_type = type_ident::<I>();
-        let rep_matcher = self.rep.write_matcher::<I>(caps);
+        let rep_matcher = self.rep.into_matcher_expr::<I>(caps);
         let then_matcher = match self.then.len() {
             0 => return rep_matcher,
-            1 => self.then.pop().unwrap().write_matcher::<I>(caps),
-            _ => Concat(self.then).write_matcher::<I>(caps)
+            1 => self.then.pop().unwrap().into_matcher_expr::<I>(caps),
+            _ => Concat(self.then).into_matcher_expr::<I>(caps)
         };
 
         quote!(::ct_regex::internal::matcher::QuantifierThen<#item_type, #rep_matcher, #then_matcher>)
@@ -237,12 +261,12 @@ impl WriteMatcher for Backtrack {
 }
 
 impl Concat {
-    fn write_type_basic<I: HaystackItem>(self, caps: &mut Groups) -> TokenStream {
+    fn write_type_basic<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
         write_chunked::<Then<u8, A, A>, I, _>(caps, self.0)
     }
 }
 
-fn write_chunked<T, I: HaystackItem, W: WriteMatcher>(
+fn write_chunked<T, I: CodegenItem, W: IntoMatcherExpr>(
     caps: &mut Groups,
     mut items: Vec<W>,
 ) -> TokenStream {
@@ -252,17 +276,17 @@ fn write_chunked<T, I: HaystackItem, W: WriteMatcher>(
 
     match n {
         0 => panic!("literal contains no items"),
-        1 => items.pop().unwrap().write_matcher::<I>(caps),
+        1 => items.pop().unwrap().into_matcher_expr::<I>(caps),
         2 => {
             let mut iter = items.into_iter();
-            let first = iter.next().unwrap().write_matcher::<I>(caps);
-            let second = iter.next().unwrap().write_matcher::<I>(caps);
+            let first = iter.next().unwrap().into_matcher_expr::<I>(caps);
+            let second = iter.next().unwrap().into_matcher_expr::<I>(caps);
 
             quote!(::ct_regex::internal::matcher::#base<#item_type, #first, #second>)
         }
         3 => {
             let mut iter = items.into_iter();
-            let first = iter.next().unwrap().write_matcher::<I>(caps);
+            let first = iter.next().unwrap().into_matcher_expr::<I>(caps);
             let chunked = write_chunked::<T, I, W>(caps, iter.collect());
 
             quote!(::ct_regex::internal::matcher::#base<#item_type, #first, #chunked>)
@@ -280,7 +304,7 @@ fn write_chunked<T, I: HaystackItem, W: WriteMatcher>(
     }
 }
 
-fn write_n_items<T, I: HaystackItem, W: WriteMatcher>(
+fn write_n_items<T, I: CodegenItem, W: IntoMatcherExpr>(
     caps: &mut Groups,
     items: Vec<W>,
     n: usize,
@@ -292,7 +316,7 @@ fn write_n_items<T, I: HaystackItem, W: WriteMatcher>(
 
     for item in items {
         tokens.extend(quote!(,));
-        tokens.extend(item.write_matcher::<I>(caps));
+        tokens.extend(item.into_matcher_expr::<I>(caps));
     }
 
     tokens.extend(quote!(>));

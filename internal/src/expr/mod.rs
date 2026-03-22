@@ -1,9 +1,9 @@
 pub mod anon;
-pub mod capture;
+pub mod captures;
 pub mod regex;
 
 pub use anon::*;
-pub use capture::*;
+pub use captures::*;
 pub use regex::*;
 
 #[cfg(test)]

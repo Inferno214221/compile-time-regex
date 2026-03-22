@@ -3,8 +3,7 @@ use quote::{format_ident, quote};
 use regex_automata::util::syntax::{self, Config};
 use syn::{Ident, Visibility};
 
-use crate::{codegen::captures::impl_captures, haystack::HaystackItem, hir::{Group, HirExtension}};
-use super::args::*;
+use crate::codegen::{AnonRegexArgs, CodegenItem, Group, HirExtension, RegexArgs, capture};
 
 pub fn make_regex(
     RegexArgs {
@@ -36,7 +35,7 @@ pub fn make_regex(
 
     let captures_name = format_ident!("{}Capture", name);
     let captures_len = Literal::usize_unsuffixed(groups.len());
-    let captures_impl = impl_captures(&vis, &captures_name, groups);
+    let captures_impl = capture::impl_captures(&vis, &captures_name, groups);
 
     let anon_impl = if impl_anon {
         quote! {
@@ -95,7 +94,7 @@ pub fn make_anon_regex(AnonRegexArgs { pat, flags }: AnonRegexArgs) -> TokenStre
     }
 }
 
-pub fn parse_regex<I: HaystackItem>(pat: &str, config: &Config) -> (TokenStream, Vec<Group>) {
+pub fn parse_regex<I: CodegenItem>(pat: &str, config: &Config) -> (TokenStream, Vec<Group>) {
     syntax::parse_with(&pat, &config)
         .expect("failed to parse regex")
         .into_matcher::<I>()

@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
-use crate::{expr::{CaptureFromRanges, IndexedCaptures}, haystack::{Haystack, HaystackItem}, matcher::Matcher};
+use crate::{haystack::{Haystack, HaystackItem}, matcher::Matcher};
+use super::{CaptureFromRanges, IndexedCaptures};
 
 // TODO: Use iterator rather than Vec for return type.
 // TODO: Provide a method that returns a range too, not just a slice.

@@ -2,7 +2,7 @@ use proc_macro2::{Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::{Ident, Visibility};
 
-use crate::hir::Group;
+use crate::codegen::Group;
 
 pub fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStream {
     // Aliases

@@ -317,7 +317,7 @@ fn test_complex_anchored_pattern() {
 #[test]
 fn test_write_type_expr_u8() {
     let mut groups = Groups::new();
-    let result = (b'x').write_matcher::<u8>(&mut groups).to_string();
+    let result = (b'x').into_matcher_expr::<u8>(&mut groups).to_string();
     assert!(result.contains("Byte"));
     assert!(result.contains("120")); // ASCII value of 'x'
 }
@@ -325,7 +325,7 @@ fn test_write_type_expr_u8() {
 #[test]
 fn test_write_type_expr_char() {
     let mut groups = Groups::new();
-    let result = 'a'.write_matcher::<char>(&mut groups).to_string();
+    let result = 'a'.into_matcher_expr::<char>(&mut groups).to_string();
     assert!(result.contains("Scalar"));
     assert!(result.contains("a"));
 }
@@ -333,14 +333,14 @@ fn test_write_type_expr_char() {
 #[test]
 fn test_write_type_expr_char_unicode() {
     let mut groups = Groups::new();
-    let result = '🦀'.write_matcher::<char>(&mut groups).to_string();
+    let result = '🦀'.into_matcher_expr::<char>(&mut groups).to_string();
     assert!(result.contains("Scalar"));
 }
 
 #[test]
 fn test_write_type_expr_char_escape() {
     let mut groups = Groups::new();
-    let result = '\n'.write_matcher::<char>(&mut groups).to_string();
+    let result = '\n'.into_matcher_expr::<char>(&mut groups).to_string();
     assert!(result.contains("Scalar"));
     assert!(result.contains("\\n")); // escaped newline
 }

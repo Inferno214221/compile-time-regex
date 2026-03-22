@@ -96,14 +96,9 @@ pub fn make_anon_regex(AnonRegexArgs { pat, flags }: AnonRegexArgs) -> TokenStre
 }
 
 pub fn parse_regex<I: HaystackItem>(pat: &str, config: &Config) -> (TokenStream, Vec<Group>) {
-    let (type_expr_str, groups) = syntax::parse_with(&pat, &config)
+    syntax::parse_with(&pat, &config)
         .expect("failed to parse regex")
-        .into_matcher::<I>();
-
-    let type_expr: TokenStream = type_expr_str.parse()
-        .expect("failed to parse type expression");
-
-    (type_expr, groups)
+        .into_matcher::<I>()
 }
 
 pub fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStream {

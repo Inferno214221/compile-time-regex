@@ -4,8 +4,6 @@ regex!(pub MyPattern = r"^(([a-z]+)|([0-9]+))$");
 regex!(MyOtherPattern = r"word\n");
 regex!(PhoneNum = r"(0|(?<country_code>\+[0-9]+))(?<number>[0-9]{9})");
 
-// TODO: regex flags
-
 fn main() {
     dbg!(MyPattern::is_match("word"));
     dbg!(MyPattern::is_match("word123"));

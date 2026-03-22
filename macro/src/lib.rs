@@ -1,46 +1,14 @@
 extern crate proc_macro;
 
+mod args;
+use args::*;
+
 use proc_macro2::{Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 use regex_automata::util::syntax::{self, Config};
-use syn::{Ident, LitStr, Token, Visibility, parse::{Parse, ParseStream}, parse_macro_input};
+use syn::{Ident, Visibility, parse_macro_input};
 
-use ct_regex_internal::hir::{Group, HirExtension};
-
-struct RegexArgs {
-    vis: Visibility,
-    name: Ident,
-    pat: LitStr,
-}
-
-impl Parse for RegexArgs {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let visibility: Visibility = input.parse()?;
-        let name: Ident = input.parse()?;
-        input.parse::<Token![=]>()?;
-        let pattern: LitStr = input.parse()?;
-        Ok(RegexArgs {
-            vis: visibility,
-            name,
-            pat: pattern,
-        })
-    }
-}
-
-enum RegexArgType {
-    Regex(RegexArgs),
-    Anon(LitStr),
-}
-
-impl Parse for RegexArgType {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        if input.fork().parse::<RegexArgs>().is_ok() {
-            Ok(RegexArgType::Regex(input.parse()?))
-        } else {
-            Ok(RegexArgType::Anon(input.parse()?))
-        }
-    }
-}
+use ct_regex_internal::{haystack::HaystackItem, hir::{Group, HirExtension}};
 
 #[proc_macro]
 pub fn regex(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -50,37 +18,44 @@ pub fn regex(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     }
 }
 
+fn parse_regex<I: HaystackItem>(pat: &str, config: &Config) -> (TokenStream, Vec<Group>) {
+    let (type_expr_str, groups) = syntax::parse_with(&pat, &config)
+        .expect("failed to parse regex")
+        .into_matcher::<I>();
+
+    let type_expr: TokenStream = type_expr_str.parse()
+        .expect("failed to parse type expression");
+
+    (type_expr, groups)
+}
+
 fn regex_internal(
     RegexArgs {
         vis,
         name,
-        pat
+        pat,
+        flags,
     }: RegexArgs,
     impl_anon: bool
 ) -> TokenStream {
     // Aliases
     #![allow(nonstandard_style)]
+    let fmt = quote!(::std::fmt);
     let Regex = quote!(::ct_regex::internal::expr::Regex);
     let AnonRegex = quote!(::ct_regex::internal::expr::AnonRegex);
 
-    let config = Config::new().unicode(false).utf8(false);
-
     let pat_str = pat.value();
 
-    let (type_expr_byte_str, groups) = syntax::parse_with(&pat_str, &config)
-        .expect("failed to parse regex")
-        .into_matcher::<u8>();
+    let doc = format!("A macro-generated regular expression matching the pattern: `{}` with flags: \
+        {}", pat_str, flags);
 
-    let type_expr_byte: TokenStream = type_expr_byte_str.parse()
-        .expect("failed to parse type expression");
+    let config = flags.create_config().unicode(false).utf8(false);
+
+    let (type_expr_byte, groups) = parse_regex::<u8>(&pat_str, &config);
 
     let config = config.unicode(true).utf8(true);
 
-    let type_expr_scalar: TokenStream = syntax::parse_with(&pat_str, &config)
-        .expect("failed to parse regex")
-        .into_matcher::<char>().0
-        .parse()
-        .expect("failed to parse type expression");
+    let (type_expr_scalar, _) = parse_regex::<char>(&pat_str, &config);
 
     let captures_name = format_ident!("{}Capture", name);
     let captures_len = Literal::usize_unsuffixed(groups.len());
@@ -97,6 +72,7 @@ fn regex_internal(
     };
 
     quote! {
+        #[doc = #doc]
         #vis struct #name;
 
         impl #Regex<u8, #captures_len> for #name {
@@ -113,8 +89,8 @@ fn regex_internal(
 
         #anon_impl
 
-        impl ::std::fmt::Debug for #name {
-            fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        impl #fmt::Debug for #name {
+            fn fmt(&self, f: &mut #fmt::Formatter<'_>) -> #fmt::Result {
                 write!(f, "/{:?}/", <Self as #Regex<char, #captures_len>>::Pattern::default())
             }
         }
@@ -123,12 +99,13 @@ fn regex_internal(
     }
 }
 
-fn anon_regex_internal(pat: LitStr) -> TokenStream {
+fn anon_regex_internal(AnonRegexArgs { pat, flags }: AnonRegexArgs) -> TokenStream {
     let impl_tokens = regex_internal(
         RegexArgs {
             vis: Visibility::Inherited,
             name: Ident::new("__AnonRegex", Span::call_site()),
-            pat
+            pat,
+            flags,
         },
         true
     );
@@ -144,8 +121,9 @@ fn anon_regex_internal(pat: LitStr) -> TokenStream {
 fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStream {
     // Aliases
     #![allow(nonstandard_style)]
-    let haystack_mod = quote!(::ct_regex::internal::haystack);
-    let expr_mod = quote!(::ct_regex::internal::expr);
+    let CaptureFromRanges = quote!(::ct_regex::internal::expr::CaptureFromRanges);
+    let Haystack = quote!(::ct_regex::internal::haystack::Haystack);
+    let HaystackItem = quote!(::ct_regex::internal::haystack::HaystackItem);
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
 
@@ -184,21 +162,21 @@ fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStr
 
     quote! {
         #[derive(Debug, Clone)]
-        #vis struct #name<'a, I: #haystack_mod::HaystackItem>(
-            pub #haystack_mod::Haystack<'a, I>,
+        #vis struct #name<'a, I: #HaystackItem>(
+            pub #Haystack<'a, I>,
             #(#inner),*
         );
 
-        impl<'a, I: #haystack_mod::HaystackItem> #name<'a, I> {
+        impl<'a, I: #HaystackItem> #name<'a, I> {
             #(#numbered_groups)*
 
             #(#named_groups)*
         }
 
-        impl<'a, I: #haystack_mod::HaystackItem> #expr_mod::CaptureFromRanges<'a, I, #captures_len> for #name<'a, I> {
+        impl<'a, I: #HaystackItem> #CaptureFromRanges<'a, I, #captures_len> for #name<'a, I> {
             fn from_ranges(
                 ranges: [#Option<#Range>; #captures_len],
-                hay: #haystack_mod::Haystack<'a, I>
+                hay: #Haystack<'a, I>
             ) -> #Option<Self> {
                 let [#(#capture_destructure),*] = ranges;
                 #Option::Some(Self(

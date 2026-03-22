@@ -1,4 +1,3 @@
-use std::ops::Deref;
 use super::*;
 
 // ============================================================================
@@ -159,7 +158,7 @@ fn test_pop_if_unique_shared_returns_none() {
 #[test]
 fn test_keep_unique_empty() {
     let mut tree: ConsTree<i32> = ConsTree::new();
-    let shared = tree.keep_unique();
+    let shared = tree.split_off_unique();
     assert!(tree.is_empty());
     assert!(shared.is_empty());
 }
@@ -169,9 +168,9 @@ fn test_keep_unique_all_unique() {
     let mut tree = ConsTree::new();
     tree.push(1);
     tree.push(2);
-    let shared = tree.keep_unique();
-    assert_eq!(tree.iter().copied().collect::<Vec<_>>(), vec![2, 1]);
-    assert!(shared.is_empty());
+    let unique = tree.split_off_unique();
+    assert!(tree.is_empty());
+    assert_eq!(unique.iter().copied().collect::<Vec<_>>(), vec![2, 1]);
 }
 
 #[test]
@@ -181,9 +180,9 @@ fn test_keep_unique_partially_shared() {
     let _shared_ref = tree1.clone(); // node(1) shared
     tree1.push(2);                   // unique head
 
-    let remainder = tree1.keep_unique();
-    assert_eq!(tree1.iter().copied().collect::<Vec<_>>(), vec![2]);
-    assert_eq!(remainder.iter().copied().collect::<Vec<_>>(), vec![1]);
+    let unique = tree1.split_off_unique();
+    assert_eq!(tree1.iter().copied().collect::<Vec<_>>(), vec![1]);
+    assert_eq!(unique.iter().copied().collect::<Vec<_>>(), vec![2]);
 }
 
 // ============================================================================

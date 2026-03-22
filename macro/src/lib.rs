@@ -1,11 +1,6 @@
 extern crate proc_macro;
 
-mod args;
-mod codegen;
-
-use args::*;
-use codegen::*;
-
+use ct_regex_internal::codegen::{RegexArgType, regex::{make_anon_regex, make_regex}};
 use syn::parse_macro_input;
 
 #[proc_macro]

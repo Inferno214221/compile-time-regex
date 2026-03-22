@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-regex-automata = "0.4.14"
-regex-syntax = "0.8.9"
 proc-macro2 = "1.0.106"
 quote = "1.0.44"
+regex-automata = "0.4.14"
+regex-syntax = "0.8.9"
+syn = "2.0.117"

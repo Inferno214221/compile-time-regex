@@ -6,13 +6,13 @@ use regex_syntax::Parser;
 fn parse_and_convert_char(pattern: &str) -> String {
     let hir = Parser::new().parse(pattern).unwrap();
     let (matcher, _groups) = hir.into_matcher::<char>();
-    matcher
+    matcher.to_string()
 }
 
 fn parse_and_convert_byte(pattern: &str) -> String {
     let hir = Parser::new().parse(pattern).unwrap();
     let (matcher, _groups) = hir.into_matcher::<u8>();
-    matcher
+    matcher.to_string()
 }
 
 // Tests for type_name function
@@ -185,7 +185,7 @@ fn test_alternation_consecutive_chars() {
     // Consecutive chars like a|b should optimize to ScalarRange
     let result = parse_and_convert_char("a|b");
     assert!(result.contains("ScalarRange"));
-    assert!(result.contains("'\\u{61}'") && result.contains("'\\u{62}'")); // 'a' and 'b'
+    assert!(result.contains("'a'") && result.contains("'b'"));
 }
 
 #[test]
@@ -201,7 +201,7 @@ fn test_alternation_three_consecutive_chars() {
     // Three consecutive chars like a|b|c should optimize to ScalarRange
     let result = parse_and_convert_char("a|b|c");
     assert!(result.contains("ScalarRange"));
-    assert!(result.contains("'\\u{61}'") && result.contains("'\\u{63}'")); // 'a' and 'c'
+    assert!(result.contains("'a'") && result.contains("'c'"));
 }
 
 #[test]
@@ -316,37 +316,33 @@ fn test_complex_anchored_pattern() {
 // Tests for WriteTypeExpr trait implementations
 #[test]
 fn test_write_type_expr_u8() {
-    let mut s = String::new();
     let mut groups = Groups::new();
-    (b'x').write_matcher::<u8>(&mut s, &mut groups).unwrap();
-    assert!(s.contains("Byte"));
-    assert!(s.contains("120")); // ASCII value of 'x'
+    let result = (b'x').write_matcher::<u8>(&mut groups).to_string();
+    assert!(result.contains("Byte"));
+    assert!(result.contains("120")); // ASCII value of 'x'
 }
 
 #[test]
 fn test_write_type_expr_char() {
-    let mut s = String::new();
     let mut groups = Groups::new();
-    'a'.write_matcher::<char>(&mut s, &mut groups).unwrap();
-    assert!(s.contains("Scalar"));
-    assert!(s.contains("a"));
+    let result = 'a'.write_matcher::<char>(&mut groups).to_string();
+    assert!(result.contains("Scalar"));
+    assert!(result.contains("a"));
 }
 
 #[test]
 fn test_write_type_expr_char_unicode() {
-    let mut s = String::new();
     let mut groups = Groups::new();
-    '🦀'.write_matcher::<char>(&mut s, &mut groups).unwrap();
-    assert!(s.contains("Scalar"));
+    let result = '🦀'.write_matcher::<char>(&mut groups).to_string();
+    assert!(result.contains("Scalar"));
 }
 
 #[test]
 fn test_write_type_expr_char_escape() {
-    let mut s = String::new();
     let mut groups = Groups::new();
-    '\n'.write_matcher::<char>(&mut s, &mut groups).unwrap();
-    assert!(s.contains("Scalar"));
-    assert!(s.contains("\\u{a}")); // escaped newline
+    let result = '\n'.write_matcher::<char>(&mut groups).to_string();
+    assert!(result.contains("Scalar"));
+    assert!(result.contains("\\n")); // escaped newline
 }
 
 // Edge case tests
@@ -375,6 +371,7 @@ fn test_unicode_escape() {
 fn test_hir_extension_into_type_expr() {
     let hir = Parser::new().parse("abc").unwrap();
     let (result, _groups) = hir.into_matcher::<char>();
+    let result = result.to_string();
     assert!(result.contains("Then"));
     assert!(result.contains("Scalar"));
 }
@@ -383,6 +380,7 @@ fn test_hir_extension_into_type_expr() {
 fn test_hir_extension_with_quantifier() {
     let hir = Parser::new().parse("a+").unwrap();
     let (result, _groups) = hir.into_matcher::<char>();
+    let result = result.to_string();
     assert!(result.contains("QuantifierNOrMore"));
 }
 
@@ -451,7 +449,7 @@ fn test_chunked_mixed_size_5() {
     // Should have Or wrapper and Or4 inside
     assert!(result.contains("Or4"), "Expected Or4 inside for 5 alternations, got: {}", result);
     // Count Or occurrences - should have both Or4 and regular Or
-    let or_count = result.matches("Or<").count();
+    let or_count = result.matches("Or <").count();
     assert!(or_count >= 1, "Expected at least one Or wrapper, got: {}", result);
 }
 
@@ -481,10 +479,10 @@ fn test_chunked_preserves_order() {
     // Verify that chunking preserves the order of items
     let result = parse_and_convert_char("abcd");
     // Should have all chars in order: a, b, c, d
-    let a_pos = result.find("'\\u{61}'").expect("'a' not found");
-    let b_pos = result.find("'\\u{62}'").expect("'b' not found");
-    let c_pos = result.find("'\\u{63}'").expect("'c' not found");
-    let d_pos = result.find("'\\u{64}'").expect("'d' not found");
+    let a_pos = result.find("'a'").expect("'a' not found");
+    let b_pos = result.find("'b'").expect("'b' not found");
+    let c_pos = result.find("'c'").expect("'c' not found");
+    let d_pos = result.find("'d'").expect("'d' not found");
     assert!(a_pos < b_pos && b_pos < c_pos && c_pos < d_pos,
         "Characters should appear in order, got: {}", result);
 }
@@ -673,7 +671,7 @@ fn test_dot_vs_escaped_dot() {
     let escaped_result = parse_and_convert_char(r"\.");
 
     // Escaped dot should be a literal period character
-    assert!(escaped_result.contains("Scalar") && escaped_result.contains("'\\u{2e}'"),
+    assert!(escaped_result.contains("Scalar") && escaped_result.contains("'.'"),
         "Escaped dot should be Scalar<'.'>, got: {}", escaped_result);
 
     // Unescaped dot should NOT be a simple Scalar
@@ -736,7 +734,7 @@ fn test_quantifier_then_plus() {
     let result = parse_and_convert_char("a+b");
     assert!(result.contains("QuantifierThen"),
         "Expected QuantifierThen for a+b, got: {}", result);
-    assert!(result.contains(",1>"),
+    assert!(result.contains("1usize"),
         "Expected min=1 for a+, got: {}", result);
 }
 
@@ -758,7 +756,7 @@ fn test_quantifier_then_bounded() {
         "Expected QuantifierThen for a{{2,4}}b, got: {}", result);
     assert!(result.contains("QuantifierNToM"),
         "Expected QuantifierNToM for a{{2,4}}, got: {}", result);
-    assert!(result.contains(",2,4>"),
+    assert!(result.contains("2usize") && result.contains("4usize"),
         "Expected bounds 2,4 for a{{2,4}}, got: {}", result);
 }
 
@@ -769,7 +767,7 @@ fn test_quantifier_then_with_multi_char_continuation() {
     assert!(result.contains("QuantifierThen"),
         "Expected QuantifierThen for a*bc, got: {}", result);
     // The continuation should contain both 'b' and 'c'
-    assert!(result.contains("'\\u{62}'") && result.contains("'\\u{63}'"),
+    assert!(result.contains("'b'") && result.contains("'c'"),
         "Expected 'b' and 'c' in continuation, got: {}", result);
 }
 

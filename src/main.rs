@@ -47,4 +47,8 @@ fn main() {
     dbg!(caps.cap_1());
     dbg!(caps.cap_2());
     dbg!(caps.cap_3());
+
+    // FIXME: not matching. Do I need a final check after hay returns none?
+    // I don't think there is a single other pattern that can fail like that.
+    dbg!(regex!("$").slice_all_matching("aaa", true));
 }

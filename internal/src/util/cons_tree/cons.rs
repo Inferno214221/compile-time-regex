@@ -87,20 +87,16 @@ impl<T> ConsTree<T> {
 
     /// Pops the head element of this list, if it is unique. Otherwise, `self` remains unchanged.
     pub fn pop_if_unique(&mut self) -> Option<T> {
-        let inner = mem::take(&mut self.inner);
-
-        match inner {
-            Some(rc) => {
-                // If this returns here, self.inner.inner has been replaced with a None.
-                let ConsTreeNode { value, next } = Rc::into_inner(rc)?;
-                self.inner = next.inner;
-                Some(value)
-            },
-            None => {
-                self.inner = inner;
-                None
-            },
+        if Rc::get_mut(self.inner.as_mut()?).is_none() {
+            return None;
         }
+
+        // We've just confirmed that self.inner is Some and that it is unique.
+        let inner = mem::take(&mut self.inner).unwrap();
+        let ConsTreeNode { value, next } = Rc::into_inner(inner).unwrap();
+        self.inner = next.inner;
+
+        Some(value)
     }
 
     /// Removes all shared items from this list and returns them as another `ConsTree`. After

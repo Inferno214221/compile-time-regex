@@ -86,16 +86,30 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         let mut all_matches = vec![];
 
         while hay.item().is_some() {
-            let start = hay.index();
             let rollback = hay.clone();
 
-            if let Some(fork) = Self::Pattern::all_matches(&mut hay).pop() {
-                all_matches.push(start..fork.index());
-            }
-
             if overlapping {
+                if let Some(fork) = Self::Pattern::all_matches(&mut hay).pop() {
+                    all_matches.push(rollback.index()..fork.index());
+                }
+
                 hay = rollback;
                 hay.progress();
+            } else {
+                if let Some(fork) = Self::Pattern::all_matches(&mut hay).pop() {
+                    all_matches.push(rollback.index()..fork.index());
+                    hay = fork;
+
+                    // This doesn't seem to make a difference...
+                    debug_assert_ne!(rollback.index(), hay.index())
+                    // if rollback.index() == hay.index() {
+                    //     // We've already matched at this index.
+                    //     hay.progress();
+                    // }
+                } else {
+                    hay = rollback;
+                    hay.progress();
+                }
             }
         }
 
@@ -143,8 +157,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
 
             let first = Self::Pattern::all_captures(&mut hay.clone(), &mut caps)
                 .into_iter()
-                .rev()
-                .find(|(hay, _)| hay.is_end());
+                .last();
 
             if let Some((hay_fork, mut caps_fork)) = first {
                 caps_fork.push(0, start..hay_fork.index());

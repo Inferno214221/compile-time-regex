@@ -17,8 +17,8 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     type Pattern: Matcher<I>;
     type Capture<'a>: CaptureFromRanges<'a, I, N> where I: 'a;
 
-    /// Returns true if this Regex matches the **entire** haystack provided. This should probably be
-    /// the default _matching_ function to use.
+    /// Returns `true` if this Regex matches the **entire** haystack provided. This should probably
+    /// be the default _matching_ function to use.
     ///
     /// A similar behavior can be achieved by using start and end anchors in an expression and then
     /// calling [`contains_match`](Self::contains_match). This function should be prefered however,
@@ -32,7 +32,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         Self::Pattern::all_matches(&mut hay).iter().any(Haystack::is_end)
     }
 
-    /// Returns true if this Regex matches any substring of the haystack provided. To retrieve the
+    /// Returns `true` if this Regex matches any substring of the haystack provided. To retrieve the
     /// actual substring itself, use [`slice_matching`](Self::slice_matching) or
     /// [`find_capture`](Self::find_capture).
     ///

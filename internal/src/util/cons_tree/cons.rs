@@ -43,7 +43,7 @@ impl<T> ConsTree<T> {
 }
 
 impl<T> ConsTree<T> {
-    /// Returns true if this `ConsTree` contains no elements.
+    /// Returns `true` if this `ConsTree` contains no elements.
     pub const fn is_empty(&self) -> bool {
         self.inner.is_none()
     }
@@ -62,7 +62,7 @@ impl<T> ConsTree<T> {
         }
     }
 
-    /// Returns true if this entire list is unique (doesn't share any items with another list).
+    /// Returns `true` if this entire list is unique (doesn't share any items with another list).
     ///
     /// If this method returns true, [`into_iter_unique`](Self::into_iter_unique) will produce every
     /// item in the list.
@@ -77,7 +77,7 @@ impl<T> ConsTree<T> {
         true
     }
 
-    /// Returns true if the head element of this list is unique.
+    /// Returns `true` if the head element of this list is unique.
     pub fn is_head_unique(&self) -> bool {
         match &self.inner {
             Some(node) => is_unqiue(node),

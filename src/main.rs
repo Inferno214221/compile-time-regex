@@ -14,15 +14,15 @@ fn main() {
     dbg!(MyOtherPattern::is_match("word"));
     dbg!(MyOtherPattern::is_match("word\n"));
 
-    dbg!(regex!(r"^[a-z]+$").is_match("word"));
-    dbg!(regex!(r"^[a-z]+$").is_match("123"));
+    dbg!(regex!(r"[a-z]+").is_match("word"));
+    dbg!(regex!(r"[a-z]+").is_match("123"));
     dbg!(regex!(r"word\n").is_match("word\n"));
 
-    dbg!(regex!(r"^start.*end$").is_match("startfend"));
-    dbg!(regex!(r"^start.*end$").is_match("starteend"));
+    dbg!(regex!(r"start.*end").is_match("startfend"));
+    dbg!(regex!(r"start.*end").is_match("starteend"));
     dbg!(regex!(r"[a-z][A-Z][0-9]\d\w\s").is_match("sS01_ "));
     dbg!(regex!(r"a|b|c").is_match("c"));
-    dbg!(regex!(r"^(a|b)+c$").is_match("abc"));
+    dbg!(regex!(r"(a|b)+c").is_match("abc"));
 
     dbg!(regex!(r"bc*").slice_matching("abcccd"));
 

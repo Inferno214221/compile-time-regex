@@ -5,3 +5,6 @@ mod iter;
 
 pub use cons::*;
 pub use iter::*;
+
+#[cfg(test)]
+mod test;

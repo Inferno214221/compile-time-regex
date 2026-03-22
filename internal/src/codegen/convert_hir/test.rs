@@ -988,3 +988,79 @@ fn test_generated_pattern_original_failing_case() {
     assert!(!matches_char::<Pattern>("startXXX"));
     assert!(!matches_char::<Pattern>("XXXend"));
 }
+
+// ============================================================================
+// type_ident
+// ============================================================================
+
+#[test]
+fn test_type_ident_scalar() {
+    let ident = type_ident::<Scalar<'a'>>();
+    assert_eq!(ident.to_string(), "Scalar");
+}
+
+#[test]
+fn test_type_ident_or() {
+    let ident = type_ident::<Or<char, Scalar<'a'>, Scalar<'b'>>>();
+    assert_eq!(ident.to_string(), "Or");
+}
+
+// ============================================================================
+// Group / Groups
+// ============================================================================
+
+#[test]
+fn test_groups_new_has_whole_match() {
+    let groups = Groups::new();
+    let group0 = groups.map.get(&0).unwrap();
+    assert_eq!(group0.name.as_deref(), Some("whole_match"));
+    assert!(group0.required);
+}
+
+#[test]
+fn test_groups_insert_required() {
+    let mut groups = Groups::new();
+    groups.insert(1, None);
+    let g = groups.map.get(&1).unwrap();
+    assert!(g.required);
+    assert!(g.name.is_none());
+}
+
+#[test]
+fn test_groups_insert_optional() {
+    let mut groups = Groups::new();
+    groups.required = false;
+    groups.insert(1, None);
+    assert!(!groups.map.get(&1).unwrap().required);
+}
+
+#[test]
+fn test_groups_insert_named() {
+    let mut groups = Groups::new();
+    groups.insert(1, Some("foo".into()));
+    assert_eq!(groups.map.get(&1).unwrap().name.as_deref(), Some("foo"));
+}
+
+#[test]
+fn test_groups_into_vec_order() {
+    let mut groups = Groups::new();
+    groups.insert(2, None);
+    groups.insert(1, None);
+    let vec = groups.into_vec();
+    assert_eq!(vec.len(), 3);
+    assert_eq!(vec[0].name.as_deref(), Some("whole_match"));
+}
+
+#[test]
+fn test_group_debug() {
+    let g = Group { name: Some("test".into()), required: true };
+    let s = format!("{:?}", g);
+    assert!(s.contains("test"));
+}
+
+#[test]
+fn test_groups_debug() {
+    let groups = Groups::new();
+    let s = format!("{:?}", groups);
+    assert!(!s.is_empty());
+}

@@ -644,3 +644,146 @@ fn test_byte_iter_clone_independence() {
     assert_eq!(iter1.current_item(), Some(b'c'));
     assert_eq!(iter2.current_item(), Some(b'b'));
 }
+
+// ============================================================================
+// Haystack::slice
+// ============================================================================
+
+#[test]
+fn test_slice_full_str() {
+    let hay = Haystack::from("hello");
+    assert_eq!(hay.slice(0..5), "hello");
+}
+
+#[test]
+fn test_slice_partial_str() {
+    let hay = Haystack::from("hello");
+    assert_eq!(hay.slice(1..4), "ell");
+}
+
+#[test]
+fn test_slice_empty_range() {
+    let hay = Haystack::from("hello");
+    assert_eq!(hay.slice(0..0), "");
+}
+
+#[test]
+fn test_slice_bytes() {
+    let hay = Haystack::from(b"hello" as &[u8]);
+    assert_eq!(hay.slice(1..4), b"ell");
+}
+
+#[test]
+fn test_slice_unicode() {
+    let hay = Haystack::from("🦀bc");
+    assert_eq!(hay.slice(0..4), "🦀");
+    assert_eq!(hay.slice(4..6), "bc");
+}
+
+// ============================================================================
+// Haystack::reset
+// ============================================================================
+
+#[test]
+fn test_reset_restores_to_start() {
+    let mut hay = Haystack::from("abc");
+    hay.progress();
+    hay.progress();
+    assert!(!hay.is_start());
+    hay.reset();
+    assert!(hay.is_start());
+    assert_eq!(hay.item(), Some('a'));
+}
+
+#[test]
+fn test_reset_on_fresh_haystack() {
+    let mut hay = Haystack::from("abc");
+    hay.reset();
+    assert!(hay.is_start());
+    assert_eq!(hay.item(), Some('a'));
+}
+
+#[test]
+fn test_reset_bytes() {
+    let mut hay = Haystack::from(b"abc" as &[u8]);
+    hay.progress();
+    hay.reset();
+    assert_eq!(hay.item(), Some(b'a'));
+}
+
+// ============================================================================
+// Debug for Haystack
+// ============================================================================
+
+#[test]
+fn test_debug_haystack_str() {
+    let hay = Haystack::from("hi");
+    let s = format!("{:?}", hay);
+    assert!(s.contains("Haystack"));
+}
+
+#[test]
+fn test_debug_haystack_bytes() {
+    let hay = Haystack::from(b"hi" as &[u8]);
+    let s = format!("{:?}", hay);
+    assert!(s.contains("Haystack"));
+}
+
+// ============================================================================
+// HaystackItem::vec_from_str
+// ============================================================================
+
+#[test]
+fn test_vec_from_str_char() {
+    let v = <char as HaystackItem>::vec_from_str("abc");
+    assert_eq!(v, vec!['a', 'b', 'c']);
+}
+
+#[test]
+fn test_vec_from_str_char_unicode() {
+    let v = <char as HaystackItem>::vec_from_str("🦀!");
+    assert_eq!(v, vec!['🦀', '!']);
+}
+
+#[test]
+fn test_vec_from_str_u8() {
+    let v = <u8 as HaystackItem>::vec_from_str("abc");
+    assert_eq!(v, vec![b'a', b'b', b'c']);
+}
+
+#[test]
+fn test_vec_from_str_empty() {
+    let v = <char as HaystackItem>::vec_from_str("");
+    assert!(v.is_empty());
+}
+
+// ============================================================================
+// Debug for StrIter / ByteIter
+// ============================================================================
+
+#[test]
+fn test_debug_str_iter() {
+    let iter = StrIter::from("hi");
+    let s = format!("{:?}", iter);
+    assert!(!s.is_empty());
+}
+
+#[test]
+fn test_debug_byte_iter() {
+    let iter = ByteIter::from(b"hi" as &[u8]);
+    let s = format!("{:?}", iter);
+    assert!(!s.is_empty());
+}
+
+// ============================================================================
+// HaystackIter::rollback (via reset)
+// ============================================================================
+
+#[test]
+fn test_rollback_via_reset() {
+    let mut hay = Haystack::from("abc");
+    hay.progress();
+    assert_eq!(hay.index(), 1);
+    hay.reset();
+    assert_eq!(hay.index(), 0);
+}

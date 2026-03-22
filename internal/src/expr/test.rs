@@ -434,3 +434,171 @@ fn test_regex_captures_requires_full_match() {
     let caps = TestRegexWithCaptures::do_capture("aaab");
     assert!(caps.is_none());
 }
+
+// ============================================================================
+// Regex::contains_match
+// ============================================================================
+
+#[test]
+fn test_contains_match_present() {
+    assert!(TestRegexChar::contains_match("xax"));
+}
+
+#[test]
+fn test_contains_match_absent() {
+    assert!(!TestRegexChar::contains_match("xyz"));
+}
+
+#[test]
+fn test_contains_match_exact() {
+    assert!(TestRegexChar::contains_match("a"));
+}
+
+#[test]
+fn test_contains_match_empty() {
+    assert!(!TestRegexChar::contains_match(""));
+}
+
+#[test]
+fn test_contains_match_bytes() {
+    assert!(TestRegexByte::contains_match(b"yxy" as &[u8]));
+    assert!(!TestRegexByte::contains_match(b"yyy" as &[u8]));
+}
+
+// ============================================================================
+// Regex::slice_matching
+// ============================================================================
+
+#[test]
+fn test_slice_matching_found() {
+    assert_eq!(TestRegexChar::slice_matching("xax"), Some("a"));
+}
+
+#[test]
+fn test_slice_matching_not_found() {
+    assert_eq!(TestRegexChar::slice_matching("xyz"), None);
+}
+
+#[test]
+fn test_slice_matching_exact() {
+    assert_eq!(TestRegexChar::slice_matching("a"), Some("a"));
+}
+
+#[test]
+fn test_slice_matching_bytes() {
+    assert_eq!(TestRegexByte::slice_matching(b"zxz" as &[u8]), Some(b"x" as &[u8]));
+}
+
+// ============================================================================
+// Regex::slice_all_matching
+// ============================================================================
+
+#[test]
+fn test_slice_all_matching_multiple() {
+    let matches = TestRegexChar::slice_all_matching("abac", false);
+    assert_eq!(matches.len(), 2);
+    assert!(matches.iter().all(|&m| m == "a"));
+}
+
+#[test]
+fn test_slice_all_matching_none() {
+    let matches = TestRegexChar::slice_all_matching("bbb", false);
+    assert!(matches.is_empty());
+}
+
+#[test]
+fn test_slice_all_matching_empty_haystack() {
+    let matches = TestRegexChar::slice_all_matching("", false);
+    assert!(matches.is_empty());
+}
+
+// ============================================================================
+// Regex::find_capture
+// ============================================================================
+
+#[test]
+fn test_find_capture_found() {
+    let caps = TestRegexWithCaptures::find_capture("baaa");
+    assert!(caps.is_some());
+    assert_eq!(caps.unwrap().group1(), "aaa");
+}
+
+#[test]
+fn test_find_capture_not_found() {
+    let caps = TestRegexWithCaptures::find_capture("bbb");
+    assert!(caps.is_none());
+}
+
+#[test]
+fn test_find_capture_at_start() {
+    let caps = TestRegexWithCaptures::find_capture("aa");
+    assert!(caps.is_some());
+}
+
+// ============================================================================
+// AnonRegex methods
+// ============================================================================
+
+#[test]
+fn test_anon_contains_match_present() {
+    let r = TestAnonRegexChar;
+    assert!(r.contains_match("xbx"));
+}
+
+#[test]
+fn test_anon_contains_match_absent() {
+    let r = TestAnonRegexChar;
+    assert!(!r.contains_match("aaa"));
+}
+
+#[test]
+fn test_anon_slice_matching_found() {
+    let r = TestAnonRegexChar;
+    assert_eq!(r.slice_matching("xbx"), Some("b"));
+}
+
+#[test]
+fn test_anon_slice_matching_not_found() {
+    let r = TestAnonRegexChar;
+    assert_eq!(r.slice_matching("aaa"), None);
+}
+
+#[test]
+fn test_anon_slice_all_matching() {
+    let r = TestAnonRegexChar;
+    let matches = r.slice_all_matching("abba", false);
+    assert_eq!(matches.len(), 2);
+}
+
+#[test]
+fn test_anon_do_capture() {
+    // Reuse TestAnonRegexChar which matches 'b'
+    // We need a type with captures for this — use TestAnonRegex wrapping TestRegexWithCaptures
+    // For simplicity just test via the Regex trait's AnonRegex delegation
+    let r = TestAnonRegexChar;
+    // AnonRegex::do_capture delegates to Regex::do_capture
+    // TestAnonRegexChar matches exactly 'b' with no capture groups
+    let caps = r.do_capture("b");
+    assert!(caps.is_some());
+}
+
+#[test]
+fn test_anon_do_capture_no_match() {
+    let r = TestAnonRegexChar;
+    let caps = r.do_capture("a");
+    assert!(caps.is_none());
+}
+
+#[test]
+fn test_anon_find_capture_found() {
+    let r = TestAnonRegexChar;
+    let caps = r.find_capture("xbx");
+    assert!(caps.is_some());
+}
+
+#[test]
+fn test_anon_find_capture_not_found() {
+    let r = TestAnonRegexChar;
+    let caps = r.find_capture("aaa");
+    assert!(caps.is_none());
+}

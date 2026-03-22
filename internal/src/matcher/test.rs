@@ -1232,3 +1232,137 @@ fn test_then_quantifiers_continuation_fails() {
     type Pattern = QuantifierThen<char, AB, Scalar<'c'>>;
     assert!(!Pattern::matches(&mut hay));
 }
+
+// ============================================================================
+// CaptureGroup tests
+// ============================================================================
+
+#[test]
+fn test_capture_group_matches() {
+    let mut hay = Haystack::from("a");
+    assert!(CaptureGroup::<char, Scalar<'a'>, 1>::matches(&mut hay));
+    assert!(hay.is_end());
+}
+
+#[test]
+fn test_capture_group_no_match() {
+    let mut hay = Haystack::from("b");
+    assert!(!CaptureGroup::<char, Scalar<'a'>, 1>::matches(&mut hay));
+}
+
+#[test]
+fn test_capture_group_all_matches() {
+    let mut hay = Haystack::from("a");
+    let forks = CaptureGroup::<char, Scalar<'a'>, 1>::all_matches(&mut hay);
+    assert_eq!(forks.len(), 1);
+    assert!(forks[0].is_end());
+}
+
+#[test]
+fn test_capture_group_captures_records_range() {
+    use crate::expr::IndexedCaptures;
+    let mut hay = Haystack::from("a");
+    let mut caps = IndexedCaptures::default();
+    assert!(CaptureGroup::<char, Scalar<'a'>, 1>::captures(&mut hay, &mut caps));
+    let arr: [_; 2] = caps.into_array();
+    assert_eq!(arr[1], Some(0..1));
+}
+
+#[test]
+fn test_capture_group_all_captures_records_range() {
+    use crate::expr::IndexedCaptures;
+    let mut hay = Haystack::from("a");
+    let mut caps = IndexedCaptures::default();
+    let results = CaptureGroup::<char, Scalar<'a'>, 1>::all_captures(&mut hay, &mut caps);
+    assert_eq!(results.len(), 1);
+    let arr: [_; 2] = results[0].1.clone().into_array();
+    assert_eq!(arr[1], Some(0..1));
+}
+
+#[test]
+fn test_capture_group_debug() {
+    let s = format!("{:?}", CaptureGroup::<char, Scalar<'a'>, 1>::default());
+    assert!(s.contains("("));
+}
+
+// ============================================================================
+// Debug impl smoke tests
+// ============================================================================
+
+#[test]
+fn test_debug_byte() {
+    let s = format!("{:?}", Byte::<b'x'>::default());
+    assert!(!s.is_empty());
+}
+
+#[test]
+fn test_debug_byte_range() {
+    let s = format!("{:?}", ByteRange::<b'a', b'z'>::default());
+    assert!(!s.is_empty());
+}
+
+#[test]
+fn test_debug_scalar() {
+    let s = format!("{:?}", Scalar::<'a'>::default());
+    assert!(!s.is_empty());
+}
+
+#[test]
+fn test_debug_scalar_range() {
+    let s = format!("{:?}", ScalarRange::<'a', 'z'>::default());
+    assert!(!s.is_empty());
+}
+
+#[test]
+fn test_debug_always() {
+    let s = format!("{:?}", Always::default());
+    assert!(!s.is_empty());
+}
+
+#[test]
+fn test_debug_beginning() {
+    let s = format!("{:?}", Beginning::default());
+    assert!(!s.is_empty());
+}
+
+#[test]
+fn test_debug_end() {
+    let s = format!("{:?}", End::default());
+    assert!(!s.is_empty());
+}
+
+#[test]
+fn test_debug_or() {
+    let s = format!("{:?}", Or::<char, Scalar<'a'>, Scalar<'b'>>::default());
+    assert!(!s.is_empty());
+}
+
+#[test]
+fn test_debug_then() {
+    let s = format!("{:?}", Then::<char, Scalar<'a'>, Scalar<'b'>>::default());
+    assert!(!s.is_empty());
+}
+
+#[test]
+fn test_debug_quantifier_n() {
+    let s = format!("{:?}", QuantifierN::<char, Scalar<'a'>, 3>::default());
+    assert!(!s.is_empty());
+}
+
+#[test]
+fn test_debug_quantifier_n_or_more() {
+    let s = format!("{:?}", QuantifierNOrMore::<char, Scalar<'a'>, 1>::default());
+    assert!(!s.is_empty());
+}
+
+#[test]
+fn test_debug_quantifier_n_to_m() {
+    let s = format!("{:?}", QuantifierNToM::<char, Scalar<'a'>, 2, 5>::default());
+    assert!(!s.is_empty());
+}
+
+#[test]
+fn test_debug_quantifier_then() {
+    let s = format!("{:?}", QuantifierThen::<char, QuantifierNOrMore<char, Scalar<'a'>, 0>, Scalar<'b'>>::default());
+    assert!(!s.is_empty());
+}

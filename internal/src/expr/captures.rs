@@ -1,9 +1,11 @@
 use std::{fmt::Debug, ops::Range};
 
-use crate::{haystack::{Haystack, HaystackItem}, util::cons_tree::ConsTree};
+use standard_lib::collections::cons::ConsBranch;
+
+use crate::{haystack::{Haystack, HaystackItem}};
 
 #[derive(Debug, Default, Clone)]
-pub struct IndexedCaptures(pub ConsTree<IndexedCapture>);
+pub struct IndexedCaptures(pub ConsBranch<IndexedCapture>);
 
 #[derive(Debug, Clone)]
 pub struct IndexedCapture {

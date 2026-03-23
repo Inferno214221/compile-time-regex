@@ -7,6 +7,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-ct-regex-internal ={ path = "internal" }
-ct-regex-macro ={ path = "macro"}
+ct-regex-internal = { path = "internal" }
+ct-regex-macro = { path = "macro"}
 regex-automata = "0.4.14"

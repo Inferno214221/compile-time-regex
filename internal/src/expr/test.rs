@@ -213,9 +213,9 @@ fn test_indexed_captures_push_single() {
     caps.push(0, 0..5);
 
     assert!(!caps.0.is_empty());
-    let inner = caps.0.inner.as_ref().unwrap();
-    assert_eq!(inner.index, 0);
-    assert_eq!(inner.cap, 0..5);
+    let first = caps.0.get_head().unwrap();
+    assert_eq!(first.index, 0);
+    assert_eq!(first.cap, 0..5);
 }
 
 #[test]
@@ -226,9 +226,9 @@ fn test_indexed_captures_push_multiple() {
     caps.push(2, 5..10);
 
     // Most recent push should be at the front
-    let inner = caps.0.inner.as_ref().unwrap();
-    assert_eq!(inner.index, 2);
-    assert_eq!(inner.cap, 5..10);
+    let first = caps.0.get_head().unwrap();
+    assert_eq!(first.index, 2);
+    assert_eq!(first.cap, 5..10);
 }
 
 #[test]

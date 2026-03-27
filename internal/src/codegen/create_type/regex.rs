@@ -1,9 +1,8 @@
 use proc_macro2::{Literal, Span, TokenStream};
 use quote::{format_ident, quote};
-use regex_automata::util::syntax::{self, Config};
 use syn::{Ident, Visibility};
 
-use crate::codegen::{AnonRegexArgs, CodegenItem, Group, HirExtension, RegexArgs, capture};
+use crate::codegen::{AnonRegexArgs, RegexArgs, capture, parse};
 
 pub fn make_regex(
     RegexArgs {
@@ -25,13 +24,14 @@ pub fn make_regex(
     let doc = format!("A macro-generated regular expression matching the pattern: `{}` with flags: \
         {}", pat_str, flags);
 
-    let config = flags.create_config().unicode(false).utf8(false);
+    let mut config = flags.create_config();
+    config.unicode(false).utf8(false);
 
-    let (type_expr_byte, groups) = parse_regex::<u8>(&pat_str, &config);
+    let (type_expr_byte, groups) = parse::parse_regex::<u8>(&pat_str, &config);
 
-    let config = config.unicode(true).utf8(true);
+    config.unicode(true).utf8(true);
 
-    let (type_expr_scalar, _) = parse_regex::<char>(&pat_str, &config);
+    let (type_expr_scalar, _) = parse::parse_regex::<char>(&pat_str, &config);
 
     let captures_name = format_ident!("{}Capture", name);
     let captures_len = Literal::usize_unsuffixed(groups.len());
@@ -92,10 +92,4 @@ pub fn make_anon_regex(AnonRegexArgs { pat, flags }: AnonRegexArgs) -> TokenStre
             __AnonRegex
         }
     }
-}
-
-pub fn parse_regex<I: CodegenItem>(pat: &str, config: &Config) -> (TokenStream, Vec<Group>) {
-    syntax::parse_with(&pat, &config)
-        .expect("failed to parse regex")
-        .into_matcher::<I>()
 }

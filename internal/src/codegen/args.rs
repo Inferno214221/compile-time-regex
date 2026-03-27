@@ -1,7 +1,8 @@
 use std::{collections::HashSet, fmt::{self, Display}};
 
-use regex_automata::util::syntax::Config;
 use syn::{Ident, LitStr, Token, Visibility, parse::{Parse, ParseStream}};
+
+use crate::codegen::ConfigExt;
 
 pub enum RegexArgType {
     Regex(RegexArgs),
@@ -75,17 +76,18 @@ impl Parse for Flags {
 }
 
 impl Flags {
-    pub fn create_config(self) -> Config {
-        let mut config = Config::new();
+    pub fn create_config(self) -> ConfigExt {
+        let mut config = ConfigExt::default();
 
         for c in self.0 {
-            config = match c {
+            match c {
                 'i' => config.case_insensitive(true),
                 'm' => config.multi_line(true),
                 's' => config.dot_matches_new_line(true),
                 'R' => config.crlf(true),
                 'U' => config.swap_greed(true),
                 'x' => config.ignore_whitespace(true),
+                'c' => config.complex_classes(true),
                 'g' => panic!("the global flag is unsupported by this implementation, please read \
                     the docs on the methods available on the Regex trait"),
                 o => panic!("unknown flag provided for regex: {o:?}"),

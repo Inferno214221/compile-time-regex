@@ -54,7 +54,8 @@ use syn::parse_macro_input;
 /// # Flags
 ///
 /// The flats available are relatively standard and are implemented according to those provided by
-/// [`regex_automata::util::syntax::Config`](https://docs.rs/regex-automata/latest/regex_automata/util/syntax/struct.Config.html).
+/// [`regex_automata::util::syntax::Config`](https://docs.rs/regex-automata/latest/regex_automata/util/syntax/struct.Config.html),
+/// with one addition, `'c'`.
 /// One notable exception to the standard options is the absence of a `'g'` (global) flag.
 ///
 /// Available flags:
@@ -66,16 +67,26 @@ use syn::parse_macro_input;
 ///     'R' => config.crlf(true),
 ///     'U' => config.swap_greed(true),
 ///     'x' => config.ignore_whitespace(true),
+///     'c' => config.complex_classes(true),
 ///     ...
 /// }
 /// ```
 ///
-/// _I find the global flag to be unintuitive and it would be unessecarily restricting in this
+/// The _complex classes_ flag (`'c'`), when enabled, expands perl character classes (`\w`, `\d`,
+/// `\s`) to their full unicode versions. This is how `regex_syntax` behaves, but it could easily
+/// trip people up. The default behavior (with this flag disabled) aliases the classes as follows:
+/// - `\w` -> `[A-Za-z0-9_]`
+/// - `\d` -> `[0-9]`
+/// - `\s` -> `[ \n\r\t\f\v\u00a0]`
+///
+/// ## Aside on Global Flag
+///
+/// I find the global flag to be unintuitive and it would be unessecarily restricting in this
 /// implementation: you may want to use the same pattern with and without the global functionality,
 /// but you'd need to define the same expression multiple times to do so. (This might make sense in
 /// some cases where the Regex itself tracks state but we don't do that here.) Anyway, there is no
 /// global flag. Instead, all methods of the [`Regex`](trait.Regex.html) trait clearly define how
-/// they behave - have a read._
+/// they behave - have a read.
 #[proc_macro]
 pub fn regex(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     match parse_macro_input!(input as RegexArgType) {

@@ -1,6 +1,6 @@
 use ct_regex::*;
 
-regex!(pub MyPattern = r"^(([a-z]+)|([0-9]+))$");
+regex!(pub MyPattern = r"^(([a-z]+)|([0-9]+))$" / "i");
 regex!(MyOtherPattern = r"^word$");
 regex!(PhoneNum = r"(0|(?<country_code>\+[0-9]+))(?<number>[0-9]{9})");
 

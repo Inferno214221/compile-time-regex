@@ -59,9 +59,13 @@ pub struct Flags(pub HashSet<char>);
 
 impl Parse for Flags {
     fn parse(input: ParseStream) -> syn::Result<Self> {
+        let sep = input.parse::<Token![/]>();
+
         let lit: syn::Result<LitStr> = input.parse();
 
-        let set = lit.map(|l| l.value())
+        let set = lit
+            .and_then(|l| sep.map(|_| l))
+            .map(|l| l.value())
             .unwrap_or_default()
             .chars()
             .collect();

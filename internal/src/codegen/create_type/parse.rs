@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use regex_syntax::{ast::{Ast, ClassBracketed, ClassPerl, ClassPerlKind, ClassSet, ClassSetBinaryOp, ClassSetItem, ClassSetRange, ClassSetUnion, HexLiteralKind, Literal, LiteralKind, SpecialLiteralKind, parse::ParserBuilder}, hir::translate::TranslatorBuilder};
+use regex_syntax::{ast::{Ast, ClassAscii, ClassAsciiKind, ClassBracketed, ClassPerl, ClassPerlKind, ClassSet, ClassSetBinaryOp, ClassSetItem, parse::ParserBuilder}, hir::translate::TranslatorBuilder};
 
 use crate::codegen::{CodegenItem, Group, HirExtension};
 
@@ -20,7 +20,7 @@ pub fn parse_regex<I: CodegenItem>(pat: &str, config: &ConfigExt) -> (TokenStrea
 
 pub fn simplify_classes(ast: &mut Ast) {
     let replacement = match ast {
-        Ast::ClassPerl(class) =>      replace_pearl_class(class),
+        Ast::ClassPerl(class) =>      replace_perl_class(class),
         Ast::ClassBracketed(class) => return replace_in_class(&mut class.kind),
         Ast::Repetition(rep) =>       return simplify_classes(&mut rep.ast),
         Ast::Group(group) =>          return simplify_classes(&mut group.ast),
@@ -28,7 +28,11 @@ pub fn simplify_classes(ast: &mut Ast) {
         Ast::Concat(cat) =>           return cat.asts.iter_mut().for_each(simplify_classes),
         _ => return,
     };
-    *ast = Ast::ClassBracketed(Box::new(replacement));
+    *ast = Ast::ClassBracketed(Box::new(ClassBracketed {
+        span: *ast.span(),
+        negated: false,
+        kind: ClassSet::Item(ClassSetItem::Ascii(replacement))
+    }));
 }
 
 pub fn replace_in_class(class: &mut ClassSet) {
@@ -43,131 +47,24 @@ pub fn replace_in_class(class: &mut ClassSet) {
 
 pub fn replace_in_class_set_item(item: &mut ClassSetItem) {
     let replacement = match item {
-        ClassSetItem::Perl(class) =>      replace_pearl_class(class),
+        ClassSetItem::Perl(class) =>      replace_perl_class(class),
         ClassSetItem::Bracketed(class) => return replace_in_class(&mut class.kind),
         ClassSetItem::Union(class) => {
             return class.items.iter_mut().for_each(replace_in_class_set_item);
         },
         _ => return,
     };
-    *item = ClassSetItem::Bracketed(Box::new(replacement));
+    *item = ClassSetItem::Ascii(replacement);
 }
 
-pub fn replace_pearl_class(class: &mut ClassPerl) -> ClassBracketed {
-    match class.kind {
-        ClassPerlKind::Digit => ClassBracketed {
-            span: class.span,
-            negated: class.negated,
-            kind: ClassSet::Item(ClassSetItem::Range(ClassSetRange {
-                span: class.span,
-                start: Literal {
-                    span: class.span,
-                    kind: LiteralKind::Verbatim,
-                    c: '0',
-                },
-                end: Literal {
-                    span: class.span,
-                    kind: LiteralKind::Verbatim,
-                    c: '9',
-                },
-            }))
-        },
-        ClassPerlKind::Space => ClassBracketed {
-            span: class.span,
-            negated: class.negated,
-            kind: ClassSet::Item(ClassSetItem::Union(ClassSetUnion {
-                span: class.span,
-                items: vec![
-                    ClassSetItem::Literal(Literal {
-                        span: class.span,
-                        kind: LiteralKind::Special(SpecialLiteralKind::FormFeed),
-                        c: '\x0C'
-                    }),
-                    ClassSetItem::Literal(Literal {
-                        span: class.span,
-                        kind: LiteralKind::Special(SpecialLiteralKind::LineFeed),
-                        c: '\n'
-                    }),
-                    ClassSetItem::Literal(Literal {
-                        span: class.span,
-                        kind: LiteralKind::Special(SpecialLiteralKind::CarriageReturn),
-                        c: '\r'
-                    }),
-                    ClassSetItem::Literal(Literal {
-                        span: class.span,
-                        kind: LiteralKind::Special(SpecialLiteralKind::Tab),
-                        c: '\t'
-                    }),
-                    ClassSetItem::Literal(Literal {
-                        span: class.span,
-                        kind: LiteralKind::Special(SpecialLiteralKind::VerticalTab),
-                        c: '\x08'
-                    }),
-                    ClassSetItem::Literal(Literal {
-                        span: class.span,
-                        kind: LiteralKind::Verbatim,
-                        c: ' '
-                    }),
-                    ClassSetItem::Literal(Literal {
-                        span: class.span,
-                        kind: LiteralKind::HexFixed(HexLiteralKind::X),
-                        c: '\u{00a0}'
-                    }),
-                ],
-            })),
-        },
-        ClassPerlKind::Word => ClassBracketed {
-            span: class.span,
-            negated: class.negated,
-            kind: ClassSet::Item(ClassSetItem::Union(ClassSetUnion {
-                span: class.span,
-                items: vec![
-                    ClassSetItem::Range(ClassSetRange {
-                        span: class.span,
-                        start: Literal {
-                            span: class.span,
-                            kind: LiteralKind::Verbatim,
-                            c: 'A',
-                        },
-                        end: Literal {
-                            span: class.span,
-                            kind: LiteralKind::Verbatim,
-                            c: 'Z',
-                        },
-                    }),
-                    ClassSetItem::Range(ClassSetRange {
-                        span: class.span,
-                        start: Literal {
-                            span: class.span,
-                            kind: LiteralKind::Verbatim,
-                            c: 'a',
-                        },
-                        end: Literal {
-                            span: class.span,
-                            kind: LiteralKind::Verbatim,
-                            c: 'z',
-                        },
-                    }),
-                    ClassSetItem::Range(ClassSetRange {
-                        span: class.span,
-                        start: Literal {
-                            span: class.span,
-                            kind: LiteralKind::Verbatim,
-                            c: '0',
-                        },
-                        end: Literal {
-                            span: class.span,
-                            kind: LiteralKind::Verbatim,
-                            c: '9',
-                        },
-                    }),
-                    ClassSetItem::Literal(Literal {
-                        span: class.span,
-                        kind: LiteralKind::Verbatim,
-                        c: '_'
-                    }),
-                ],
-            })),
+pub fn replace_perl_class(class: &mut ClassPerl) -> ClassAscii {
+    ClassAscii {
+        span: class.span,
+        negated: class.negated,
+        kind: match class.kind {
+            ClassPerlKind::Digit => ClassAsciiKind::Digit,
+            ClassPerlKind::Space => ClassAsciiKind::Space,
+            ClassPerlKind::Word => ClassAsciiKind::Word,
         },
     }
 }

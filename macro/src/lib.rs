@@ -74,10 +74,11 @@ use syn::parse_macro_input;
 ///
 /// The _complex classes_ flag (`'c'`), when enabled, expands perl character classes (`\w`, `\d`,
 /// `\s`) to their full unicode versions. This is how `regex_syntax` behaves, but it could easily
-/// trip people up. The default behavior (with this flag disabled) aliases the classes as follows:
-/// - `\w` -> `[A-Za-z0-9_]`
+/// trip people up. The default behavior (with this flag disabled) aliases the classes to their
+/// ascii variants as follows:
+/// - `\w` -> `[0-9A-Za-z_]`
 /// - `\d` -> `[0-9]`
-/// - `\s` -> `[ \n\r\t\f\v\u00a0]`
+/// - `\s` -> `[\t\n\v\f\r ]`
 ///
 /// ## Aside on Global Flag
 ///

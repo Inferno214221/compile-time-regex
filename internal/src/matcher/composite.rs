@@ -1,6 +1,6 @@
 use std::{fmt::{self, Debug}, marker::PhantomData};
 
-use crate::{expr::IndexedCaptures, haystack::{Haystack, HaystackItem, HaystackWith}, matcher::Matcher};
+use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackWith}, matcher::Matcher};
 
 #[derive(Default)]
 pub struct Or<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
@@ -138,7 +138,10 @@ macro_rules! define_paired_n {
                 $combiner::<Z, $($pair<Z, $a, $b>),+>::all_matches(hay)
             }
 
-            fn captures<'a, Y: HaystackWith<'a, Z>>(hay: &mut Y, caps: &mut IndexedCaptures) -> bool {
+            fn captures<'a, Y: HaystackWith<'a, Z>>(
+                hay: &mut Y,
+                caps: &mut IndexedCaptures
+            ) -> bool {
                 $combiner::<Z, $($pair<Z, $a, $b>),+>::captures(hay, caps)
             }
 

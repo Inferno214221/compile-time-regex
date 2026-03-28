@@ -12,7 +12,6 @@ pub fn impl_captures(
     #![allow(nonstandard_style)]
     let CaptureFromRanges = quote!(::ct_regex::internal::expr::CaptureFromRanges);
     let Haystack = quote!(::ct_regex::internal::haystack::Haystack);
-    let HaystackItem = quote!(::ct_regex::internal::haystack::HaystackItem);
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
     let PhantomData = quote!(::std::marker::PhantomData);

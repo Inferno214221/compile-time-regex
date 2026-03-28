@@ -60,7 +60,9 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     ///
     /// Note that there is no slicing equivalent of [`is_match`](Self::is_match), because any match
     /// has to be the entire haystack.
-    fn slice_matching<'a, H: HaystackWith<'a, I>>(hay: impl IntoHaystack<'a, H>) -> Option<H::Slice> {
+    fn slice_matching<'a, H: HaystackWith<'a, I>>(
+        hay: impl IntoHaystack<'a, H>
+    ) -> Option<H::Slice> {
         let mut hay = hay.into_haystack();
 
         while hay.item().is_some() {
@@ -124,7 +126,9 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     ///
     /// Provides the same result as [`find_capture`](Self::find_capture) with start and end anchors,
     /// although without needing to check any non-starting substring.
-    fn do_capture<'a, H: HaystackWith<'a, I>>(hay: impl IntoHaystack<'a, H>) -> Option<Self::Capture<'a, H>> {
+    fn do_capture<'a, H: HaystackWith<'a, I>>(
+        hay: impl IntoHaystack<'a, H>
+    ) -> Option<Self::Capture<'a, H>> {
         let mut hay = hay.into_haystack();
 
         let mut caps = IndexedCaptures::default();
@@ -148,7 +152,9 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     ///
     /// Anchors should be used for complex behavior, beyond unconditional start and end matches. See
     /// [`do_capture`](Self::do_capture) instead to capture a full haystack.
-    fn find_capture<'a, H: HaystackWith<'a, I>>(hay: impl IntoHaystack<'a, H>) -> Option<Self::Capture<'a, H>> {
+    fn find_capture<'a, H: HaystackWith<'a, I>>(
+        hay: impl IntoHaystack<'a, H>
+    ) -> Option<Self::Capture<'a, H>> {
         let mut hay = hay.into_haystack();
 
         let mut caps = IndexedCaptures::default();

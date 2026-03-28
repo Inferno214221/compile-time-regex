@@ -1,1 +1,0 @@
-pub fn get_item<I>((_, item): (usize, I)) -> I { item }

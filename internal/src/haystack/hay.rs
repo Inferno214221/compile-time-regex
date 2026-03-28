@@ -51,7 +51,11 @@ impl<'a, T: HaystackIter<'a>> Haystack<'a> for T {}
 
 pub trait HaystackWith<'a, I: HaystackItem>: Haystack<'a, Slice: HaystackSlice<'a, Item = I>> {}
 
-impl<'a, I: HaystackItem, T: HaystackIter<'a, Slice: HaystackSlice<'a, Item = I>>> HaystackWith<'a, I> for T {}
+impl<'a, I, T> HaystackWith<'a, I> for T
+where
+    I: HaystackItem,
+    T: Haystack<'a, Slice: HaystackSlice<'a, Item = I>>
+{}
 
 pub trait IntoHaystack<'a, H: Haystack<'a>> {
     fn into_haystack(self) -> H;

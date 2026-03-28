@@ -1,8 +1,9 @@
 use std::{fmt::{self, Debug}, ops::Range};
 
-use crate::haystack::{HaystackSlice, util};
+use crate::haystack::{HaystackSlice};
 
-pub trait HaystackIter<'a>: Iterator<Item = <Self::Slice as HaystackSlice<'a>>::Item> + Debug + Clone {
+pub trait HaystackIter<'a>: Iterator<Item = <Self::Slice as HaystackSlice<'a>>::Item> + Debug + Clone
+{
     type Slice: HaystackSlice<'a>;
 
     fn from_slice(value: Self::Slice) -> Self;
@@ -20,6 +21,8 @@ pub trait HaystackIter<'a>: Iterator<Item = <Self::Slice as HaystackSlice<'a>>::
     fn go_to(&mut self, index: usize);
 }
 
+fn get_item<I>((_, item): (usize, I)) -> I { item }
+
 #[derive(Clone)]
 pub struct StrIter<'a> {
     inner: &'a str,
@@ -30,7 +33,7 @@ impl<'a> StrIter<'a> {
     fn get_first_char(&self) -> (usize, Option<char>) {
         let mut iter = self.remainder_as_slice().char_indices();
         let first = iter.next();
-        (iter.offset(), first.map(util::get_item))
+        (iter.offset(), first.map(get_item))
     }
 }
 
@@ -65,7 +68,7 @@ impl<'a> HaystackIter<'a> for StrIter<'a> {
     }
 
     fn current_item(&self) -> Option<Self::Item> {
-        util::get_item(self.get_first_char())
+        get_item(self.get_first_char())
     }
 
     fn current_index(&self) -> usize {

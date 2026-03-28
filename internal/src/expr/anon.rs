@@ -1,4 +1,4 @@
-use crate::haystack::{Haystack, HaystackItem, HaystackWith, IntoHaystack};
+use crate::haystack::{HaystackItem, HaystackWith, IntoHaystack};
 use super::Regex;
 
 /// A trait that is automatically implemented for 'anonymous' regular expression types. There is
@@ -19,7 +19,10 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
     }
 
     /// See [`Regex::slice_matching`].
-    fn slice_matching<'a, H: HaystackWith<'a, I>>(&self, hay: impl IntoHaystack<'a, H>) -> Option<H::Slice> {
+    fn slice_matching<'a, H: HaystackWith<'a, I>>(
+        &self,
+        hay: impl IntoHaystack<'a, H>
+    ) -> Option<H::Slice> {
         <Self as Regex<I, N>>::slice_matching(hay)
     }
 
@@ -33,12 +36,18 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
     }
 
     /// See [`Regex::do_capture`].
-    fn do_capture<'a, H: HaystackWith<'a, I>>(&self, hay: impl IntoHaystack<'a, H>) -> Option<Self::Capture<'a, H>> {
+    fn do_capture<'a, H: HaystackWith<'a, I>>(
+        &self,
+        hay: impl IntoHaystack<'a, H>
+    ) -> Option<Self::Capture<'a, H>> {
         <Self as Regex<I, N>>::do_capture(hay)
     }
 
     /// See [`Regex::find_capture`].
-    fn find_capture<'a, H: HaystackWith<'a, I>>(&self, hay: impl IntoHaystack<'a, H>) -> Option<Self::Capture<'a, H>> {
+    fn find_capture<'a, H: HaystackWith<'a, I>>(
+        &self,
+        hay: impl IntoHaystack<'a, H>
+    ) -> Option<Self::Capture<'a, H>> {
         <Self as Regex<I, N>>::find_capture(hay)
     }
 

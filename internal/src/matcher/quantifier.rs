@@ -1,6 +1,6 @@
 use std::{fmt::{self, Debug}, marker::PhantomData, vec};
 
-use crate::{expr::IndexedCaptures, haystack::{Haystack, HaystackItem, HaystackWith}, matcher::{Matcher, Then}};
+use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackWith}, matcher::{Matcher, Then}};
 
 #[derive(Default)]
 pub struct QuantifierN<I: HaystackItem, A: Matcher<I>, const N: usize>(

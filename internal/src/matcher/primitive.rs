@@ -1,6 +1,6 @@
 use std::fmt::{self, Debug};
 
-use crate::{expr::IndexedCaptures, haystack::{Haystack, HaystackItem, HaystackWith}};
+use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackWith}};
 
 pub trait Matcher<I: HaystackItem>: Debug + Default {
     /// Checks if the start of the haystack contains a match for this [`Matcher`]. If this method

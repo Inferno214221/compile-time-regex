@@ -1,6 +1,6 @@
 use std::{fmt::{self, Debug}, marker::PhantomData};
 
-use crate::{expr::IndexedCaptures, haystack::{Haystack, HaystackItem}, matcher::Matcher};
+use crate::{expr::IndexedCaptures, haystack::{Haystack, HaystackItem, HaystackWith}, matcher::Matcher};
 
 #[derive(Default)]
 pub struct Or<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
@@ -10,7 +10,7 @@ pub struct Or<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
 );
 
 impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
-    fn matches(hay: &mut Haystack<I>) -> bool {
+    fn matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> bool {
         let rollback = hay.clone();
         if A::matches(hay) {
             true
@@ -21,7 +21,7 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
     }
 
     // /(a*|b*)c/ should prefer aa, a, bb, b -> vec![b, bb, a, aa]
-    fn all_matches<'a>(hay: &mut Haystack<'a, I>) -> Vec<Haystack<'a, I>> {
+    fn all_matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> Vec<H> {
         let mut fork = hay.clone();
         // We match B first because the output needs to be reversed for greedy matching.
         // TODO: Consider implications for lazy matching.
@@ -30,7 +30,7 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
         vec
     }
 
-    fn captures(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
+    fn captures<'a, H: HaystackWith<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
         let rollback = (hay.clone(), caps.clone());
         if A::captures(hay, caps) {
             true
@@ -40,10 +40,10 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
         }
     }
 
-    fn all_captures<'a>(
-        hay: &mut Haystack<'a, I>,
+    fn all_captures<'a, H: HaystackWith<'a, I>>(
+        hay: &mut H,
         caps: &mut IndexedCaptures
-    ) -> Vec<(Haystack<'a, I>, IndexedCaptures)> {
+    ) -> Vec<(H, IndexedCaptures)> {
         let (mut hay_fork, mut caps_fork) = (hay.clone(), caps.clone());
         // We match B first because the output needs to be reversed for greedy matching.
         let mut vec = B::all_captures(hay, caps);
@@ -66,7 +66,7 @@ pub struct Then<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
 );
 
 impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B> {
-    fn matches(hay: &mut Haystack<I>) -> bool {
+    fn matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> bool {
         if let Some(fork) = Self::all_matches(hay).pop() {
             *hay = fork;
             true
@@ -75,13 +75,13 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B>
         }
     }
 
-    fn all_matches<'a>(hay: &mut Haystack<'a, I>) -> Vec<Haystack<'a, I>> {
+    fn all_matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> Vec<H> {
         A::all_matches(hay).into_iter().flat_map(|mut h| {
             B::all_matches(&mut h)
         }).collect()
     }
 
-    fn captures(hay: &mut Haystack<I>, caps: &mut IndexedCaptures) -> bool {
+    fn captures<'a, H: HaystackWith<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
         if let Some(fork) = Self::all_captures(hay, caps).pop() {
             (*hay, *caps) = fork;
             true
@@ -90,10 +90,10 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B>
         }
     }
 
-    fn all_captures<'a>(
-        hay: &mut Haystack<'a, I>,
+    fn all_captures<'a, H: HaystackWith<'a, I>>(
+        hay: &mut H,
         caps: &mut IndexedCaptures
-    ) -> Vec<(Haystack<'a, I>, IndexedCaptures)> {
+    ) -> Vec<(H, IndexedCaptures)> {
         A::all_captures(hay, caps).into_iter().flat_map(|(mut hay_fork, mut caps_fork)| {
             B::all_captures(&mut hay_fork, &mut caps_fork)
         }).collect()
@@ -130,22 +130,22 @@ macro_rules! define_paired_n {
             Z: HaystackItem,
             $($a: Matcher<Z>, $b: Matcher<Z>),+
         > Matcher<Z> for $name<Z, $($a, $b),+> {
-            fn matches(hay: &mut Haystack<Z>) -> bool {
+            fn matches<'a, Y: HaystackWith<'a, Z>>(hay: &mut Y) -> bool {
                 $combiner::<Z, $($pair<Z, $a, $b>),+>::matches(hay)
             }
 
-            fn all_matches<'a>(hay: &mut Haystack<'a, Z>) -> Vec<Haystack<'a, Z>> {
+            fn all_matches<'a, Y: HaystackWith<'a, Z>>(hay: &mut Y) -> Vec<Y> {
                 $combiner::<Z, $($pair<Z, $a, $b>),+>::all_matches(hay)
             }
 
-            fn captures(hay: &mut Haystack<Z>, caps: &mut IndexedCaptures) -> bool {
+            fn captures<'a, Y: HaystackWith<'a, Z>>(hay: &mut Y, caps: &mut IndexedCaptures) -> bool {
                 $combiner::<Z, $($pair<Z, $a, $b>),+>::captures(hay, caps)
             }
 
-            fn all_captures<'a>(
-                hay: &mut Haystack<'a, Z>,
+            fn all_captures<'a, Y: HaystackWith<'a, Z>>(
+                hay: &mut Y,
                 caps: &mut IndexedCaptures
-            ) -> Vec<(Haystack<'a, Z>, IndexedCaptures)> {
+            ) -> Vec<(Y, IndexedCaptures)> {
                 $combiner::<Z, $($pair<Z, $a, $b>),+>::all_captures(hay, caps)
             }
         }

@@ -1,6 +1,6 @@
-use std::{fmt::{self, Debug}, ops::Range};
+use std::ops::Range;
 
-use crate::haystack::{HaystackItem, HaystackIter};
+use crate::haystack::{ByteIter, HaystackItem, HaystackIter, HaystackSlice, StrIter};
 
 // TODO: Create a HatstackState(usize) for even cheaper clones.
 
@@ -16,60 +16,62 @@ use crate::haystack::{HaystackItem, HaystackIter};
 ///
 /// The `Haystack` type is accompanied by a helper trait, [`HaystackItem`], representing an item
 /// that can be matched against a [`Regex`](crate::expr::Regex).
-#[derive(Clone)]
-pub struct Haystack<'a, I: HaystackItem> {
-    inner: I::Iter<'a>,
-}
-
-impl<'a> From<&'a str> for Haystack<'a, char> {
-    fn from(value: &'a str) -> Self {
-        Haystack {
-            inner: char::iter_from_slice(value),
-        }
-    }
-}
-
-impl<'a> From<&'a [u8]> for Haystack<'a, u8> {
-    fn from(value: &'a [u8]) -> Self {
-        Haystack {
-            inner: u8::iter_from_slice(value),
-        }
-    }
-}
-
-impl<'a, I: HaystackItem> Haystack<'a, I> {
-    pub fn item(&self) -> Option<I> {
-        self.inner.current_item()
+pub trait Haystack<'a>: HaystackIter<'a> {
+    fn is_start(&self) -> bool {
+        self.current_index() == 0
     }
 
-    pub fn index(&self) -> usize {
-        self.inner.current_index()
-    }
-
-    // Progression is only completed by elements which explicitly check the byte and succeed.
-    pub fn progress(&mut self) {
-        self.inner.next();
-    }
-
-    pub fn is_start(&self) -> bool {
-        self.inner.is_start()
-    }
-
-    pub fn is_end(&self) -> bool {
+    fn is_end(&self) -> bool {
         self.item().is_none()
     }
 
-    pub fn slice(&self, cap: Range<usize>) -> I::Slice<'a> {
-        self.inner.slice_with(cap)
+    fn item(&self) -> Option<Self::Item> {
+        self.current_item()
     }
 
-    pub fn reset(&mut self) {
-        self.inner.rollback(0);
+    fn index(&self) -> usize {
+        self.current_index()
+    }
+
+    // Progression is only completed by elements which explicitly check the byte and succeed.
+    fn progress(&mut self) {
+        self.next();
+    }
+
+    fn slice(&self, cap: Range<usize>) -> Self::Slice {
+        self.slice_with(cap)
+    }
+
+    fn reset(&mut self) {
+        self.go_to(0);
     }
 }
 
-impl<'a, I: HaystackItem> Debug for Haystack<'a, I> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Haystack(\n{:?}\n)", self.inner)
+impl<'a, T: HaystackIter<'a>> Haystack<'a> for T {}
+
+pub trait HaystackWith<'a, I: HaystackItem>: Haystack<'a, Slice: HaystackSlice<'a, Item = I>> {}
+
+impl<'a, I: HaystackItem, T: HaystackIter<'a, Slice: HaystackSlice<'a, Item = I>>> HaystackWith<'a, I> for T {}
+
+pub trait IntoHaystack<'a, H: Haystack<'a>> {
+    fn into_haystack(self) -> H;
+}
+
+// Avoid a blanket implementation here so that users don't have to specify types.
+// impl<'a, I: HaystackItem, H: Haystack<'a, I>> IntoHaystack<'a, I, H> for H::Slice {
+//     fn into_haystack(self) -> H {
+//         <H as HaystackIter>::from_slice(self)
+//     }
+// }
+
+impl<'a> IntoHaystack<'a, ByteIter<'a>> for &'a [u8] {
+    fn into_haystack(self) -> ByteIter<'a> {
+        ByteIter::from_slice(self)
+    }
+}
+
+impl<'a> IntoHaystack<'a, StrIter<'a>> for &'a str {
+    fn into_haystack(self) -> StrIter<'a> {
+        StrIter::from_slice(self)
     }
 }

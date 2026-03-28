@@ -15,6 +15,7 @@ pub fn make_regex(
 ) -> TokenStream {
     #![allow(nonstandard_style)]
     let fmt = quote!(::std::fmt);
+    let Haystack = quote!(::ct_regex::internal::haystack::Haystack);
     let Regex = quote!(::ct_regex::internal::expr::Regex);
     let AnonRegex = quote!(::ct_regex::internal::expr::AnonRegex);
 
@@ -55,13 +56,12 @@ pub fn make_regex(
         impl #Regex<u8, #captures_len> for #name {
             type Pattern = #type_expr_byte;
 
-            type Capture<'a> = #captures_name<'a, u8>;
+            type Capture<'a, H: #Haystack<'a>> = #captures_name<'a, H>;
         }
 
         impl #Regex<char, #captures_len> for #name {
             type Pattern = #type_expr_scalar;
-
-            type Capture<'a> = #captures_name<'a, char>;
+            type Capture<'a, H: #Haystack<'a>> = #captures_name<'a, H>;
         }
 
         #anon_impl

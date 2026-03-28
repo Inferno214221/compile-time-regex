@@ -15,6 +15,7 @@ pub fn impl_captures(
     let HaystackItem = quote!(::ct_regex::internal::haystack::HaystackItem);
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
+    let PhantomData = quote!(::std::marker::PhantomData);
 
     let len_usize = groups.len();
 
@@ -66,25 +67,28 @@ pub fn impl_captures(
     let captures_impl = quote! {
         #[doc = #doc]
         #[derive(Debug, Clone)]
-        #vis struct #name<'a, I: #HaystackItem>(
-            pub #Haystack<'a, I>,
-            #(#inner),*
+        #vis struct #name<'a, H: #Haystack<'a>>(
+            pub H,
+            #(#inner),*,
+            #PhantomData<&'a ()>,
         );
 
-        impl<'a, I: #HaystackItem> #name<'a, I> {
+        impl<'a, H: #Haystack<'a>> #name<'a, H> {
             #(#numbered_groups)*
 
             #(#named_groups)*
         }
 
-        impl<'a, I: #HaystackItem> #CaptureFromRanges<'a, I, #len> for #name<'a, I> {
+        impl<'a, H: #Haystack<'a>> #CaptureFromRanges<'a, H, #len> for #name<'a, H> {
             fn from_ranges(
                 ranges: [#Option<#Range>; #len],
-                hay: #Haystack<'a, I>
+                hay: H
             ) -> #Option<Self> {
                 let [#(#capture_destructure),*] = ranges;
                 #Option::Some(Self(
-                    hay, #(#capture_constructor),*
+                    hay,
+                    #(#capture_constructor),*,
+                    #PhantomData,
                 ))
             }
         }
@@ -94,7 +98,6 @@ pub fn impl_captures(
 }
 
 pub fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStream {
-    // Aliases
     #![allow(nonstandard_style)]
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
@@ -105,7 +108,7 @@ pub fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> Token
 
     if cap.required {
         quote! {
-            pub fn #cap_name(&'a self) -> I::Slice<'a> {
+            pub fn #cap_name(&self) -> H::Slice {
                 self.0.slice(self.#index_name.clone())
             }
 
@@ -115,7 +118,7 @@ pub fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> Token
         }
     } else {
         quote! {
-            pub fn #cap_name(&'a self) -> #Option<I::Slice<'a>> {
+            pub fn #cap_name(&self) -> #Option<H::Slice> {
                 self.#index_name.as_ref().map(|c| self.0.slice(c.clone()))
             }
 

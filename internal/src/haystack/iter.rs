@@ -1,23 +1,23 @@
 use std::{fmt::{self, Debug}, ops::Range};
 
-use crate::haystack::{HaystackItem, util};
+use crate::haystack::{HaystackSlice, util};
 
-pub trait HaystackIter<'a>: Iterator<Item: HaystackItem> + Debug {
+pub trait HaystackIter<'a>: Iterator<Item = <Self::Slice as HaystackSlice<'a>>::Item> + Debug + Clone {
+    type Slice: HaystackSlice<'a>;
+
+    fn from_slice(value: Self::Slice) -> Self;
+
     fn current_item(&self) -> Option<Self::Item>;
 
     fn current_index(&self) -> usize;
 
-    fn is_start(&self) -> bool {
-        self.current_index() == 0
-    }
+    fn as_slice(&self) -> Self::Slice;
 
-    fn as_slice<'s>(&'s self) -> <Self::Item as HaystackItem>::Slice<'s>;
+    fn remainder_as_slice(&self) -> Self::Slice;
 
-    fn rem_as_slice<'s>(&'s self) -> <Self::Item as HaystackItem>::Slice<'s>;
+    fn slice_with(&self, range: Range<usize>) -> Self::Slice;
 
-    fn slice_with(&self, range: Range<usize>) -> <Self::Item as HaystackItem>::Slice<'a>;
-
-    fn rollback(&mut self, index: usize);
+    fn go_to(&mut self, index: usize);
 }
 
 #[derive(Clone)]
@@ -28,7 +28,7 @@ pub struct StrIter<'a> {
 
 impl<'a> StrIter<'a> {
     fn get_first_char(&self) -> (usize, Option<char>) {
-        let mut iter = self.rem_as_slice().char_indices();
+        let mut iter = self.remainder_as_slice().char_indices();
         let first = iter.next();
         (iter.offset(), first.map(util::get_item))
     }
@@ -55,6 +55,15 @@ impl<'a> Iterator for StrIter<'a> {
 }
 
 impl<'a> HaystackIter<'a> for StrIter<'a> {
+    type Slice = &'a str;
+
+    fn from_slice(value: Self::Slice) -> Self {
+        StrIter {
+            inner: value,
+            index: 0,
+        }
+    }
+
     fn current_item(&self) -> Option<Self::Item> {
         util::get_item(self.get_first_char())
     }
@@ -63,19 +72,19 @@ impl<'a> HaystackIter<'a> for StrIter<'a> {
         self.index
     }
 
-    fn as_slice<'s>(&'s self) -> <Self::Item as HaystackItem>::Slice<'s> {
+    fn as_slice(&self) -> Self::Slice {
         self.inner
     }
 
-    fn rem_as_slice<'s>(&'s self) -> <Self::Item as HaystackItem>::Slice<'s> {
+    fn remainder_as_slice(&self) -> Self::Slice {
         &self.inner[self.index..]
     }
 
-    fn slice_with(&self, range: Range<usize>) -> <Self::Item as HaystackItem>::Slice<'a> {
+    fn slice_with(&self, range: Range<usize>) -> Self::Slice {
         &self.inner[range]
     }
 
-    fn rollback(&mut self, index: usize) {
+    fn go_to(&mut self, index: usize) {
         self.index = index;
     }
 }
@@ -129,31 +138,37 @@ impl<'a> Iterator for ByteIter<'a> {
 }
 
 impl<'a> HaystackIter<'a> for ByteIter<'a> {
-    fn current_item(&self) -> Option<Self::Item> {
-        if self.index >= self.inner.len() {
-            None
-        } else {
-            Some(self.inner[self.index])
+    type Slice = &'a [u8];
+
+    fn from_slice(value: Self::Slice) -> Self {
+        ByteIter {
+            inner: value,
+            index: 0,
         }
+    }
+
+    fn current_item(&self) -> Option<Self::Item> {
+        self.inner.get(self.index).copied()
     }
 
     fn current_index(&self) -> usize {
         self.index
     }
 
-    fn as_slice<'s>(&'s self) -> <Self::Item as HaystackItem>::Slice<'s> {
+    fn as_slice(&self) -> Self::Slice {
         self.inner
     }
 
-    fn rem_as_slice<'s>(&'s self) -> <Self::Item as HaystackItem>::Slice<'s> {
+    fn remainder_as_slice(&self) -> Self::Slice {
+        // FIXME: Check for possible panics when slicing.
         &self.inner[self.index..]
     }
 
-    fn slice_with(&self, range: Range<usize>) -> <Self::Item as HaystackItem>::Slice<'a> {
+    fn slice_with(&self, range: Range<usize>) -> Self::Slice {
         &self.inner[range]
     }
 
-    fn rollback(&mut self, index: usize) {
+    fn go_to(&mut self, index: usize) {
         self.index = index;
     }
 }

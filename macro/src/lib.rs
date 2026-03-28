@@ -56,7 +56,7 @@ use syn::parse_macro_input;
 /// The flats available are relatively standard and are implemented according to those provided by
 /// [`regex_automata::util::syntax::Config`](https://docs.rs/regex-automata/latest/regex_automata/util/syntax/struct.Config.html),
 /// with one addition, `'c'`.
-/// One notable exception to the standard options is the absence of a `'g'` (global) flag.
+/// One notable exception to the standard options is the absence of a `'g'` (_global_) flag.
 ///
 /// Available flags:
 /// ```

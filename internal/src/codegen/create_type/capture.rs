@@ -4,8 +4,11 @@ use syn::{Ident, Visibility};
 
 use crate::codegen::Group;
 
-pub fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> TokenStream {
-    // Aliases
+pub fn impl_captures(
+    vis: &Visibility,
+    regex_name: &Ident,
+    groups: Vec<Group>
+) -> (Ident, Literal, TokenStream) {
     #![allow(nonstandard_style)]
     let CaptureFromRanges = quote!(::ct_regex::internal::expr::CaptureFromRanges);
     let Haystack = quote!(::ct_regex::internal::haystack::Haystack);
@@ -13,7 +16,21 @@ pub fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> Toke
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
 
-    let captures_len = Literal::usize_unsuffixed(groups.len());
+    let len_usize = groups.len();
+
+    let name = format_ident!("{}Capture", regex_name);
+    let len = Literal::usize_unsuffixed(len_usize);
+
+    let doc = format!(
+        "A macro-generated type that holds {len_usize} captures for the associated regex, \
+        [`{regex_name}`]. If present, named groups can be retrieved through their associated \
+        method.\n\n\
+        Capture types include methods to retrieve individual captures as a slice of the original \
+        haystack, or as the underlying [`Range<usize>`](::std::range::Range), which can be used \
+        to manually slice the haystack (without risk of panicking in the case of `&str`).\n\n\
+        As is common with regular expressions, group `0` refers to the whole match (and is \
+        therefore aliased as [`{name}::whole_match`])."
+    );
 
     if groups.is_empty() {
         panic!("empty groups")
@@ -46,7 +63,8 @@ pub fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> Toke
         }
     });
 
-    quote! {
+    let captures_impl = quote! {
+        #[doc = #doc]
         #[derive(Debug, Clone)]
         #vis struct #name<'a, I: #HaystackItem>(
             pub #Haystack<'a, I>,
@@ -59,9 +77,9 @@ pub fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> Toke
             #(#named_groups)*
         }
 
-        impl<'a, I: #HaystackItem> #CaptureFromRanges<'a, I, #captures_len> for #name<'a, I> {
+        impl<'a, I: #HaystackItem> #CaptureFromRanges<'a, I, #len> for #name<'a, I> {
             fn from_ranges(
-                ranges: [#Option<#Range>; #captures_len],
+                ranges: [#Option<#Range>; #len],
                 hay: #Haystack<'a, I>
             ) -> #Option<Self> {
                 let [#(#capture_destructure),*] = ranges;
@@ -70,7 +88,9 @@ pub fn impl_captures(vis: &Visibility, name: &Ident, groups: Vec<Group>) -> Toke
                 ))
             }
         }
-    }
+    };
+
+    return (name, len, captures_impl);
 }
 
 pub fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStream {

@@ -6,7 +6,6 @@ edition = "2024"
 [dependencies]
 proc-macro2 = "1.0.106"
 quote = "1.0.44"
-regex-automata = "0.4.14"
 regex-syntax = "0.8.9"
 syn = "2.0.117"
 standard-lib = { git = "https://github.com/Inferno214221/standard-lib.git", features = ["cons"] }

@@ -42,7 +42,7 @@ pub trait HaystackIter<'a>: Debug + Clone
 
     /// Returns the underlying slice, as it was when this `HaystackIter` was created - representing
     /// the entire haystack being matched against.
-    fn as_slice(&self) -> Self::Slice;
+    fn whole_slice(&self) -> Self::Slice;
 
     /// Returns the remaining contents of this haystack, as a `Slice`. For slice based haystacks,
     /// this is can be implemented as `&self.inner[self.index..]`.
@@ -108,7 +108,7 @@ impl<'a> HaystackIter<'a> for StrStack<'a> {
         self.index
     }
 
-    fn as_slice(&self) -> Self::Slice {
+    fn whole_slice(&self) -> Self::Slice {
         self.inner
     }
 
@@ -186,7 +186,7 @@ impl<'a> HaystackIter<'a> for ByteStack<'a> {
         self.index
     }
 
-    fn as_slice(&self) -> Self::Slice {
+    fn whole_slice(&self) -> Self::Slice {
         self.inner
     }
 

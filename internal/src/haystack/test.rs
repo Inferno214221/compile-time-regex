@@ -403,7 +403,7 @@ fn test_str_iter_is_start_after_next() {
 #[test]
 fn test_str_iter_as_slice() {
     let iter = StrStack::from("hello");
-    assert_eq!(iter.as_slice(), "hello");
+    assert_eq!(iter.whole_slice(), "hello");
 }
 
 #[test]
@@ -411,13 +411,13 @@ fn test_str_iter_as_slice_after_progress() {
     let mut iter = StrStack::from("hello");
     iter.next();
     iter.next();
-    assert_eq!(iter.as_slice(), "hello"); // as_slice returns full string
+    assert_eq!(iter.whole_slice(), "hello"); // as_slice returns full string
 }
 
 #[test]
 fn test_str_iter_as_slice_empty() {
     let iter = StrStack::from("");
-    assert_eq!(iter.as_slice(), "");
+    assert_eq!(iter.whole_slice(), "");
 }
 
 // Tests for StrIter::rem_as_slice
@@ -583,7 +583,7 @@ fn test_byte_iter_is_start_after_next() {
 #[test]
 fn test_byte_iter_as_slice() {
     let iter = ByteStack::from(b"hello" as &[u8]);
-    assert_eq!(iter.as_slice(), b"hello");
+    assert_eq!(iter.whole_slice(), b"hello");
 }
 
 #[test]
@@ -591,13 +591,13 @@ fn test_byte_iter_as_slice_after_progress() {
     let mut iter = ByteStack::from(b"hello" as &[u8]);
     iter.next();
     iter.next();
-    assert_eq!(iter.as_slice(), b"hello"); // as_slice returns full slice
+    assert_eq!(iter.whole_slice(), b"hello"); // as_slice returns full slice
 }
 
 #[test]
 fn test_byte_iter_as_slice_empty() {
     let iter = ByteStack::from(b"" as &[u8]);
-    assert_eq!(iter.as_slice(), b"");
+    assert_eq!(iter.whole_slice(), b"");
 }
 
 // Tests for ByteIter::rem_as_slice

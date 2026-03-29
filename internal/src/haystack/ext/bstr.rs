@@ -50,7 +50,7 @@ impl<'a> HaystackIter<'a> for BStrStack<'a> {
         self.index
     }
 
-    fn as_slice(&self) -> Self::Slice {
+    fn whole_slice(&self) -> Self::Slice {
         self.inner
     }
 

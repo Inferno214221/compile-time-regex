@@ -47,7 +47,7 @@ impl<'a, B: Backend> HaystackIter<'a> for HipStrStack<'a, B> {
         self.index
     }
 
-    fn as_slice(&self) -> Self::Slice {
+    fn whole_slice(&self) -> Self::Slice {
         self.inner.clone()
     }
 
@@ -120,7 +120,7 @@ impl<'a, B: Backend> HaystackIter<'a> for HipBytStack<'a, B> {
         self.index
     }
 
-    fn as_slice(&self) -> Self::Slice {
+    fn whole_slice(&self) -> Self::Slice {
         self.inner.clone()
     }
 

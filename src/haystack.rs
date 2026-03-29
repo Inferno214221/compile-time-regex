@@ -1,8 +1,8 @@
 //! A collection of traits and structs that form the haystack system. Although usually implicit,
 //! these type may be needed on occasion for full type names etc.
 //!
-//! Additionally, it _should_ be possible to implement these traits for other types to allow
-//! matching different strings and other types, but not all of the traits will be required.
+//! Additionally, it is be possible to implement these traits for other types to allow matching
+//! different strings and other types, but not all of the traits will be required.
 //!
 //! The main traits in this crate are chained together with associated items:
 //! ```
@@ -32,7 +32,7 @@
 //! It needs to be noted that regardless of the haystack type being matched, the regular expression
 //! provided to the `regex!` macro needs to be valid UTF-8.
 
-pub use ct_regex_internal::haystack::{ByteStack, Haystack, HaystackItem, HaystackIter, HaystackSlice, HaystackWith, StrStack};
+pub use ct_regex_internal::haystack::{ByteStack, Haystack, HaystackItem, HaystackIter, HaystackSlice, HaystackOf, IntoHaystack, StrStack};
 
 #[cfg(any(doc, feature = "arcstr"))]
 #[doc(cfg(feature = "arcstr"))]

@@ -28,7 +28,10 @@ impl<'a> IntoHaystack<'a, ArcStrStack<'a>> for ArcStr {
 
 impl<'a> IntoHaystack<'a, ArcStrStack<'a>> for Substr {
     fn into_haystack(self) -> ArcStrStack<'a> {
-        ArcStrStack::from_slice(self)
+        ArcStrStack {
+            inner: self,
+            _phantom: PhantomData,
+        }
     }
 }
 
@@ -46,13 +49,6 @@ impl<'a> Iterator for ArcStrStack<'a> {
 
 impl<'a> HaystackIter<'a> for ArcStrStack<'a> {
     type Slice = Substr;
-
-    fn from_slice(inner: Self::Slice) -> Self {
-        ArcStrStack {
-            inner,
-            _phantom: PhantomData,
-        }
-    }
 
     fn current_item(&self) -> Option<Self::Item> {
         get_item(get_first_char(&self.inner))

@@ -4,18 +4,20 @@ use crate::haystack::{HaystackItem, HaystackIter, HaystackSlice};
 
 // FIXME: This documentation is stale.
 
-/// A type used to reference the haystack when matching of capturing against a
-/// [`Regex`](crate::expr::Regex), in addition to tracking progression.
+/// A trait used to interface the haystack types use when matching of capturing against a
+/// [`Regex`](crate::expr::Regex), including tracking progression and slicing captures.
 ///
 /// It is rare that users will have to interact with this trait, appart from Trait bounds. All
 /// public methods will take an `impl IntoHaystack<'a, H>` as an argument.
 ///
-/// Because of the progression tracking, a `Haystack` can't be matched against multiple times
-/// without [`reset`](Self::reset)ting it first, or it will continue where the first pattern
-/// finished.
+/// `Haystack` is accompanied by another trait, [`HaystackItem`], representing items that can be
+/// matched against a [`Regex`](crate::expr::Regex).
 ///
-/// The `Haystack` type is accompanied by a helper trait, [`HaystackItem`], representing an item
-/// that can be matched against a [`Regex`](crate::expr::Regex).
+/// `Haystack`s are stateful and therefore can't be matched against multiple times without being
+/// [`reset`](Self::reset) first, or they will continue where the first pattern finished. They store
+/// their state as a `usize`, which can be obtained via [`index`](Self::index) and restored via
+/// [`rollback`](Self::rollback). Additionally, `Haystack`s are cheap to clone, relying on shallow
+/// clones or reference counting.
 pub trait Haystack<'a>: HaystackIter<'a> {
     fn is_start(&self) -> bool {
         self.current_index() == 0
@@ -54,9 +56,13 @@ pub trait Haystack<'a>: HaystackIter<'a> {
 
 impl<'a, T: HaystackIter<'a>> Haystack<'a> for T {}
 
-pub trait HaystackWith<'a, I: HaystackItem>: Haystack<'a, Slice: HaystackSlice<'a, Item = I>> {}
+/// This trait is exactly the same as [`Haystack`], except that it simplifies bounds by requiring
+/// that `Item = I`.
+///
+/// It is also blanket-implemented for all types that implement `Haystack<Item = I>`.
+pub trait HaystackOf<'a, I: HaystackItem>: Haystack<'a, Slice: HaystackSlice<'a, Item = I>> {}
 
-impl<'a, I, T> HaystackWith<'a, I> for T
+impl<'a, I, T> HaystackOf<'a, I> for T
 where
     I: HaystackItem,
     T: Haystack<'a, Slice: HaystackSlice<'a, Item = I>>
@@ -64,8 +70,12 @@ where
 
 /// A trait that is responsible for converting a slice into a stateful [`Haystack`], of type `H`.
 /// The primary intent of this trait is to allow users to avoid creating their own `Haystack`,
-/// instead passing a slice to methods on [`Regex`](crate::Regex).
+/// instead passing a slice to methods on [`Regex`](crate::expr::Regex).
+///
+/// If creating a new `Haystack` type, this trait should be implemented manually so that all types
+/// can be inferred properly.
 pub trait IntoHaystack<'a, H: Haystack<'a>> {
+    /// Creates a new [`Haystack`] from self.
     fn into_haystack(self) -> H;
 }
 

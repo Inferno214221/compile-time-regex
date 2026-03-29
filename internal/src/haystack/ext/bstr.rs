@@ -9,9 +9,7 @@ impl<'a> HaystackSlice<'a> for &'a BStr {
 }
 
 /// A haystack type for matching against the [`u8`]s in a [`&'a BStr`](bstr::BStr). This type is a
-/// very basic example of how the haystack traits can be implemented outside of the crate itself,
-/// and to show that multiple [`Haystack`](crate::haystack::Haystack)s can have the same `Item`
-/// type.
+/// very basic example of how the haystack traits can be implemented outside of the crate itself.
 #[derive(Debug, Clone)]
 pub struct BStrStack<'a> {
     inner: &'a BStr,
@@ -20,7 +18,10 @@ pub struct BStrStack<'a> {
 
 impl<'a> IntoHaystack<'a, BStrStack<'a>> for &'a BStr {
     fn into_haystack(self) -> BStrStack<'a> {
-        BStrStack::from_slice(self)
+        BStrStack {
+            inner: self,
+            index: 0,
+        }
     }
 }
 
@@ -40,13 +41,6 @@ impl<'a> Iterator for BStrStack<'a> {
 
 impl<'a> HaystackIter<'a> for BStrStack<'a> {
     type Slice = &'a BStr;
-
-    fn from_slice(inner: Self::Slice) -> Self {
-        BStrStack {
-            inner,
-            index: 0,
-        }
-    }
 
     fn current_item(&self) -> Option<Self::Item> {
         self.inner.get(self.index).copied()

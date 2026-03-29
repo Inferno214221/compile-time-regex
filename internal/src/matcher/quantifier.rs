@@ -1,6 +1,6 @@
 use std::{fmt::{self, Debug}, marker::PhantomData, vec};
 
-use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackWith}, matcher::{Matcher, Then}};
+use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::{Matcher, Then}};
 
 #[derive(Default)]
 pub struct QuantifierN<I: HaystackItem, A: Matcher<I>, const N: usize>(
@@ -9,7 +9,7 @@ pub struct QuantifierN<I: HaystackItem, A: Matcher<I>, const N: usize>(
 );
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierN<I, A, N> {
-    fn matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> bool {
+    fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         let mut count = 0;
         while A::matches(hay) {
             count += 1;
@@ -17,7 +17,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierN<
         count == N
     }
 
-    fn captures<'a, H: HaystackWith<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
+    fn captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
         let mut count = 0;
         while A::captures(hay, caps) {
             count += 1;
@@ -39,7 +39,7 @@ pub struct QuantifierNOrMore<I: HaystackItem, A: Matcher<I>, const N: usize>(
 );
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNOrMore<I, A, N> {
-    fn matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> bool {
+    fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         let mut count = 0;
         while A::matches(hay) {
             count += 1;
@@ -47,7 +47,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNO
         count >= N
     }
 
-    fn all_matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> Vec<usize> {
+    fn all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Vec<usize> {
         let mut matches = vec![];
         let mut count = 0;
 
@@ -65,7 +65,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNO
         matches
     }
 
-    fn captures<'a, H: HaystackWith<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
+    fn captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
         let mut count = 0;
         while A::captures(hay, caps) {
             count += 1;
@@ -73,7 +73,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNO
         count >= N
     }
 
-    fn all_captures<'a, H: HaystackWith<'a, I>>(
+    fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
         caps: &mut IndexedCaptures
     ) -> Vec<(usize, IndexedCaptures)> {
@@ -108,7 +108,7 @@ pub struct QuantifierNToM<I: HaystackItem, A: Matcher<I>, const N: usize, const 
 );
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> for QuantifierNToM<I, A, N, M> {
-    fn matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> bool {
+    fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         let mut count = 0;
         while A::matches(hay) {
             count += 1;
@@ -120,7 +120,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
         N <= count && count <= M
     }
 
-    fn all_matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> Vec<usize> {
+    fn all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Vec<usize> {
         let mut matches = vec![];
         let mut count = 0;
 
@@ -142,7 +142,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
         matches
     }
 
-    fn captures<'a, H: HaystackWith<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
+    fn captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
         let mut count = 0;
         while A::captures(hay, caps) {
             count += 1;
@@ -154,7 +154,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
         N <= count && count <= M
     }
 
-    fn all_captures<'a, H: HaystackWith<'a, I>>(
+    fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
         caps: &mut IndexedCaptures
     ) -> Vec<(usize, IndexedCaptures)> {
@@ -194,7 +194,7 @@ pub struct QuantifierThen<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>>(
 );
 
 impl<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>> Matcher<I> for QuantifierThen<I, Q, T> {
-    fn matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> bool {
+    fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         let mut rollback = hay.clone();
         if Then::<I, Q, T>::matches(hay) {
             true
@@ -213,11 +213,11 @@ impl<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>> Matcher<I> for QuantifierThe
         }
     }
 
-    fn all_matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> Vec<usize> {
+    fn all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Vec<usize> {
         Then::<I, Q, T>::all_matches(hay)
     }
 
-    fn captures<'a, H: HaystackWith<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
+    fn captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
         let mut rollback = (hay.clone(), caps.clone());
         if Then::<I, Q, T>::captures(hay, caps) {
             true
@@ -238,7 +238,7 @@ impl<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>> Matcher<I> for QuantifierThe
         }
     }
 
-    fn all_captures<'a, H: HaystackWith<'a, I>>(
+    fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
         caps: &mut IndexedCaptures
     ) -> Vec<(usize, IndexedCaptures)> {

@@ -8,8 +8,6 @@
 //! `O(n*m)` where `n` and `m` are the length of the pattern and haystack, the same as most regex
 //! crates.
 //!
-//! TODO: Double check time complexity, write some benchmarks.
-//!
 //! # Approach
 //!
 //! How does this crate differ from the many other regex crates on crates.io?
@@ -44,10 +42,12 @@
 
 #![feature(doc_cfg)]
 
+// TODO: Double check time complexity, write some benchmarks.
+
 // Enable the crate to reference itself by name (needed for macro expansion)
 extern crate self as ct_regex;
 
-pub use ct_regex_internal::{expr::{AnonRegex, Regex}, haystack::IntoHaystack};
+pub use ct_regex_internal::expr::{AnonRegex, Regex};
 pub use ct_regex_macro::regex;
 
 #[cfg(any(doc, feature = "demo"))]

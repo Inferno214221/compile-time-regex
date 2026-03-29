@@ -1,12 +1,12 @@
 use std::fmt::{self, Debug};
 
-use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackWith}};
+use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}};
 
 pub trait Matcher<I: HaystackItem>: Debug + Default {
     /// Checks if the start of the haystack contains a match for this [`Matcher`]. If this method
     /// successfully matches the start of the haystack, `hay` is progressed so that `hay.item()`
     /// hasn't been matched yet. On a fail, the state of hay is undefined.
-    fn matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> bool;
+    fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool;
 
     // It would be nice to use a custom Iterator here rather than a Vec, but reversing an arbitrary
     // match is not easy, so we just progress through linearly and store them all.
@@ -22,7 +22,7 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
     /// # Required
     /// This method needs to be implemented by all [`Matcher`]s that can match more than one string
     /// of characters from a haystack.
-    fn all_matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> Vec<usize> {
+    fn all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Vec<usize> {
         if Self::matches(hay) {
             vec![hay.index()]
         } else {
@@ -37,7 +37,7 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
     /// # Required
     /// This method needs to be implemented for capturing groups or any type that holds other
     /// [`Matcher`]s, so that it can redirect to the relevant `capture` methods.
-    fn captures<'a, H: HaystackWith<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
+    fn captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
         let _ = caps;
         Self::matches(hay)
     }
@@ -50,7 +50,7 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
     /// # Required
     /// This method needs to be implemented for any type that also implements
     /// [`captures`](Matcher::captures) and [`all_matches`](Matcher::all_matches).
-    fn all_captures<'a, H: HaystackWith<'a, I>>(
+    fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
         caps: &mut IndexedCaptures
     ) -> Vec<(usize, IndexedCaptures)> {
@@ -66,7 +66,7 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
 pub struct Byte<const N: u8>;
 
 impl<const N: u8> Matcher<u8> for Byte<N> {
-    fn matches<'a, H: HaystackWith<'a, u8>>(hay: &mut H) -> bool {
+    fn matches<'a, H: HaystackOf<'a, u8>>(hay: &mut H) -> bool {
         if hay.item() == Some(N) {
             hay.progress();
             true
@@ -86,7 +86,7 @@ impl<const N: u8> Debug for Byte<N> {
 pub struct ByteRange<const A: u8, const B: u8>;
 
 impl<const A: u8, const B: u8> Matcher<u8> for ByteRange<A, B> {
-    fn matches<'a, H: HaystackWith<'a, u8>>(hay: &mut H) -> bool {
+    fn matches<'a, H: HaystackOf<'a, u8>>(hay: &mut H) -> bool {
         if let Some(byte) = hay.item() && A <= byte && byte <= B {
             hay.progress();
             true
@@ -106,7 +106,7 @@ impl<const A: u8, const B: u8> Debug for ByteRange<A, B> {
 pub struct Scalar<const N: char>;
 
 impl<const N: char> Matcher<char> for Scalar<N> {
-    fn matches<'a, H: HaystackWith<'a, char>>(hay: &mut H) -> bool {
+    fn matches<'a, H: HaystackOf<'a, char>>(hay: &mut H) -> bool {
         if hay.item() == Some(N) {
             hay.progress();
             true
@@ -126,7 +126,7 @@ impl<const N: char> Debug for Scalar<N> {
 pub struct ScalarRange<const A: char, const B: char>;
 
 impl<const A: char, const B: char> Matcher<char> for ScalarRange<A, B> {
-    fn matches<'a, H: HaystackWith<'a, char>>(hay: &mut H) -> bool {
+    fn matches<'a, H: HaystackOf<'a, char>>(hay: &mut H) -> bool {
         if let Some(scalar) = hay.item() && A <= scalar && scalar <= B {
             hay.progress();
             true
@@ -146,7 +146,7 @@ impl<const A: char, const B: char> Debug for ScalarRange<A, B> {
 pub struct Always;
 
 impl<I: HaystackItem> Matcher<I> for Always {
-    fn matches<'a, H: HaystackWith<'a, I>>(_hay: &mut H) -> bool {
+    fn matches<'a, H: HaystackOf<'a, I>>(_hay: &mut H) -> bool {
         true
     }
 }
@@ -161,7 +161,7 @@ impl Debug for Always {
 pub struct Beginning;
 
 impl<I: HaystackItem> Matcher<I> for Beginning {
-    fn matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> bool {
+    fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         hay.is_start()
     }
 }
@@ -176,7 +176,7 @@ impl Debug for Beginning {
 pub struct End;
 
 impl<I: HaystackItem> Matcher<I> for End {
-    fn matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> bool {
+    fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         hay.is_end()
     }
 }

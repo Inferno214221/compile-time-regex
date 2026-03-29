@@ -18,7 +18,10 @@ pub struct HipStrStack<'a, B: Backend> {
 
 impl<'a, B: Backend> IntoHaystack<'a, HipStrStack<'a, B>> for HipStr<'a, B> {
     fn into_haystack(self) -> HipStrStack<'a, B> {
-        HipStrStack::from_slice(self)
+        HipStrStack {
+            inner: self,
+            index: 0,
+        }
     }
 }
 
@@ -35,13 +38,6 @@ impl<'a, B: Backend> Iterator for HipStrStack<'a, B> {
 
 impl<'a, B: Backend> HaystackIter<'a> for HipStrStack<'a, B> {
     type Slice = HipStr<'a, B>;
-
-    fn from_slice(inner: Self::Slice) -> Self {
-        HipStrStack {
-            inner,
-            index: 0,
-        }
-    }
 
     fn current_item(&self) -> Option<Self::Item> {
         get_item(get_first_char(&self.remainder_as_slice()))
@@ -92,7 +88,10 @@ pub struct HipBytStack<'a, B: Backend> {
 
 impl<'a, B: Backend> IntoHaystack<'a, HipBytStack<'a, B>> for HipByt<'a, B> {
     fn into_haystack(self) -> HipBytStack<'a, B> {
-        HipBytStack::from_slice(self)
+        HipBytStack {
+            inner: self,
+            index: 0,
+        }
     }
 }
 
@@ -112,13 +111,6 @@ impl<'a, B: Backend> Iterator for HipBytStack<'a, B> {
 
 impl<'a, B: Backend> HaystackIter<'a> for HipBytStack<'a, B> {
     type Slice = HipByt<'a, B>;
-
-    fn from_slice(inner: Self::Slice) -> Self {
-        HipBytStack {
-            inner,
-            index: 0,
-        }
-    }
 
     fn current_item(&self) -> Option<Self::Item> {
         self.inner.get(self.index).copied()

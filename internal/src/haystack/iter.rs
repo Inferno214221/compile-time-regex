@@ -57,7 +57,12 @@ pub trait HaystackIter<'a>: Debug + Clone
     fn go_to(&mut self, index: usize);
 }
 
+/// A helper for getting the first `char` of a provided `&str`. Returns the width of the character
+/// (possibly zero) and the character itself.
 pub fn get_first_char(value: &str) -> (usize, Option<char>) {
+    // Unfortunately, I don't think there is a stable way to get `char`s from a `str` without using
+    // the `chars` or `char_indicies` iterators. We can calculate the width easily but may as well
+    // have it done for us.
     let mut iter = value.char_indices();
     let first = iter.next();
     (iter.offset(), first.map(get_item))

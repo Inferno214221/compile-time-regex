@@ -2,8 +2,6 @@ use std::ops::Range;
 
 use crate::haystack::{HaystackItem, HaystackIter, HaystackSlice};
 
-// FIXME: This documentation is stale.
-
 /// A trait used to interface the haystack types use when matching of capturing against a
 /// [`Regex`](crate::expr::Regex), including tracking progression and slicing captures.
 ///

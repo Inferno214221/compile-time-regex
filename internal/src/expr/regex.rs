@@ -7,7 +7,7 @@ use super::{CaptureFromRanges, IndexedCaptures};
 // TODO: Provide a method that returns a range too, not just a slice.
 // TODO: Switch to lazy rollback via iterators.
 
-/// A trait that is automatically implemented for types produced by the `regex!()` macro. Various
+/// A trait that is automatically implemented for types produced by the `regex!` macro. Various
 /// function are included that test this pattern against a provided [`Haystack`].
 ///
 /// Altough rarely encountered, this trait's generic parameter, `I` refers to the item that can be

@@ -2,13 +2,13 @@ use std::ops::Range;
 
 use crate::haystack::{ByteIter, HaystackItem, HaystackIter, HaystackSlice, StrIter};
 
-// TODO: Create a HatstackState(usize) for even cheaper clones.
+// FIXME: This documentation is stale.
 
 /// A type used to reference the haystack when matching of capturing against a
 /// [`Regex`](crate::expr::Regex), in addition to tracking progression.
 ///
 /// It is rare that users will have to interact with this trait, appart from Trait bounds. All
-/// public methods will take an `impl Into<Haystack<'a, I>>` as an argument.
+/// public methods will take an `impl IntoHaystack<'a, H>` as an argument.
 ///
 /// Because of the progression tracking, a `Haystack` can't be matched against multiple times
 /// without [`reset`](Self::reset)ting it first, or it will continue where the first pattern
@@ -57,6 +57,9 @@ where
     T: Haystack<'a, Slice: HaystackSlice<'a, Item = I>>
 {}
 
+/// A trait that is responsible for converting a slice into a stateful [`Haystack`], of type `H`.
+/// The primary intent of this trait is to allow users to avoid creating their own `Haystack`,
+/// instead passing a slice to methods on [`Regex`](crate::Regex).
 pub trait IntoHaystack<'a, H: Haystack<'a>> {
     fn into_haystack(self) -> H;
 }

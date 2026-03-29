@@ -2,8 +2,8 @@ use std::{fmt::{self, Debug}, ops::Range};
 
 use crate::haystack::{HaystackSlice};
 
-pub trait HaystackIter<'a>: Iterator<Item = <Self::Slice as HaystackSlice<'a>>::Item> + Debug + Clone
-{
+// TODO: Document cheap cloning requirement.
+pub trait HaystackIter<'a>: Iterator<Item = <Self::Slice as HaystackSlice<'a>>::Item> + Debug + Clone {
     type Slice: HaystackSlice<'a>;
 
     fn from_slice(value: Self::Slice) -> Self;

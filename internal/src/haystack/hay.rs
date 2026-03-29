@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use crate::haystack::{ByteIter, HaystackItem, HaystackIter, HaystackSlice, StrIter};
+use crate::haystack::{HaystackItem, HaystackIter, HaystackSlice};
 
 // FIXME: This documentation is stale.
 
@@ -75,15 +75,3 @@ pub trait IntoHaystack<'a, H: Haystack<'a>> {
 //         <H as HaystackIter>::from_slice(self)
 //     }
 // }
-
-impl<'a> IntoHaystack<'a, ByteIter<'a>> for &'a [u8] {
-    fn into_haystack(self) -> ByteIter<'a> {
-        ByteIter::from_slice(self)
-    }
-}
-
-impl<'a> IntoHaystack<'a, StrIter<'a>> for &'a str {
-    fn into_haystack(self) -> StrIter<'a> {
-        StrIter::from_slice(self)
-    }
-}

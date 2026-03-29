@@ -1,6 +1,6 @@
 use std::{fmt::{self, Debug}, ops::Range};
 
-use crate::haystack::{HaystackSlice};
+use crate::haystack::{HaystackSlice, IntoHaystack};
 
 // TODO: Document cheap cloning requirement.
 pub trait HaystackIter<'a>: Iterator<Item = <Self::Slice as HaystackSlice<'a>>::Item> + Debug + Clone {
@@ -23,13 +23,19 @@ pub trait HaystackIter<'a>: Iterator<Item = <Self::Slice as HaystackSlice<'a>>::
 
 fn get_item<I>((_, item): (usize, I)) -> I { item }
 
+/// A haystack type for matching against the [`char`]s in a [`&'a str`](str). This type abstracts
+/// over the variable width scalars contained, to allow indexing without panics.
+///
+/// To accomodate, calls to [`go_to`](Self::go_to) should only be made with an index previously
+/// produced by this type for the specific haystack. Failure to do so, may cause a panic if indexing
+/// on an invalid unicode boundary.
 #[derive(Clone)]
-pub struct StrIter<'a> {
+pub struct StrStack<'a> {
     inner: &'a str,
     index: usize,
 }
 
-impl<'a> StrIter<'a> {
+impl<'a> StrStack<'a> {
     fn get_first_char(&self) -> (usize, Option<char>) {
         let mut iter = self.remainder_as_slice().char_indices();
         let first = iter.next();
@@ -37,16 +43,13 @@ impl<'a> StrIter<'a> {
     }
 }
 
-impl<'a> From<&'a str> for StrIter<'a> {
-    fn from(inner: &'a str) -> Self {
-        StrIter {
-            inner,
-            index: 0,
-        }
+impl<'a> IntoHaystack<'a, StrStack<'a>> for &'a str {
+    fn into_haystack(self) -> StrStack<'a> {
+        StrStack::from_slice(self)
     }
 }
 
-impl<'a> Iterator for StrIter<'a> {
+impl<'a> Iterator for StrStack<'a> {
     type Item = char;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -57,12 +60,12 @@ impl<'a> Iterator for StrIter<'a> {
     }
 }
 
-impl<'a> HaystackIter<'a> for StrIter<'a> {
+impl<'a> HaystackIter<'a> for StrStack<'a> {
     type Slice = &'a str;
 
-    fn from_slice(value: Self::Slice) -> Self {
-        StrIter {
-            inner: value,
+    fn from_slice(inner: Self::Slice) -> Self {
+        StrStack {
+            inner,
             index: 0,
         }
     }
@@ -92,7 +95,7 @@ impl<'a> HaystackIter<'a> for StrIter<'a> {
     }
 }
 
-impl<'a> Debug for StrIter<'a> {
+impl<'a> Debug for StrStack<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut len = 0;
         write!(f, "\"")?;
@@ -111,41 +114,40 @@ impl<'a> Debug for StrIter<'a> {
     }
 }
 
+/// A haystack type for matching against the [`u8`]s in a [`&'a [u8]`](slice). This type provides
+/// very straightforward indexing and iteration over the contained slice.
 #[derive(Clone)]
-pub struct ByteIter<'a> {
+pub struct ByteStack<'a> {
     inner: &'a [u8],
     index: usize,
 }
 
-impl<'a> From<&'a [u8]> for ByteIter<'a> {
-    fn from(inner: &'a [u8]) -> Self {
-        ByteIter {
-            inner,
-            index: 0,
-        }
+impl<'a> IntoHaystack<'a, ByteStack<'a>> for &'a [u8] {
+    fn into_haystack(self) -> ByteStack<'a> {
+        ByteStack::from_slice(self)
     }
 }
 
-impl<'a> Iterator for ByteIter<'a> {
+impl<'a> Iterator for ByteStack<'a> {
     type Item = u8;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index >= self.inner.len() {
-            None
-        } else {
-            let byte = self.inner[self.index];
+        let byte = self.inner.get(self.index).copied();
+
+        if byte.is_some() {
             self.index += 1;
-            Some(byte)
         }
+
+        byte
     }
 }
 
-impl<'a> HaystackIter<'a> for ByteIter<'a> {
+impl<'a> HaystackIter<'a> for ByteStack<'a> {
     type Slice = &'a [u8];
 
-    fn from_slice(value: Self::Slice) -> Self {
-        ByteIter {
-            inner: value,
+    fn from_slice(inner: Self::Slice) -> Self {
+        ByteStack {
+            inner,
             index: 0,
         }
     }
@@ -176,7 +178,7 @@ impl<'a> HaystackIter<'a> for ByteIter<'a> {
     }
 }
 
-impl<'a> Debug for ByteIter<'a> {
+impl<'a> Debug for ByteStack<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "b\"")?;
 

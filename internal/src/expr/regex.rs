@@ -12,7 +12,7 @@ use super::{CaptureFromRanges, IndexedCaptures};
 ///
 /// Altough rarely encountered, this trait's generic parameter, `I` refers to the item that can be
 /// matched individually from the provided `I::Slice`. This is used so that the same expression can
-/// be used to match various haystack typesncluding `&str` (`I = char`) and `&[u8]` (`I = u8`).
+/// be used to match various haystack types, including `&str` (`I = char`) and `&[u8]` (`I = u8`).
 /// Implementations for both of these slice/item pairs will be implemented by the macro.
 pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     type Pattern: Matcher<I>;

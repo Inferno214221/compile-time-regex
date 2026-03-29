@@ -284,7 +284,7 @@ fn test_peek_does_not_consume() {
 // Tests for StrIter Iterator implementation
 #[test]
 fn test_str_iter_next_basic() {
-    let mut iter = StrIter::from("abc");
+    let mut iter = StrStack::from("abc");
     assert_eq!(iter.next(), Some('a'));
     assert_eq!(iter.next(), Some('b'));
     assert_eq!(iter.next(), Some('c'));
@@ -293,13 +293,13 @@ fn test_str_iter_next_basic() {
 
 #[test]
 fn test_str_iter_next_empty() {
-    let mut iter = StrIter::from("");
+    let mut iter = StrStack::from("");
     assert_eq!(iter.next(), None);
 }
 
 #[test]
 fn test_str_iter_next_unicode() {
-    let mut iter = StrIter::from("🦀🎉");
+    let mut iter = StrStack::from("🦀🎉");
     assert_eq!(iter.next(), Some('🦀'));
     assert_eq!(iter.next(), Some('🎉'));
     assert_eq!(iter.next(), None);
@@ -307,7 +307,7 @@ fn test_str_iter_next_unicode() {
 
 #[test]
 fn test_str_iter_next_multibyte() {
-    let mut iter = StrIter::from("café");
+    let mut iter = StrStack::from("café");
     assert_eq!(iter.next(), Some('c'));
     assert_eq!(iter.next(), Some('a'));
     assert_eq!(iter.next(), Some('f'));
@@ -318,19 +318,19 @@ fn test_str_iter_next_multibyte() {
 // Tests for StrIter::current_item
 #[test]
 fn test_str_iter_current_item_basic() {
-    let iter = StrIter::from("abc");
+    let iter = StrStack::from("abc");
     assert_eq!(iter.current_item(), Some('a'));
 }
 
 #[test]
 fn test_str_iter_current_item_empty() {
-    let iter = StrIter::from("");
+    let iter = StrStack::from("");
     assert_eq!(iter.current_item(), None);
 }
 
 #[test]
 fn test_str_iter_current_item_does_not_advance() {
-    let iter = StrIter::from("abc");
+    let iter = StrStack::from("abc");
     assert_eq!(iter.current_item(), Some('a'));
     assert_eq!(iter.current_item(), Some('a'));
     assert_eq!(iter.current_item(), Some('a'));
@@ -338,27 +338,27 @@ fn test_str_iter_current_item_does_not_advance() {
 
 #[test]
 fn test_str_iter_current_item_after_next() {
-    let mut iter = StrIter::from("abc");
+    let mut iter = StrStack::from("abc");
     iter.next();
     assert_eq!(iter.current_item(), Some('b'));
 }
 
 #[test]
 fn test_str_iter_current_item_unicode() {
-    let iter = StrIter::from("🦀test");
+    let iter = StrStack::from("🦀test");
     assert_eq!(iter.current_item(), Some('🦀'));
 }
 
 // Tests for StrIter::current_index
 #[test]
 fn test_str_iter_current_index_initial() {
-    let iter = StrIter::from("abc");
+    let iter = StrStack::from("abc");
     assert_eq!(iter.current_index(), 0);
 }
 
 #[test]
 fn test_str_iter_current_index_after_next() {
-    let mut iter = StrIter::from("abc");
+    let mut iter = StrStack::from("abc");
     iter.next();
     assert_eq!(iter.current_index(), 1);
     iter.next();
@@ -367,7 +367,7 @@ fn test_str_iter_current_index_after_next() {
 
 #[test]
 fn test_str_iter_current_index_unicode() {
-    let mut iter = StrIter::from("🦀b");
+    let mut iter = StrStack::from("🦀b");
     assert_eq!(iter.current_index(), 0);
     iter.next(); // Skip the 4-byte emoji
     assert_eq!(iter.current_index(), 4); // Index is byte position, not char position
@@ -375,26 +375,26 @@ fn test_str_iter_current_index_unicode() {
 
 #[test]
 fn test_str_iter_current_index_empty() {
-    let iter = StrIter::from("");
+    let iter = StrStack::from("");
     assert_eq!(iter.current_index(), 0);
 }
 
 // Tests for StrIter::is_start
 #[test]
 fn test_str_iter_is_start_initial() {
-    let iter = StrIter::from("abc");
+    let iter = StrStack::from("abc");
     assert!(iter.is_start());
 }
 
 #[test]
 fn test_str_iter_is_start_empty() {
-    let iter = StrIter::from("");
+    let iter = StrStack::from("");
     assert!(iter.is_start());
 }
 
 #[test]
 fn test_str_iter_is_start_after_next() {
-    let mut iter = StrIter::from("abc");
+    let mut iter = StrStack::from("abc");
     iter.next();
     assert!(!iter.is_start());
 }
@@ -402,13 +402,13 @@ fn test_str_iter_is_start_after_next() {
 // Tests for StrIter::as_slice
 #[test]
 fn test_str_iter_as_slice() {
-    let iter = StrIter::from("hello");
+    let iter = StrStack::from("hello");
     assert_eq!(iter.as_slice(), "hello");
 }
 
 #[test]
 fn test_str_iter_as_slice_after_progress() {
-    let mut iter = StrIter::from("hello");
+    let mut iter = StrStack::from("hello");
     iter.next();
     iter.next();
     assert_eq!(iter.as_slice(), "hello"); // as_slice returns full string
@@ -416,20 +416,20 @@ fn test_str_iter_as_slice_after_progress() {
 
 #[test]
 fn test_str_iter_as_slice_empty() {
-    let iter = StrIter::from("");
+    let iter = StrStack::from("");
     assert_eq!(iter.as_slice(), "");
 }
 
 // Tests for StrIter::rem_as_slice
 #[test]
 fn test_str_iter_rem_as_slice_initial() {
-    let iter = StrIter::from("hello");
+    let iter = StrStack::from("hello");
     assert_eq!(iter.rem_as_slice(), "hello");
 }
 
 #[test]
 fn test_str_iter_rem_as_slice_after_progress() {
-    let mut iter = StrIter::from("hello");
+    let mut iter = StrStack::from("hello");
     iter.next();
     assert_eq!(iter.rem_as_slice(), "ello");
     iter.next();
@@ -438,7 +438,7 @@ fn test_str_iter_rem_as_slice_after_progress() {
 
 #[test]
 fn test_str_iter_rem_as_slice_at_end() {
-    let mut iter = StrIter::from("ab");
+    let mut iter = StrStack::from("ab");
     iter.next();
     iter.next();
     assert_eq!(iter.rem_as_slice(), "");
@@ -446,7 +446,7 @@ fn test_str_iter_rem_as_slice_at_end() {
 
 #[test]
 fn test_str_iter_rem_as_slice_unicode() {
-    let mut iter = StrIter::from("🦀bc");
+    let mut iter = StrStack::from("🦀bc");
     iter.next();
     assert_eq!(iter.rem_as_slice(), "bc");
 }
@@ -454,7 +454,7 @@ fn test_str_iter_rem_as_slice_unicode() {
 // Tests for StrIter::slice_with
 #[test]
 fn test_str_iter_slice_with() {
-    let iter = StrIter::from("hello");
+    let iter = StrStack::from("hello");
     assert_eq!(iter.slice_with(0..5), "hello");
     assert_eq!(iter.slice_with(1..4), "ell");
     assert_eq!(iter.slice_with(0..0), "");
@@ -462,7 +462,7 @@ fn test_str_iter_slice_with() {
 
 #[test]
 fn test_str_iter_slice_with_unicode() {
-    let iter = StrIter::from("🦀bc");
+    let iter = StrStack::from("🦀bc");
     assert_eq!(iter.slice_with(0..4), "🦀"); // First 4 bytes are the emoji
     assert_eq!(iter.slice_with(4..6), "bc");
 }
@@ -470,7 +470,7 @@ fn test_str_iter_slice_with_unicode() {
 // Tests for StrIter clone
 #[test]
 fn test_str_iter_clone_independence() {
-    let mut iter1 = StrIter::from("abc");
+    let mut iter1 = StrStack::from("abc");
     iter1.next();
     let iter2 = iter1.clone();
 
@@ -486,7 +486,7 @@ fn test_str_iter_clone_independence() {
 // Tests for ByteIter Iterator implementation
 #[test]
 fn test_byte_iter_next_basic() {
-    let mut iter = ByteIter::from(b"abc" as &[u8]);
+    let mut iter = ByteStack::from(b"abc" as &[u8]);
     assert_eq!(iter.next(), Some(b'a'));
     assert_eq!(iter.next(), Some(b'b'));
     assert_eq!(iter.next(), Some(b'c'));
@@ -495,14 +495,14 @@ fn test_byte_iter_next_basic() {
 
 #[test]
 fn test_byte_iter_next_empty() {
-    let mut iter = ByteIter::from(b"" as &[u8]);
+    let mut iter = ByteStack::from(b"" as &[u8]);
     assert_eq!(iter.next(), None);
 }
 
 #[test]
 fn test_byte_iter_next_binary() {
     let data: &[u8] = &[0x00, 0xFF, 0x7F];
-    let mut iter = ByteIter::from(data);
+    let mut iter = ByteStack::from(data);
     assert_eq!(iter.next(), Some(0x00));
     assert_eq!(iter.next(), Some(0xFF));
     assert_eq!(iter.next(), Some(0x7F));
@@ -512,19 +512,19 @@ fn test_byte_iter_next_binary() {
 // Tests for ByteIter::current_item
 #[test]
 fn test_byte_iter_current_item_basic() {
-    let iter = ByteIter::from(b"abc" as &[u8]);
+    let iter = ByteStack::from(b"abc" as &[u8]);
     assert_eq!(iter.current_item(), Some(b'a'));
 }
 
 #[test]
 fn test_byte_iter_current_item_empty() {
-    let iter = ByteIter::from(b"" as &[u8]);
+    let iter = ByteStack::from(b"" as &[u8]);
     assert_eq!(iter.current_item(), None);
 }
 
 #[test]
 fn test_byte_iter_current_item_does_not_advance() {
-    let iter = ByteIter::from(b"abc" as &[u8]);
+    let iter = ByteStack::from(b"abc" as &[u8]);
     assert_eq!(iter.current_item(), Some(b'a'));
     assert_eq!(iter.current_item(), Some(b'a'));
     assert_eq!(iter.current_item(), Some(b'a'));
@@ -532,7 +532,7 @@ fn test_byte_iter_current_item_does_not_advance() {
 
 #[test]
 fn test_byte_iter_current_item_after_next() {
-    let mut iter = ByteIter::from(b"abc" as &[u8]);
+    let mut iter = ByteStack::from(b"abc" as &[u8]);
     iter.next();
     assert_eq!(iter.current_item(), Some(b'b'));
 }
@@ -540,13 +540,13 @@ fn test_byte_iter_current_item_after_next() {
 // Tests for ByteIter::current_index
 #[test]
 fn test_byte_iter_current_index_initial() {
-    let iter = ByteIter::from(b"abc" as &[u8]);
+    let iter = ByteStack::from(b"abc" as &[u8]);
     assert_eq!(iter.current_index(), 0);
 }
 
 #[test]
 fn test_byte_iter_current_index_after_next() {
-    let mut iter = ByteIter::from(b"abc" as &[u8]);
+    let mut iter = ByteStack::from(b"abc" as &[u8]);
     iter.next();
     assert_eq!(iter.current_index(), 1);
     iter.next();
@@ -555,26 +555,26 @@ fn test_byte_iter_current_index_after_next() {
 
 #[test]
 fn test_byte_iter_current_index_empty() {
-    let iter = ByteIter::from(b"" as &[u8]);
+    let iter = ByteStack::from(b"" as &[u8]);
     assert_eq!(iter.current_index(), 0);
 }
 
 // Tests for ByteIter::is_start
 #[test]
 fn test_byte_iter_is_start_initial() {
-    let iter = ByteIter::from(b"abc" as &[u8]);
+    let iter = ByteStack::from(b"abc" as &[u8]);
     assert!(iter.is_start());
 }
 
 #[test]
 fn test_byte_iter_is_start_empty() {
-    let iter = ByteIter::from(b"" as &[u8]);
+    let iter = ByteStack::from(b"" as &[u8]);
     assert!(iter.is_start());
 }
 
 #[test]
 fn test_byte_iter_is_start_after_next() {
-    let mut iter = ByteIter::from(b"abc" as &[u8]);
+    let mut iter = ByteStack::from(b"abc" as &[u8]);
     iter.next();
     assert!(!iter.is_start());
 }
@@ -582,13 +582,13 @@ fn test_byte_iter_is_start_after_next() {
 // Tests for ByteIter::as_slice
 #[test]
 fn test_byte_iter_as_slice() {
-    let iter = ByteIter::from(b"hello" as &[u8]);
+    let iter = ByteStack::from(b"hello" as &[u8]);
     assert_eq!(iter.as_slice(), b"hello");
 }
 
 #[test]
 fn test_byte_iter_as_slice_after_progress() {
-    let mut iter = ByteIter::from(b"hello" as &[u8]);
+    let mut iter = ByteStack::from(b"hello" as &[u8]);
     iter.next();
     iter.next();
     assert_eq!(iter.as_slice(), b"hello"); // as_slice returns full slice
@@ -596,20 +596,20 @@ fn test_byte_iter_as_slice_after_progress() {
 
 #[test]
 fn test_byte_iter_as_slice_empty() {
-    let iter = ByteIter::from(b"" as &[u8]);
+    let iter = ByteStack::from(b"" as &[u8]);
     assert_eq!(iter.as_slice(), b"");
 }
 
 // Tests for ByteIter::rem_as_slice
 #[test]
 fn test_byte_iter_rem_as_slice_initial() {
-    let iter = ByteIter::from(b"hello" as &[u8]);
+    let iter = ByteStack::from(b"hello" as &[u8]);
     assert_eq!(iter.rem_as_slice(), b"hello");
 }
 
 #[test]
 fn test_byte_iter_rem_as_slice_after_progress() {
-    let mut iter = ByteIter::from(b"hello" as &[u8]);
+    let mut iter = ByteStack::from(b"hello" as &[u8]);
     iter.next();
     assert_eq!(iter.rem_as_slice(), b"ello");
     iter.next();
@@ -618,7 +618,7 @@ fn test_byte_iter_rem_as_slice_after_progress() {
 
 #[test]
 fn test_byte_iter_rem_as_slice_at_end() {
-    let mut iter = ByteIter::from(b"ab" as &[u8]);
+    let mut iter = ByteStack::from(b"ab" as &[u8]);
     iter.next();
     iter.next();
     assert_eq!(iter.rem_as_slice(), b"");
@@ -627,7 +627,7 @@ fn test_byte_iter_rem_as_slice_at_end() {
 // Tests for ByteIter::slice_with
 #[test]
 fn test_byte_iter_slice_with() {
-    let iter = ByteIter::from(b"hello" as &[u8]);
+    let iter = ByteStack::from(b"hello" as &[u8]);
     assert_eq!(iter.slice_with(0..5), b"hello");
     assert_eq!(iter.slice_with(1..4), b"ell");
     assert_eq!(iter.slice_with(0..0), b"");
@@ -636,7 +636,7 @@ fn test_byte_iter_slice_with() {
 // Tests for ByteIter clone
 #[test]
 fn test_byte_iter_clone_independence() {
-    let mut iter1 = ByteIter::from(b"abc" as &[u8]);
+    let mut iter1 = ByteStack::from(b"abc" as &[u8]);
     iter1.next();
     let iter2 = iter1.clone();
 
@@ -763,14 +763,14 @@ fn test_vec_from_str_empty() {
 
 #[test]
 fn test_debug_str_iter() {
-    let iter = StrIter::from("hi");
+    let iter = StrStack::from("hi");
     let s = format!("{:?}", iter);
     assert!(!s.is_empty());
 }
 
 #[test]
 fn test_debug_byte_iter() {
-    let iter = ByteIter::from(b"hi" as &[u8]);
+    let iter = ByteStack::from(b"hi" as &[u8]);
     let s = format!("{:?}", iter);
     assert!(!s.is_empty());
 }

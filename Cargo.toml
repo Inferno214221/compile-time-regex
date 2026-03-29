@@ -9,6 +9,12 @@ edition = "2024"
 [dependencies]
 ct-regex-internal = { path = "internal" }
 ct-regex-macro = { path = "macro"}
+arcstr = { version = "1.2.0", optional = true }
+bstr = { version = "1.12.1", optional = true }
+hipstr = { version = "0.8.0", optional = true }
 
 [features]
 demo = []
+arcstr = ["dep:arcstr", "ct-regex-internal/arcstr"]
+bstr = ["dep:bstr", "ct-regex-internal/bstr"]
+hipstr = ["dep:hipstr", "ct-regex-internal/hipstr"]

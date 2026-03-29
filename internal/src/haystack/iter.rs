@@ -2,7 +2,7 @@ use std::{fmt::{self, Debug}, ops::Range};
 
 use crate::haystack::{HaystackSlice, IntoHaystack};
 
-// TODO: Document cheap cloning requirement.
+// TODO: Document cheap cloning requirement. Understand slicing and iterating...
 pub trait HaystackIter<'a>: Iterator<Item = <Self::Slice as HaystackSlice<'a>>::Item> + Debug + Clone {
     type Slice: HaystackSlice<'a>;
 
@@ -21,6 +21,12 @@ pub trait HaystackIter<'a>: Iterator<Item = <Self::Slice as HaystackSlice<'a>>::
     fn go_to(&mut self, index: usize);
 }
 
+pub fn get_first_char(value: &str) -> (usize, Option<char>) {
+    let mut iter = value.char_indices();
+    let first = iter.next();
+    (iter.offset(), first.map(get_item))
+}
+
 fn get_item<I>((_, item): (usize, I)) -> I { item }
 
 /// A haystack type for matching against the [`char`]s in a [`&'a str`](str). This type abstracts
@@ -35,14 +41,6 @@ pub struct StrStack<'a> {
     index: usize,
 }
 
-impl<'a> StrStack<'a> {
-    fn get_first_char(&self) -> (usize, Option<char>) {
-        let mut iter = self.remainder_as_slice().char_indices();
-        let first = iter.next();
-        (iter.offset(), first.map(get_item))
-    }
-}
-
 impl<'a> IntoHaystack<'a, StrStack<'a>> for &'a str {
     fn into_haystack(self) -> StrStack<'a> {
         StrStack::from_slice(self)
@@ -53,7 +51,7 @@ impl<'a> Iterator for StrStack<'a> {
     type Item = char;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let (width, first) = self.get_first_char();
+        let (width, first) = get_first_char(self.remainder_as_slice());
         // The width won't exceed the remaining slice, so it can't overflow then length.
         self.index += width;
         first
@@ -71,7 +69,7 @@ impl<'a> HaystackIter<'a> for StrStack<'a> {
     }
 
     fn current_item(&self) -> Option<Self::Item> {
-        get_item(self.get_first_char())
+        get_item(get_first_char(self.remainder_as_slice()))
     }
 
     fn current_index(&self) -> usize {

@@ -33,3 +33,15 @@
 //! provided to the `regex!` macro needs to be valid UTF-8.
 
 pub use ct_regex_internal::haystack::{ByteStack, Haystack, HaystackItem, HaystackIter, HaystackSlice, HaystackWith, StrStack};
+
+#[cfg(any(doc, feature = "arcstr"))]
+#[doc(cfg(feature = "arcstr"))]
+pub use ct_regex_internal::haystack::arcstr;
+
+#[cfg(any(doc, feature = "bstr"))]
+#[doc(cfg(feature = "bstr"))]
+pub use ct_regex_internal::haystack::bstr;
+
+#[cfg(any(doc, feature = "hipstr"))]
+#[doc(cfg(feature = "hipstr"))]
+pub use ct_regex_internal::haystack::hipstr;

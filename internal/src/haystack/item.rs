@@ -4,7 +4,7 @@ pub trait HaystackItem: Debug + Default + Copy + Eq + Ord {
     fn vec_from_str(value: &str) -> Vec<Self>;
 }
 
-pub trait HaystackSlice<'a>: Debug + Copy + Sized {
+pub trait HaystackSlice<'a>: Debug + Clone + Sized {
     type Item: HaystackItem;
 }
 

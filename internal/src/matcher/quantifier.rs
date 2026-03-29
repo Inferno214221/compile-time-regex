@@ -47,19 +47,19 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNO
         count >= N
     }
 
-    fn all_matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> Vec<H> {
+    fn all_matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> Vec<usize> {
         let mut matches = vec![];
         let mut count = 0;
 
         // Include zero-match position when N=0
         if N == 0 {
-            matches.push(hay.clone());
+            matches.push(hay.index());
         }
 
         while A::matches(hay) {
             count += 1;
             if count >= N {
-                matches.push(hay.clone());
+                matches.push(hay.index());
             }
         }
         matches
@@ -76,19 +76,19 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNO
     fn all_captures<'a, H: HaystackWith<'a, I>>(
         hay: &mut H,
         caps: &mut IndexedCaptures
-    ) -> Vec<(H, IndexedCaptures)> {
+    ) -> Vec<(usize, IndexedCaptures)> {
         let mut captures = vec![];
         let mut count = 0;
 
         // Include zero-match position when N=0
         if N == 0 {
-            captures.push((hay.clone(), caps.clone()));
+            captures.push((hay.index(), caps.clone()));
         }
 
         while A::captures(hay, caps) {
             count += 1;
             if count >= N {
-                captures.push((hay.clone(), caps.clone()));
+                captures.push((hay.index(), caps.clone()));
             }
         }
         captures
@@ -120,19 +120,19 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
         N <= count && count <= M
     }
 
-    fn all_matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> Vec<H> {
+    fn all_matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> Vec<usize> {
         let mut matches = vec![];
         let mut count = 0;
 
         // Include zero-match position when N=0
         if N == 0 {
-            matches.push(hay.clone());
+            matches.push(hay.index());
         }
 
         while A::matches(hay) {
             count += 1;
             if N <= count && count <= M {
-                matches.push(hay.clone());
+                matches.push(hay.index());
 
                 if count == M {
                     return matches;
@@ -157,19 +157,19 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
     fn all_captures<'a, H: HaystackWith<'a, I>>(
         hay: &mut H,
         caps: &mut IndexedCaptures
-    ) -> Vec<(H, IndexedCaptures)> {
+    ) -> Vec<(usize, IndexedCaptures)> {
         let mut captures = vec![];
         let mut count = 0;
 
         // Include zero-match position when N=0
         if N == 0 {
-            captures.push((hay.clone(), caps.clone()));
+            captures.push((hay.index(), caps.clone()));
         }
 
         while A::captures(hay, caps) {
             count += 1;
             if N <= count && count <= M {
-                captures.push((hay.clone(), caps.clone()));
+                captures.push((hay.index(), caps.clone()));
 
                 if count == M {
                     return captures;
@@ -202,10 +202,10 @@ impl<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>> Matcher<I> for QuantifierThe
             // Try all valid match points for Q in reverse order (greedy).
             let match_points = Q::all_matches(&mut rollback);
 
-            for mut point in match_points.into_iter().rev() {
-                if T::matches(&mut point) {
-                    // Overwrite the provided haystack with the progressed version.
-                    *hay = point;
+            for point in match_points.into_iter().rev() {
+                // Overwrite the provided haystack with the progressed version.
+                hay.rollback(point);
+                if T::matches(hay) {
                     return true;
                 }
             }
@@ -213,7 +213,7 @@ impl<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>> Matcher<I> for QuantifierThe
         }
     }
 
-    fn all_matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> Vec<H> {
+    fn all_matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> Vec<usize> {
         Then::<I, Q, T>::all_matches(hay)
     }
 
@@ -225,10 +225,12 @@ impl<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>> Matcher<I> for QuantifierThe
             // Try all valid match points for Q in reverse order (greedy).
             let match_points = Q::all_captures(&mut rollback.0, &mut rollback.1);
 
-            for mut point in match_points.into_iter().rev() {
-                if T::captures(&mut point.0, &mut point.1) {
-                    // Overwrite the provided haystack with the progressed version.
-                    (*hay, *caps) = point;
+            for (point_state, mut point_caps) in match_points.into_iter().rev() {
+                // Overwrite the provided haystack with the progressed version.
+                hay.rollback(point_state);
+                if T::captures(hay, &mut point_caps) {
+                    // Overwrite captures with the progressed version.
+                    *caps = point_caps;
                     return true;
                 }
             }
@@ -239,7 +241,7 @@ impl<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>> Matcher<I> for QuantifierThe
     fn all_captures<'a, H: HaystackWith<'a, I>>(
         hay: &mut H,
         caps: &mut IndexedCaptures
-    ) -> Vec<(H, IndexedCaptures)> {
+    ) -> Vec<(usize, IndexedCaptures)> {
         Then::<I, Q, T>::all_captures(hay, caps)
     }
 }

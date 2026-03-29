@@ -22,9 +22,9 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
     /// # Required
     /// This method needs to be implemented by all [`Matcher`]s that can match more than one string
     /// of characters from a haystack.
-    fn all_matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> Vec<H> {
+    fn all_matches<'a, H: HaystackWith<'a, I>>(hay: &mut H) -> Vec<usize> {
         if Self::matches(hay) {
-            vec![hay.clone()]
+            vec![hay.index()]
         } else {
             vec![]
         }
@@ -53,9 +53,9 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
     fn all_captures<'a, H: HaystackWith<'a, I>>(
         hay: &mut H,
         caps: &mut IndexedCaptures
-    ) -> Vec<(H, IndexedCaptures)> {
+    ) -> Vec<(usize, IndexedCaptures)> {
         if Self::captures(hay, caps) {
-            vec![(hay.clone(), caps.clone())]
+            vec![(hay.index(), caps.clone())]
         } else {
             vec![]
         }

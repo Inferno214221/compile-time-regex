@@ -45,6 +45,11 @@ pub trait Haystack<'a>: HaystackIter<'a> {
     fn reset(&mut self) {
         self.go_to(0);
     }
+
+    fn rollback(&mut self, state: usize) -> &mut Self {
+        self.go_to(state);
+        self
+    }
 }
 
 impl<'a, T: HaystackIter<'a>> Haystack<'a> for T {}

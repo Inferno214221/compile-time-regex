@@ -31,7 +31,9 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     fn is_match<'a, H: HaystackWith<'a, I>>(hay: impl IntoHaystack<'a, H>) -> bool {
         let mut hay = hay.into_haystack();
 
-        Self::Pattern::all_matches(&mut hay).iter().any(H::is_end)
+        Self::Pattern::all_matches(&mut hay)
+            .iter()
+            .any(|state| hay.rollback(*state).is_end())
     }
 
     /// Returns `true` if this Regex matches any substring of the haystack provided. To retrieve the
@@ -44,10 +46,13 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         let mut hay = hay.into_haystack();
 
         while hay.item().is_some() {
-            if Self::Pattern::all_matches(&mut hay.clone()).pop().is_some() {
+            let start = hay.index();
+
+            if Self::Pattern::all_matches(&mut hay).pop().is_some() {
                 return true;
             }
-            hay.progress()
+
+            hay.rollback(start).progress();
         }
         false
     }
@@ -68,11 +73,12 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         while hay.item().is_some() {
             let start = hay.index();
 
-            if let Some(fork) = Self::Pattern::all_matches(&mut hay.clone()).pop() {
-                let cap = start..fork.index();
+            if let Some(state_fork) = Self::Pattern::all_matches(&mut hay).pop() {
+                let cap = start..state_fork;
                 return Some(hay.slice(cap));
             }
-            hay.progress()
+
+            hay.rollback(start).progress()
         }
         None
     }
@@ -89,29 +95,27 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         let mut all_matches = vec![];
 
         while hay.item().is_some() {
-            let rollback = hay.clone();
+            let start = hay.index();
 
             if overlapping {
-                if let Some(fork) = Self::Pattern::all_matches(&mut hay).pop() {
-                    all_matches.push(rollback.index()..fork.index());
+                if let Some(state_fork) = Self::Pattern::all_matches(&mut hay).pop() {
+                    all_matches.push(start..state_fork);
                 }
 
-                hay = rollback;
-                hay.progress();
+                hay.rollback(start).progress();
             } else {
-                if let Some(fork) = Self::Pattern::all_matches(&mut hay).pop() {
-                    all_matches.push(rollback.index()..fork.index());
-                    hay = fork;
+                if let Some(state_fork) = Self::Pattern::all_matches(&mut hay).pop() {
+                    all_matches.push(start..state_fork);
+                    hay.rollback(state_fork);
 
                     // This doesn't seem to make a difference...
-                    debug_assert_ne!(rollback.index(), hay.index())
-                    // if rollback.index() == hay.index() {
+                    debug_assert_ne!(start, state_fork)
+                    // if start == state_fork {
                     //     // We've already matched at this index.
                     //     hay.progress();
                     // }
                 } else {
-                    hay = rollback;
-                    hay.progress();
+                    hay.rollback(start).progress();
                 }
             }
         }
@@ -135,16 +139,21 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
 
         let start = hay.index();
 
-        Self::Pattern::all_captures(&mut hay, &mut caps)
+        let all_captures = Self::Pattern::all_captures(&mut hay, &mut caps)
             .into_iter()
-            .rev()
-            .filter(|(h, _)| h.is_end())
-            .map(|(hay_fork, mut caps_fork)| {
-                caps_fork.push(0, start..hay_fork.index());
-                Self::Capture::from_ranges(caps_fork.into_array(), hay_fork)
-                    .expect("failed to convert captures despite matching correctly")
-            })
-            .next()
+            .rev();
+
+        for (state_fork, mut caps_fork) in all_captures {
+            if hay.rollback(state_fork).is_end() {
+                caps_fork.push(0, start..state_fork);
+
+                return Some(
+                    Self::Capture::from_ranges(caps_fork.into_array(), hay)
+                        .expect("failed to convert captures despite matching correctly")
+                );
+            }
+        }
+        return None;
     }
 
     /// Returns the [`Self::Capture`] that matches this Regex first, similar to
@@ -166,10 +175,12 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
                 .into_iter()
                 .last();
 
-            if let Some((hay_fork, mut caps_fork)) = first {
-                caps_fork.push(0, start..hay_fork.index());
+            if let Some((state_fork, mut caps_fork)) = first {
+                caps_fork.push(0, start..state_fork);
+                hay.rollback(state_fork);
+
                 return Some(
-                    Self::Capture::from_ranges(caps_fork.into_array(), hay_fork)
+                    Self::Capture::from_ranges(caps_fork.into_array(), hay)
                         .expect("failed to convert captures despite matching correctly")
                 );
             }

@@ -111,18 +111,18 @@ pub fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> Token
                 self.0.slice(self.#index_name.clone())
             }
 
-            pub fn #cap_name_full(&'a self) -> &'a #Range {
-                &self.#index_name
+            pub fn #cap_name_full(&self) -> #Range {
+                self.#index_name.clone()
             }
         }
     } else {
         quote! {
             pub fn #cap_name(&self) -> #Option<H::Slice> {
-                self.#index_name.as_ref().map(|c| self.0.slice(c.clone()))
+                self.#index_name.clone().map(|r| self.0.slice(r))
             }
 
-            pub fn #cap_name_full(&'a self) -> #Option<&'a #Range> {
-                self.#index_name.as_ref()
+            pub fn #cap_name_full(&self) -> #Option<#Range> {
+                self.#index_name.clone()
             }
         }
     }

@@ -91,6 +91,15 @@ impl<'a> IntoHaystack<'a, StrStack<'a>> for &'a str {
     }
 }
 
+impl<'a> IntoHaystack<'a, StrStack<'a>> for &'a String {
+    fn into_haystack(self) -> StrStack<'a> {
+        StrStack {
+            inner: self,
+            index: 0,
+        }
+    }
+}
+
 impl<'a> Iterator for StrStack<'a> {
     type Item = char;
 
@@ -158,6 +167,15 @@ pub struct ByteStack<'a> {
 }
 
 impl<'a> IntoHaystack<'a, ByteStack<'a>> for &'a [u8] {
+    fn into_haystack(self) -> ByteStack<'a> {
+        ByteStack {
+            inner: self,
+            index: 0,
+        }
+    }
+}
+
+impl<'a> IntoHaystack<'a, ByteStack<'a>> for &'a Vec<u8> {
     fn into_haystack(self) -> ByteStack<'a> {
         ByteStack {
             inner: self,

@@ -129,8 +129,8 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         all_matches.into_iter().map(|m| hay.slice(m)).collect()
     }
 
-    fn replace<'a, M: HaystackMut<'a, I>>(
-        hay_mut: &'a mut M,
+    fn replace<'a>(
+        hay_mut: &'a mut impl HaystackMut<'a, I>,
         with: &str,
     ) -> Option<()> {
         let range = {

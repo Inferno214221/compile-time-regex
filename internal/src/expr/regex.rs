@@ -1,17 +1,25 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, ops::Range};
 
-use crate::{haystack::{Haystack, HaystackItem, HaystackOf, IntoHaystack}, matcher::Matcher};
+use crate::{haystack::{Haystack, HaystackItem, HaystackIter, HaystackMut, HaystackOf, IntoHaystack}, matcher::Matcher};
 use super::{CaptureFromRanges, IndexedCaptures};
 
 // TODO: Use iterator rather than Vec for return type.
 // TODO: Provide a method that returns a range too, not just a slice.
 // TODO: Switch to lazy rollback via iterators.
 
+// TODO: Add replace functionality: replace, replace_all, replace_with_caps, replace_all_with_caps
+// these methods need a mutable haystack though. IntoMutHaystack -> MutHaystack -> Haystack
+// String::replace is an auto-deref to str, which clones with a replacement...
+//
+// Replace same len for fixed length patterns
+//
+// Need to do something because the lifetime 'a prevents a mutable reference from also being made.
+
 /// A trait that is automatically implemented for types produced by the `regex!` macro. Various
 /// function are included that test this pattern against a provided [`Haystack`].
 ///
 /// Altough rarely encountered, this trait's generic parameter, `I` refers to the item that can be
-/// matched individually from the provided `I::Slice`. This is used so that the same expression can
+/// matched individually from the provided `Haystack`. This is used so that the same expression can
 /// be used to match various haystack types, including `&str` (`I = char`) and `&[u8]` (`I = u8`).
 /// Implementations for both of these slice/item pairs will be implemented by the macro.
 pub trait Regex<I: HaystackItem, const N: usize>: Debug {
@@ -57,6 +65,14 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         false
     }
 
+    fn range_of_match<'a, H: HaystackOf<'a, I>>(
+        hay: impl IntoHaystack<'a, H>
+    ) -> Option<Range<usize>> {
+        let mut hay = hay.into_haystack();
+
+        range_of_match::<Self, _, _>(&mut hay)
+    }
+
     /// Returns the slice that matches this Regex first. This is the slicing variant of
     /// [`contains_match`](Self::contains_match).
     ///
@@ -69,18 +85,8 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         hay: impl IntoHaystack<'a, H>
     ) -> Option<H::Slice> {
         let mut hay = hay.into_haystack();
-
-        while hay.item().is_some() {
-            let start = hay.index();
-
-            if let Some(state_fork) = Self::Pattern::all_matches(&mut hay).pop() {
-                let cap = start..state_fork;
-                return Some(hay.slice(cap));
-            }
-
-            hay.rollback(start).progress()
-        }
-        None
+        let range = range_of_match::<Self, _, _>(&mut hay)?;
+        Some(hay.slice(range))
     }
 
     /// Returns all slices of the provided haystack that match this Regex, optionally `overlapping`.
@@ -121,6 +127,18 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         }
 
         all_matches.into_iter().map(|m| hay.slice(m)).collect()
+    }
+
+    fn replace<'a, M: HaystackMut<'a, I>>(
+        hay_mut: &'a mut M,
+        with: &str,
+    ) -> Option<()> {
+        let range = {
+            let mut hay = hay_mut.as_haystack();
+            range_of_match::<Self, _, _>(&mut hay)?
+        };
+        hay_mut.replace_range(range, with);
+        Some(())
     }
 
     /// Returns a [`Self::Capture`] representing the provided haystack matched against this Regex.
@@ -198,4 +216,19 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     ) -> Vec<Self::Capture<'a, H>> {
         todo!("find_all_matches equivalent ({:?}, {:?})", hay.into_haystack(), overlapping)
     }
+}
+
+fn range_of_match<'a, R: Regex<I, N> + ?Sized, I: HaystackItem, const N: usize>(
+    hay: &mut impl HaystackOf<'a, I>
+) -> Option<Range<usize>> {
+    while hay.item().is_some() {
+        let start = hay.index();
+
+        if let Some(state_fork) = R::Pattern::all_matches(hay).pop() {
+            return Some(start..state_fork);
+        }
+
+        hay.rollback(start).progress()
+    }
+    None
 }

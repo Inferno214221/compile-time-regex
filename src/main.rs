@@ -51,4 +51,14 @@ fn main() {
     // FIXME: not matching. Do I need a final check after hay returns none?
     // I don't think there is a single other pattern that can fail like that.
     dbg!(regex!("$").slice_all_matching("aaa", true));
+
+    dbg!(regex!(r"[^s]*").slice_matching("sbcccs"));
+
+    regex!{ Re = r"bc*" }
+
+    let mut hay = String::from("sbcccs");
+
+    dbg!(Re::slice_matching(hay.as_str()));
+
+    dbg!(Re::replace(&mut hay, "ucces"), &hay);
 }

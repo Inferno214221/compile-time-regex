@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use crate::haystack::{HaystackItem, HaystackIter, HaystackSlice};
+use crate::haystack::{HaystackItem, HaystackIter, HaystackSlice, StrStack};
 
 /// A trait used to interface the haystack types use when matching of capturing against a
 /// [`Regex`](crate::expr::Regex), including tracking progression and slicing captures.
@@ -63,7 +63,7 @@ pub trait HaystackOf<'a, I: HaystackItem>: Haystack<'a, Slice: HaystackSlice<'a,
 impl<'a, I, T> HaystackOf<'a, I> for T
 where
     I: HaystackItem,
-    T: Haystack<'a, Slice: HaystackSlice<'a, Item = I>>
+    T: Haystack<'a, Slice<>: HaystackSlice<'a, Item = I>>
 {}
 
 /// A trait that is responsible for converting a slice into a stateful [`Haystack`], of type `H`.
@@ -77,9 +77,35 @@ pub trait IntoHaystack<'a, H: Haystack<'a>> {
     fn into_haystack(self) -> H;
 }
 
+impl<'a, H: Haystack<'a>> IntoHaystack<'a, H> for H {
+    fn into_haystack(self) -> H {
+        self
+    }
+}
+
 // Avoid a blanket implementation here so that users don't have to specify types.
 // impl<'a, I: HaystackItem, H: Haystack<'a, I>> IntoHaystack<'a, I, H> for H::Slice {
 //     fn into_haystack(self) -> H {
 //         <H as HaystackIter>::from_slice(self)
 //     }
 // }
+
+pub trait HaystackMut<'a, I: HaystackItem> {
+    type Hay<'b>: HaystackOf<'b, I> where Self: 'b;
+
+    fn replace_range(&mut self, range: Range<usize>, with: &str);
+
+    fn as_haystack<'b>(&'b self) -> Self::Hay<'b>;
+}
+
+impl<'a> HaystackMut<'a, char> for String {
+    type Hay<'b> = StrStack<'b>;
+
+    fn replace_range(&mut self, range: Range<usize>, with: &str) {
+        self.replace_range(range, with);
+    }
+
+    fn as_haystack<'b>(&'b self) -> Self::Hay<'b> {
+        self.into_haystack()
+    }
+}

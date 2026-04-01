@@ -471,22 +471,22 @@ fn test_contains_match_bytes() {
 
 #[test]
 fn test_slice_matching_found() {
-    assert_eq!(TestRegexChar::slice_matching("xax"), Some("a"));
+    assert_eq!(TestRegexChar::slice_match("xax"), Some("a"));
 }
 
 #[test]
 fn test_slice_matching_not_found() {
-    assert_eq!(TestRegexChar::slice_matching("xyz"), None);
+    assert_eq!(TestRegexChar::slice_match("xyz"), None);
 }
 
 #[test]
 fn test_slice_matching_exact() {
-    assert_eq!(TestRegexChar::slice_matching("a"), Some("a"));
+    assert_eq!(TestRegexChar::slice_match("a"), Some("a"));
 }
 
 #[test]
 fn test_slice_matching_bytes() {
-    assert_eq!(TestRegexByte::slice_matching(b"zxz" as &[u8]), Some(b"x" as &[u8]));
+    assert_eq!(TestRegexByte::slice_match(b"zxz" as &[u8]), Some(b"x" as &[u8]));
 }
 
 // ============================================================================
@@ -495,20 +495,20 @@ fn test_slice_matching_bytes() {
 
 #[test]
 fn test_slice_all_matching_multiple() {
-    let matches = TestRegexChar::slice_all_matching("abac", false);
+    let matches = TestRegexChar::slice_all_matches("abac", false);
     assert_eq!(matches.len(), 2);
     assert!(matches.iter().all(|&m| m == "a"));
 }
 
 #[test]
 fn test_slice_all_matching_none() {
-    let matches = TestRegexChar::slice_all_matching("bbb", false);
+    let matches = TestRegexChar::slice_all_matches("bbb", false);
     assert!(matches.is_empty());
 }
 
 #[test]
 fn test_slice_all_matching_empty_haystack() {
-    let matches = TestRegexChar::slice_all_matching("", false);
+    let matches = TestRegexChar::slice_all_matches("", false);
     assert!(matches.is_empty());
 }
 
@@ -554,19 +554,19 @@ fn test_anon_contains_match_absent() {
 #[test]
 fn test_anon_slice_matching_found() {
     let r = TestAnonRegexChar;
-    assert_eq!(r.slice_matching("xbx"), Some("b"));
+    assert_eq!(r.slice_match("xbx"), Some("b"));
 }
 
 #[test]
 fn test_anon_slice_matching_not_found() {
     let r = TestAnonRegexChar;
-    assert_eq!(r.slice_matching("aaa"), None);
+    assert_eq!(r.slice_match("aaa"), None);
 }
 
 #[test]
 fn test_anon_slice_all_matching() {
     let r = TestAnonRegexChar;
-    let matches = r.slice_all_matching("abba", false);
+    let matches = r.slice_all_matches("abba", false);
     assert_eq!(matches.len(), 2);
 }
 

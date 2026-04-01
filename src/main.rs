@@ -22,7 +22,7 @@ fn main() {
     dbg!(regex!(r"a|b|c").is_match("c"));
     dbg!(regex!(r"(a|b)+c").is_match("abc"));
 
-    dbg!(regex!(r"bc*").slice_matching("abcccd"));
+    dbg!(regex!(r"bc*").slice_match("abcccd"));
 
     dbg!(PhoneNum);
 
@@ -50,15 +50,15 @@ fn main() {
 
     // FIXME: not matching. Do I need a final check after hay returns none?
     // I don't think there is a single other pattern that can fail like that.
-    dbg!(regex!("$").slice_all_matching("aaa", true));
+    dbg!(regex!("$").slice_all_matches("aaa", true));
 
-    dbg!(regex!(r"[^s]*").slice_matching("sbcccs"));
+    dbg!(regex!(r"[^s]*").slice_match("sbcccs"));
 
     regex!{ Re = r"bc*" }
 
     let mut hay = String::from("sbcccs");
 
-    dbg!(Re::slice_matching(hay.as_str()));
+    dbg!(Re::slice_match(hay.as_str()));
 
     dbg!(Re::replace(&mut hay, "ucces"), &hay);
 }

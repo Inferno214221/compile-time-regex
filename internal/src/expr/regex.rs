@@ -1,6 +1,6 @@
 use std::{fmt::Debug, ops::Range};
 
-use crate::{haystack::{Haystack, HaystackItem, HaystackIter, HaystackMut, HaystackOf, IntoHaystack}, matcher::Matcher};
+use crate::{haystack::{Haystack, HaystackItem, HaystackMut, HaystackOf, IntoHaystack}, matcher::Matcher};
 use super::{CaptureFromRanges, IndexedCaptures};
 
 // TODO: Use iterator rather than Vec for return type.
@@ -45,7 +45,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     }
 
     /// Returns `true` if this Regex matches any substring of the haystack provided. To retrieve the
-    /// actual substring itself, use [`slice_matching`](Self::slice_matching) or
+    /// actual substring itself, use [`slice_match`](Self::slice_match) or
     /// [`find_capture`](Self::find_capture).
     ///
     /// Anchors can be used as a part of this Regex to perform more complex behaviors, but if you're
@@ -65,12 +65,25 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         false
     }
 
+    fn count_matches<'a, H: HaystackOf<'a, I>>(
+        _hay: impl IntoHaystack<'a, H>,
+        _overlapping: bool
+    ) -> usize {
+        todo!()
+    }
+
     fn range_of_match<'a, H: HaystackOf<'a, I>>(
         hay: impl IntoHaystack<'a, H>
     ) -> Option<Range<usize>> {
         let mut hay = hay.into_haystack();
-
         range_of_match::<Self, _, _>(&mut hay)
+    }
+
+    fn range_of_all_matches<'a, H: HaystackOf<'a, I>>(
+        _hay: impl IntoHaystack<'a, H>,
+        _overlapping: bool
+    ) -> Vec<Range<usize>> {
+        todo!()
     }
 
     /// Returns the slice that matches this Regex first. This is the slicing variant of
@@ -81,7 +94,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     ///
     /// Note that there is no slicing equivalent of [`is_match`](Self::is_match), because any match
     /// has to be the entire haystack.
-    fn slice_matching<'a, H: HaystackOf<'a, I>>(
+    fn slice_match<'a, H: HaystackOf<'a, I>>(
         hay: impl IntoHaystack<'a, H>
     ) -> Option<H::Slice> {
         let mut hay = hay.into_haystack();
@@ -92,7 +105,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// Returns all slices of the provided haystack that match this Regex, optionally `overlapping`.
     ///
     /// This is the only match function that returns more than one result.
-    fn slice_all_matching<'a, H: HaystackOf<'a, I>>(
+    fn slice_all_matches<'a, H: HaystackOf<'a, I>>(
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool
     ) -> Vec<H::Slice> {
@@ -129,16 +142,26 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         all_matches.into_iter().map(|m| hay.slice(m)).collect()
     }
 
-    fn replace<'a>(
-        hay_mut: &'a mut impl HaystackMut<'a, I>,
-        with: &str,
-    ) -> Option<()> {
-        let range = {
+    fn replace<'a>(hay_mut: &'a mut impl HaystackMut<'a, I>, with: &str) -> bool {
+        let Some(range) = ({
             let mut hay = hay_mut.as_haystack();
-            range_of_match::<Self, _, _>(&mut hay)?
+            range_of_match::<Self, _, _>(&mut hay)
+        }) else {
+            return false;
         };
         hay_mut.replace_range(range, with);
-        Some(())
+        true
+    }
+
+    fn replace_all<'a>(_hay_mut: &'a mut impl HaystackMut<'a, I>, _with: &str) -> usize {
+        todo!()
+    }
+
+    fn replace_all_using<'a>(
+        _hay_mut: &'a mut impl HaystackMut<'a, I>,
+        _using: impl FnMut() -> String
+    ) -> usize {
+        todo!()
     }
 
     /// Returns a [`Self::Capture`] representing the provided haystack matched against this Regex.
@@ -175,7 +198,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     }
 
     /// Returns the [`Self::Capture`] that matches this Regex first, similar to
-    /// [`slice_matching`](Self::slice_matching) but with any named or numbered groups included.
+    /// [`slice_match`](Self::slice_match) but with any named or numbered groups included.
     ///
     /// Anchors should be used for complex behavior, beyond unconditional start and end matches. See
     /// [`do_capture`](Self::do_capture) instead to capture a full haystack.
@@ -208,13 +231,27 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     }
 
     /// Returns a [`Self::Capture`] representing every full match of this Regex in the provided
-    /// haystack, similar to [`slice_all_matching`](Self::slice_all_matching). This can optionally
+    /// haystack, similar to [`slice_all_matches`](Self::slice_all_matches). This can optionally
     /// include `overlapping` matches.
     fn find_all_captures<'a, H: HaystackOf<'a, I>>(
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool
     ) -> Vec<Self::Capture<'a, H>> {
         todo!("find_all_matches equivalent ({:?}, {:?})", hay.into_haystack(), overlapping)
+    }
+
+    fn replace_captured<'a, M: HaystackMut<'a, I> + 'a>(
+        _hay_mut: &'a mut M,
+        _replacer: impl for<'b> FnOnce(Self::Capture<'b, M::Hay<'b>>) -> String,
+    ) -> bool where I: 'a {
+        todo!()
+    }
+
+    fn replace_all_captured<'a, M: HaystackMut<'a, I> + 'a>(
+        _hay_mut: &'a mut M,
+        _replacer: impl for<'b> FnMut(Self::Capture<'b, M::Hay<'b>>) -> String,
+    ) -> usize where I: 'a {
+        todo!()
     }
 }
 

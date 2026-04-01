@@ -18,21 +18,21 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         <Self as Regex<I, N>>::contains_match(hay)
     }
 
-    /// See [`Regex::slice_matching`].
-    fn slice_matching<'a, H: HaystackOf<'a, I>>(
+    /// See [`Regex::slice_match`].
+    fn slice_match<'a, H: HaystackOf<'a, I>>(
         &self,
         hay: impl IntoHaystack<'a, H>
     ) -> Option<H::Slice> {
-        <Self as Regex<I, N>>::slice_matching(hay)
+        <Self as Regex<I, N>>::slice_match(hay)
     }
 
-    /// See [`Regex::slice_all_matching`].
-    fn slice_all_matching<'a, H: HaystackOf<'a, I>>(
+    /// See [`Regex::slice_all_matches`].
+    fn slice_all_matches<'a, H: HaystackOf<'a, I>>(
         &self,
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool
     ) -> Vec<H::Slice> {
-        <Self as Regex<I, N>>::slice_all_matching(hay, overlapping)
+        <Self as Regex<I, N>>::slice_all_matches(hay, overlapping)
     }
 
     /// See [`Regex::do_capture`].

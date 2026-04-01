@@ -10,10 +10,9 @@ impl<'a> HaystackSlice<'a> for Substr {
     type Item = char;
 }
 
-/// A haystack type for matching against the [`char`]s in an [`ArcStr`](arcstr::ArcStr). Rather than
-/// actual `ArcStr`s, this type internally stores [`Substr`](arcstr::Substr)s. Although
-/// [`IntoHaystack`] is implemented for `ArcStr`, the associated `Slice` type for this `Haystack` is
-/// `Substr`.
+/// A haystack type for matching against the [`char`]s in an [`ArcStr`]. Rather than actual
+/// `ArcStr`s, this type internally stores [`Substr`]s. Although [`IntoHaystack`] is implemented for
+/// `ArcStr`, the associated `Slice` type for this `Haystack` is `Substr`.
 #[derive(Debug, Clone)]
 pub struct ArcStrStack<'a> {
     inner: ArcStr,

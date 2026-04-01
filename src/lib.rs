@@ -50,7 +50,7 @@ extern crate self as ct_regex;
 pub use ct_regex_internal::expr::{AnonRegex, Regex};
 pub use ct_regex_macro::regex;
 
-#[cfg(any(doc, feature = "demo"))]
+#[cfg(feature = "demo")]
 #[doc(cfg(feature = "demo"))]
 pub mod demo;
 

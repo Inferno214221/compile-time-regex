@@ -1,8 +1,10 @@
-use ct_regex::*;
+use ct_regex::{haystack::StrStack, *};
 
 regex!(pub MyPattern = r"^(([a-z]+)|([0-9]+))$" / "i");
 regex!(MyOtherPattern = r"^word$");
 regex!(PhoneNum = r"(0|(?<country_code>\+[0-9]+))(?<number>[0-9]{9})");
+
+regex!{ Re = r"bc*" }
 
 fn main() {
     dbg!(MyPattern::is_match("word"));
@@ -54,25 +56,32 @@ fn main() {
 
     dbg!(regex!(r"[^s]*").slice_match("sbcccs"));
 
-    regex!{ Re = r"bc*" }
-
     let mut hay = String::from("sbcccs");
-
     dbg!(Re::slice_match(hay.as_str()));
-
     dbg!(Re::replace(&mut hay, "ucces"), &hay);
 
     let mut hay = String::from("a b b b c");
-
     dbg!(Re::replace_all(&mut hay, "de"));
-
     dbg!(hay);
 
     let mut hay = String::from("a b b b c");
-
     let mut it = "123".chars().map(|c| String::from(c));
-
     dbg!(Re::replace_all_using(&mut hay, || it.next().unwrap()));
-
     dbg!(hay);
+
+    let mut hay = String::from("+61123456789");
+    dbg!(PhoneNum::replace_captured(&mut hay, do_the_thing));
+    dbg!(hay);
+
+    // let mut hay = String::from("a bc bcc bccc d");
+    // dbg!(Re::replace_all_captured(&mut hay, do_the_other_thing));
+    // dbg!(hay);
+}
+
+fn do_the_thing<'a>(value: PhoneNumCapture<'a, StrStack<'a>>) -> String {
+    format!("0{}", value.number())
+}
+
+fn do_the_other_thing<'a>(value: ReCapture<'a, StrStack<'a>>) -> String {
+    format!("{}", value.cap_0().len())
 }

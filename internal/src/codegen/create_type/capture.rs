@@ -90,6 +90,10 @@ pub fn impl_captures(
                     #PhantomData,
                 ))
             }
+
+            fn whole_match_range(&self) -> #Range {
+                self.1.clone()
+            }
         }
     };
 

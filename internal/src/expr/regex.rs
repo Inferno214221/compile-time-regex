@@ -250,18 +250,45 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         todo!("find_all_matches equivalent ({:?}, {:?})", hay.into_haystack(), overlapping)
     }
 
-    fn replace_captured<'a, M: HaystackMut<'a, I> + 'a>(
-        _hay_mut: &'a mut M,
-        _replacer: impl for<'b> FnOnce(Self::Capture<'b, M::Hay<'b>>) -> String,
+    fn replace_captured<'a, M: HaystackMut<'a, I>>( // + 'a
+        hay_mut: &'a mut M,
+        replacer: impl for<'b> FnOnce(Self::Capture<'b, M::Hay<'b>>) -> String,
     ) -> bool where I: 'a {
-        todo!()
+        let (range, replacement) = {
+            let Some(caps) = Self::find_capture(hay_mut.as_haystack()) else { return false; };
+            let first = caps.whole_match_range().clone();
+
+            (first, replacer(caps))
+        };
+        hay_mut.replace_range(range, &replacement);
+        true
     }
 
-    fn replace_all_captured<'a, M: HaystackMut<'a, I> + 'a>(
-        _hay_mut: &'a mut M,
-        _replacer: impl for<'b> FnMut(Self::Capture<'b, M::Hay<'b>>) -> String,
+    fn replace_all_captured<'a, M: HaystackMut<'a, I>>(
+        hay_mut: &'a mut M,
+        mut replacer: impl for<'b> FnMut(Self::Capture<'b, M::Hay<'b>>) -> String,
     ) -> usize where I: 'a {
-        todo!()
+        let replacements: Vec<_> = {
+            let caps = Self::find_all_captures(hay_mut.as_haystack(), false);
+            caps.into_iter()
+                .map(|c| (c.whole_match_range().clone(), replacer(c)))
+                .collect()
+        };
+
+        let count = replacements.len();
+
+        let mut delta = 0;
+
+        for (mut range, replacement) in replacements {
+            range.start += delta;
+            range.end += delta;
+
+            let initial_len = hay_mut.len();
+            hay_mut.replace_range(range, &replacement);
+            delta += hay_mut.len() - initial_len;
+        }
+
+        count
     }
 }
 

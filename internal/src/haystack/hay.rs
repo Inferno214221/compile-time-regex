@@ -96,6 +96,8 @@ pub trait HaystackMut<'a, I: HaystackItem> {
     fn replace_range(&mut self, range: Range<usize>, with: &str);
 
     fn as_haystack<'b>(&'b self) -> Self::Hay<'b>;
+
+    fn len(&self) -> usize;
 }
 
 impl<'a> HaystackMut<'a, char> for String {
@@ -107,5 +109,9 @@ impl<'a> HaystackMut<'a, char> for String {
 
     fn as_haystack<'b>(&'b self) -> Self::Hay<'b> {
         self.into_haystack()
+    }
+
+    fn len(&self) -> usize {
+        String::len(self)
     }
 }

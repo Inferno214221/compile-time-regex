@@ -61,4 +61,18 @@ fn main() {
     dbg!(Re::slice_match(hay.as_str()));
 
     dbg!(Re::replace(&mut hay, "ucces"), &hay);
+
+    let mut hay = String::from("a b b b c");
+
+    dbg!(Re::replace_all(&mut hay, "de"));
+
+    dbg!(hay);
+
+    let mut hay = String::from("a b b b c");
+
+    let mut it = "123".chars().map(|c| String::from(c));
+
+    dbg!(Re::replace_all_using(&mut hay, || it.next().unwrap()));
+
+    dbg!(hay);
 }

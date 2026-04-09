@@ -14,6 +14,10 @@ use super::{CaptureFromRanges, IndexedCaptures};
 /// matched individually from the provided `Haystack`. This is used so that the same expression can
 /// be used to match various haystack types, including `&str` (`I = char`) and `&[u8]` (`I = u8`).
 /// Implementations for both of these slice/item pairs will be implemented by the macro.
+///
+/// # Function Coverage
+///
+#[doc = include_str!("coverage.md")]
 pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     type Pattern: Matcher<I>;
 

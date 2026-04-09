@@ -32,7 +32,7 @@
 //! capturing at runtime boils down to a series of function calls, which the Rust compile can
 //! optimise as it sees fit.
 //!
-//! # When not to use this crate
+//! # When Not To Use This Crate
 //!
 //! For runtime regular expressions (_gasp_). Seriously though, most of the work done by this crate
 //! occurs when building the binary, so it isn't possible to create expressions on the fly. See one

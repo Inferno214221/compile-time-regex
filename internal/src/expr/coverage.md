@@ -1,0 +1,8 @@
+| Description                            | Whole                            | First                                        | All                                                                     |
+|-|-|-|-|
+| Checks for a match                     | [`is_match`](Self::is_match)     | [`contains_match`](Self::contains_match)     | [`count_matches`](Self::count_matches)                                  |
+| Returns range of match                 | -                                | [`range_of_match`](Self::range_of_match)     | [`range_of_all_matches`](Self::range_of_all_matches)                    |
+| Returns match as a slice               | -                                | [`slice_match`](Self::slice_match)           | [`slice_all_matches`](Self::slice_all_matches)                          |
+| Performs capturing using groups        | [`do_capture`](Self::do_capture) | [`find_capture`](Self::find_capture)         | [`find_all_captures`](Self::find_all_captures)                          |
+| Replaces match with value              | -                                | [`replace`](Self::replace)                   | [`replace_all`](Self::replace_all), [`_using`](Self::replace_all_using) |
+| Replaces match by transforming capture | -                                | [`replace_captured`](Self::replace_captured) | [`replace_all_captured`](Self::replace_all_captured)                    |

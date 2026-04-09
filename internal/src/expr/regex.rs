@@ -234,7 +234,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         all_captures
     }
 
-    fn replace<'a>(hay_mut: &'a mut impl HaystackMut<'a, I>, with: &str) -> bool {
+    fn replace<'a, M: HaystackMut<'a, I>>(hay_mut: &'a mut M, with: &str) -> bool {
         let Some(range) = ({
             let mut hay = hay_mut.as_haystack();
             range_of_match::<Self, _, _>(&mut hay)
@@ -245,7 +245,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         true
     }
 
-    fn replace_all<'a>(hay_mut: &'a mut impl HaystackMut<'a, I>, with: &str) -> usize {
+    fn replace_all<'a, M: HaystackMut<'a, I>>(hay_mut: &'a mut M, with: &str) -> usize {
         // Avoids redirecting to replace_all_using to avoid unnessecary clones.
         let ranges = {
             let mut hay = hay_mut.as_haystack();
@@ -266,8 +266,8 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         count
     }
 
-    fn replace_all_using<'a>(
-        hay_mut: &'a mut impl HaystackMut<'a, I>,
+    fn replace_all_using<'a, M: HaystackMut<'a, I>>(
+        hay_mut: &'a mut M,
         mut using: impl FnMut() -> String
     ) -> usize {
         let ranges = {
@@ -289,10 +289,13 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         count
     }
 
-    fn replace_captured<'a, M: HaystackMut<'a, I>>( // + 'a
+    fn replace_captured<'a, M, F>(
         hay_mut: &'a mut M,
-        replacer: impl for<'b> FnOnce(Self::Capture<'b, M::Hay<'b>>) -> String,
-    ) -> bool where I: 'a {
+        replacer: F,
+    ) -> bool where I: 'a,
+        M: HaystackMut<'a, I>,
+        F: for<'b> FnOnce(Self::Capture<'b, M::Hay<'b>>) -> String
+    {
         let (range, replacement) = {
             let Some(caps) = Self::find_capture(hay_mut.as_haystack()) else { return false; };
             let first = caps.whole_match_range().clone();
@@ -303,10 +306,13 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         true
     }
 
-    fn replace_all_captured<'a, M: HaystackMut<'a, I>>(
+    fn replace_all_captured<'a, M, F>(
         hay_mut: &'a mut M,
-        mut replacer: impl for<'b> FnMut(Self::Capture<'b, M::Hay<'b>>) -> String,
-    ) -> usize where I: 'a {
+        mut replacer: F,
+    ) -> usize where I: 'a,
+        M: HaystackMut<'a, I>,
+        F: for<'b> FnMut(Self::Capture<'b, M::Hay<'b>>) -> String
+    {
         let replacements: Vec<_> = {
             let caps = Self::find_all_captures(hay_mut.as_haystack(), false);
             caps.into_iter()

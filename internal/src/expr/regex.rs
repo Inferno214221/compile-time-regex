@@ -1,6 +1,6 @@
 use std::{fmt::Debug, ops::Range};
 
-use crate::{haystack::{Haystack, HaystackItem, HaystackMut, HaystackOf, IntoHaystack}, matcher::Matcher};
+use crate::{haystack::{HaystackItem, HaystackIter, HaystackMut, HaystackOf, HaystackSlice, IntoHaystack}, matcher::Matcher};
 use super::{CaptureFromRanges, IndexedCaptures};
 
 // TODO: Use iterator rather than Vec for return type.
@@ -25,7 +25,7 @@ use super::{CaptureFromRanges, IndexedCaptures};
 pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     type Pattern: Matcher<I>;
 
-    type Capture<'a, H: Haystack<'a>>: CaptureFromRanges<'a, H, N> where I: 'a;
+    type Capture<'a, S: HaystackSlice<'a>>: CaptureFromRanges<'a, S, N> where I: 'a;
 
     /// Returns `true` if this Regex matches the **entire** haystack provided. This should probably
     /// be the default _matching_ function to use.
@@ -130,7 +130,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// although without needing to check any non-starting substring.
     fn do_capture<'a, H: HaystackOf<'a, I>>(
         hay: impl IntoHaystack<'a, H>
-    ) -> Option<Self::Capture<'a, H>> {
+    ) -> Option<Self::Capture<'a, H::Slice>> {
         let mut hay = hay.into_haystack();
 
         let mut caps = IndexedCaptures::default();
@@ -161,7 +161,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// [`do_capture`](Self::do_capture) instead to capture a full haystack.
     fn find_capture<'a, H: HaystackOf<'a, I>>(
         hay: impl IntoHaystack<'a, H>
-    ) -> Option<Self::Capture<'a, H>> {
+    ) -> Option<Self::Capture<'a, H::Slice>> {
         let mut hay = hay.into_haystack();
 
         while hay.item().is_some() {
@@ -198,7 +198,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     fn find_all_captures<'a, H: HaystackOf<'a, I>>(
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool
-    ) -> Vec<Self::Capture<'a, H>> {
+    ) -> Vec<Self::Capture<'a, H::Slice>> {
         let mut hay = hay.into_haystack();
 
         let mut all_captures = vec![];
@@ -294,7 +294,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         replacer: F,
     ) -> bool where I: 'a,
         M: HaystackMut<'a, I>,
-        F: for<'b> FnOnce(Self::Capture<'b, M::Hay<'b>>) -> String
+        F: for<'b> FnOnce(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> String
     {
         let (range, replacement) = {
             let Some(caps) = Self::find_capture(hay_mut.as_haystack()) else { return false; };
@@ -311,7 +311,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         mut replacer: F,
     ) -> usize where I: 'a,
         M: HaystackMut<'a, I>,
-        F: for<'b> FnMut(Self::Capture<'b, M::Hay<'b>>) -> String
+        F: for<'b> FnMut(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> String
     {
         let replacements: Vec<_> = {
             let caps = Self::find_all_captures(hay_mut.as_haystack(), false);

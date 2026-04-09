@@ -1,4 +1,4 @@
-use ct_regex::{haystack::StrStack, *};
+use ct_regex::*;
 
 regex!(pub MyPattern = r"^(([a-z]+)|([0-9]+))$" / "i");
 regex!(MyOtherPattern = r"^word$");
@@ -81,10 +81,10 @@ fn main() {
     dbg!(regex!(r"e\w").find_all_captures("aeeced", false));
 }
 
-fn do_the_thing<'a>(value: PhoneNumCapture<'a, StrStack<'a>>) -> String {
+fn do_the_thing<'a>(value: PhoneNumCapture<'a, &'a str>) -> String {
     format!("0{}", value.number())
 }
 
-fn do_the_other_thing<'a>(value: ReCapture<'a, StrStack<'a>>) -> String {
+fn do_the_other_thing<'a>(value: ReCapture<'a, &'a str>) -> String {
     format!("{}", value.cap_0().len())
 }

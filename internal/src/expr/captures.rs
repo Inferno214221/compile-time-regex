@@ -2,7 +2,7 @@ use std::{fmt::Debug, ops::Range};
 
 use standard_lib::collections::cons::ConsBranch;
 
-use crate::haystack::Haystack;
+use crate::haystack::HaystackSlice;
 
 #[derive(Debug, Default, Clone)]
 pub struct IndexedCaptures(pub ConsBranch<IndexedCapture>);
@@ -40,7 +40,7 @@ impl IndexedCaptures {
     }
 }
 
-pub trait CaptureFromRanges<'a, H: Haystack<'a>, const N: usize>: Sized + Debug {
-    fn from_ranges(ranges: [Option<Range<usize>>; N], slice: H::Slice) -> Option<Self>;
+pub trait CaptureFromRanges<'a, S: HaystackSlice<'a>, const N: usize>: Sized + Debug {
+    fn from_ranges(ranges: [Option<Range<usize>>; N], slice: S) -> Option<Self>;
     fn whole_match_range(&self) -> Range<usize>;
 }

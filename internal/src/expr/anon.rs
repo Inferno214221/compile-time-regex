@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use crate::haystack::{HaystackItem, HaystackMut, HaystackOf, IntoHaystack};
+use crate::haystack::{HaystackItem, HaystackIter, HaystackMut, HaystackOf, IntoHaystack};
 use super::Regex;
 
 /// A trait that is automatically implemented for 'anonymous' regular expression types. There is
@@ -64,7 +64,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
     fn do_capture<'a, H: HaystackOf<'a, I>>(
         &self,
         hay: impl IntoHaystack<'a, H>
-    ) -> Option<Self::Capture<'a, H>> {
+    ) -> Option<Self::Capture<'a, H::Slice>> {
         <Self as Regex<I, N>>::do_capture(hay)
     }
 
@@ -72,7 +72,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
     fn find_capture<'a, H: HaystackOf<'a, I>>(
         &self,
         hay: impl IntoHaystack<'a, H>
-    ) -> Option<Self::Capture<'a, H>> {
+    ) -> Option<Self::Capture<'a, H::Slice>> {
         <Self as Regex<I, N>>::find_capture(hay)
     }
 
@@ -81,7 +81,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         &self,
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool
-    ) -> Vec<Self::Capture<'a, H>> {
+    ) -> Vec<Self::Capture<'a, H::Slice>> {
         <Self as Regex<I, N>>::find_all_captures(hay, overlapping)
     }
 
@@ -109,7 +109,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         replacer: F,
     ) -> bool where I: 'a,
         M: HaystackMut<'a, I>,
-        F: for<'b> FnOnce(Self::Capture<'b, M::Hay<'b>>) -> String
+        F: for<'b> FnOnce(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> String
     {
         <Self as Regex<I, N>>::replace_captured::<M, F>(hay_mut, replacer)
     }
@@ -120,7 +120,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         replacer: F,
     ) -> usize where I: 'a,
         M: HaystackMut<'a, I>,
-        F: for<'b> FnMut(Self::Capture<'b, M::Hay<'b>>) -> String
+        F: for<'b> FnMut(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> String
     {
         <Self as Regex<I, N>>::replace_all_captured::<M, F>(hay_mut, replacer)
     }

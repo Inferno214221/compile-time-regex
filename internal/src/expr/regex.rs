@@ -121,61 +121,6 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
             .collect()
     }
 
-    fn replace<'a>(hay_mut: &'a mut impl HaystackMut<'a, I>, with: &str) -> bool {
-        let Some(range) = ({
-            let mut hay = hay_mut.as_haystack();
-            range_of_match::<Self, _, _>(&mut hay)
-        }) else {
-            return false;
-        };
-        hay_mut.replace_range(range, with);
-        true
-    }
-
-    fn replace_all<'a>(hay_mut: &'a mut impl HaystackMut<'a, I>, with: &str) -> usize {
-        // Avoids redirecting to replace_all_using to avoid unnessecary clones.
-        let ranges = {
-            let mut hay = hay_mut.as_haystack();
-            range_of_all_matches::<Self, _, _>(&mut hay, false)
-        };
-        let count = ranges.len();
-
-        let mut delta = Delta::new();
-
-        for mut range in ranges {
-            delta.apply_to(&mut range);
-
-            let initial_len = hay_mut.len();
-            hay_mut.replace_range(range, with);
-            delta.add_diff(hay_mut.len(), initial_len);
-        }
-
-        count
-    }
-
-    fn replace_all_using<'a>(
-        hay_mut: &'a mut impl HaystackMut<'a, I>,
-        mut using: impl FnMut() -> String
-    ) -> usize {
-        let ranges = {
-            let mut hay = hay_mut.as_haystack();
-            range_of_all_matches::<Self, _, _>(&mut hay, false)
-        };
-        let count = ranges.len();
-
-        let mut delta = Delta::new();
-
-        for mut range in ranges {
-            delta.apply_to(&mut range);
-
-            let initial_len = hay_mut.len();
-            hay_mut.replace_range(range, &using());
-            delta.add_diff(hay_mut.len(), initial_len);
-        }
-
-        count
-    }
-
     /// Returns a [`Self::Capture`] representing the provided haystack matched against this Regex.
     /// This includes any named or numbered capturing groups in the expression. As with
     /// [`is_match`](Self::is_match), this function acts on the entire haystack, and needs to match
@@ -287,6 +232,61 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         }
 
         all_captures
+    }
+
+    fn replace<'a>(hay_mut: &'a mut impl HaystackMut<'a, I>, with: &str) -> bool {
+        let Some(range) = ({
+            let mut hay = hay_mut.as_haystack();
+            range_of_match::<Self, _, _>(&mut hay)
+        }) else {
+            return false;
+        };
+        hay_mut.replace_range(range, with);
+        true
+    }
+
+    fn replace_all<'a>(hay_mut: &'a mut impl HaystackMut<'a, I>, with: &str) -> usize {
+        // Avoids redirecting to replace_all_using to avoid unnessecary clones.
+        let ranges = {
+            let mut hay = hay_mut.as_haystack();
+            range_of_all_matches::<Self, _, _>(&mut hay, false)
+        };
+        let count = ranges.len();
+
+        let mut delta = Delta::new();
+
+        for mut range in ranges {
+            delta.apply_to(&mut range);
+
+            let initial_len = hay_mut.len();
+            hay_mut.replace_range(range, with);
+            delta.add_diff(hay_mut.len(), initial_len);
+        }
+
+        count
+    }
+
+    fn replace_all_using<'a>(
+        hay_mut: &'a mut impl HaystackMut<'a, I>,
+        mut using: impl FnMut() -> String
+    ) -> usize {
+        let ranges = {
+            let mut hay = hay_mut.as_haystack();
+            range_of_all_matches::<Self, _, _>(&mut hay, false)
+        };
+        let count = ranges.len();
+
+        let mut delta = Delta::new();
+
+        for mut range in ranges {
+            delta.apply_to(&mut range);
+
+            let initial_len = hay_mut.len();
+            hay_mut.replace_range(range, &using());
+            delta.add_diff(hay_mut.len(), initial_len);
+        }
+
+        count
     }
 
     fn replace_captured<'a, M: HaystackMut<'a, I>>( // + 'a

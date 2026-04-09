@@ -53,6 +53,7 @@ pub fn make_regex(
 
     quote! {
         #[doc(hidden)]
+        #[allow(non_snake_case)]
         mod #mod_name {
             #[doc = #doc]
             pub struct #name;

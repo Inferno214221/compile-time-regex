@@ -79,6 +79,8 @@ fn main() {
 
     dbg!(regex!(r"e\w").find_all_captures("aeeced", true));
     dbg!(regex!(r"e\w").find_all_captures("aeeced", false));
+    dbg!(regex!(r"e\w").count_matches("aeeced", true));
+    dbg!(regex!(r"e\w").count_matches("aeeced", false));
 }
 
 fn do_the_thing<'a>(value: PhoneNumCapture<'a, &'a str>) -> String {

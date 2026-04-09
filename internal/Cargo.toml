@@ -14,7 +14,7 @@ bstr = { version = "1.12.1", optional = true }
 hipstr = { version = "0.8.0", optional = true }
 
 [features]
-default = []
+default = ["arcstr", "bstr", "hipstr"]
 arcstr = ["dep:arcstr"]
 bstr = ["dep:bstr"]
 hipstr = ["dep:hipstr"]

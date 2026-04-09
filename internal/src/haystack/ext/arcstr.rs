@@ -8,6 +8,10 @@ fn get_item<I>((_, item): (usize, I)) -> I { item }
 
 impl<'a> HaystackSlice<'a> for Substr {
     type Item = char;
+
+    fn slice_with(&self, range: Range<usize>) -> Self {
+        self.substr(range)
+    }
 }
 
 /// A haystack type for matching against the [`char`]s in an [`ArcStr`]. Rather than actual
@@ -58,10 +62,6 @@ impl<'a> HaystackIter<'a> for ArcStrStack<'a> {
 
     fn remainder_as_slice(&self) -> Self::Slice {
         self.inner.substr(self.index..)
-    }
-
-    fn slice_with(&self, range: Range<usize>) -> Self::Slice {
-        self.inner.substr(range)
     }
 
     fn go_to(&mut self, index: usize) {

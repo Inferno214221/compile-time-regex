@@ -48,10 +48,6 @@ pub trait HaystackIter<'a>: Debug + Clone
     /// this is can be implemented as `&self.inner[self.index..]`.
     fn remainder_as_slice(&self) -> Self::Slice;
 
-    /// Slices the original haystack with the provided (half-open) `range`, used for retrieving
-    /// values of capture groups.
-    fn slice_with(&self, range: Range<usize>) -> Self::Slice;
-
     /// Restores the `index` of the haystack to the provided one. This should only be called with
     /// indexes obtained by calling [`current_index`](Self::current_index) on this `HaystackIter`.
     fn go_to(&mut self, index: usize);
@@ -128,10 +124,6 @@ impl<'a> HaystackIter<'a> for StrStack<'a> {
 
     fn remainder_as_slice(&self) -> Self::Slice {
         &self.inner[self.index..]
-    }
-
-    fn slice_with(&self, range: Range<usize>) -> Self::Slice {
-        &self.inner[range]
     }
 
     fn go_to(&mut self, index: usize) {
@@ -216,10 +208,6 @@ impl<'a> HaystackIter<'a> for ByteStack<'a> {
     fn remainder_as_slice(&self) -> Self::Slice {
         // FIXME: Check for possible panics when slicing.
         &self.inner[self.index..]
-    }
-
-    fn slice_with(&self, range: Range<usize>) -> Self::Slice {
-        &self.inner[range]
     }
 
     fn go_to(&mut self, index: usize) {

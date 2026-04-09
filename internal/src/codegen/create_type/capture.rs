@@ -12,6 +12,7 @@ pub fn impl_captures(
     #![allow(nonstandard_style)]
     let CaptureFromRanges = quote!(::ct_regex::internal::expr::CaptureFromRanges);
     let Haystack = quote!(::ct_regex::internal::haystack::Haystack);
+    let HSlice = quote!(<H as ::ct_regex::internal::haystack::HaystackIter<'a>>::Slice);
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
     let PhantomData = quote!(::std::marker::PhantomData);
@@ -69,7 +70,7 @@ pub fn impl_captures(
         #[doc = #doc]
         #[derive(Debug, Clone)]
         #vis struct #name<'a, H: #Haystack<'a>>(
-            pub H,
+            pub #HSlice,
             #(#inner),*,
             #PhantomData<&'a ()>,
         );
@@ -83,7 +84,7 @@ pub fn impl_captures(
         impl<'a, H: #Haystack<'a>> #CaptureFromRanges<'a, H, #len> for #name<'a, H> {
             fn from_ranges(
                 ranges: [#Option<#Range>; #len],
-                hay: H
+                hay: #HSlice,
             ) -> #Option<Self> {
                 let [#(#capture_destructure),*] = ranges;
                 #Option::Some(Self(
@@ -104,6 +105,10 @@ pub fn impl_captures(
 
 pub fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStream {
     #![allow(nonstandard_style)]
+    let HSlice = quote!(
+        <<H as ::ct_regex::internal::haystack::HaystackIter<'a>>::Slice
+            as ::ct_regex::internal::haystack::HaystackSlice<'a>>
+    );
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
 
@@ -114,7 +119,7 @@ pub fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> Token
     if cap.required {
         quote! {
             pub fn #cap_name(&self) -> H::Slice {
-                self.0.slice(self.#index_name.clone())
+                #HSlice::slice_with(&self.0, self.#index_name.clone())
             }
 
             pub fn #cap_name_full(&self) -> #Range {
@@ -124,7 +129,7 @@ pub fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> Token
     } else {
         quote! {
             pub fn #cap_name(&self) -> #Option<H::Slice> {
-                self.#index_name.clone().map(|r| self.0.slice(r))
+                self.#index_name.clone().map(|r| #HSlice::slice_with(&self.0, r))
             }
 
             pub fn #cap_name_full(&self) -> #Option<#Range> {

@@ -8,6 +8,10 @@ fn get_item<I>((_, item): (usize, I)) -> I { item }
 
 impl<'a, B: Backend> HaystackSlice<'a> for HipStr<'a, B> {
     type Item = char;
+
+    fn slice_with(&self, range: Range<usize>) -> Self {
+        self.slice(range)
+    }
 }
 
 /// A haystack type for matching against the [`char`]s in a [`HipStr<'a, B>`](hipstr::HipStr).
@@ -55,10 +59,6 @@ impl<'a, B: Backend> HaystackIter<'a> for HipStrStack<'a, B> {
         self.inner.slice(self.index..)
     }
 
-    fn slice_with(&self, range: Range<usize>) -> Self::Slice {
-        self.inner.slice(range)
-    }
-
     fn go_to(&mut self, index: usize) {
         self.index = index;
     }
@@ -78,6 +78,10 @@ impl<'a, B: Backend> Clone for HipStrStack<'a, B> {
 
 impl<'a, B: Backend> HaystackSlice<'a> for HipByt<'a, B> {
     type Item = u8;
+
+    fn slice_with(&self, range: Range<usize>) -> Self {
+        self.slice(range)
+    }
 }
 
 /// A haystack type for matching against the [`u8`]s in a [`HipByt<'a, B>`](hipstr::HipByt).
@@ -126,10 +130,6 @@ impl<'a, B: Backend> HaystackIter<'a> for HipBytStack<'a, B> {
 
     fn remainder_as_slice(&self) -> Self::Slice {
         self.inner.slice(self.index..)
-    }
-
-    fn slice_with(&self, range: Range<usize>) -> Self::Slice {
-        self.inner.slice(range)
     }
 
     fn go_to(&mut self, index: usize) {

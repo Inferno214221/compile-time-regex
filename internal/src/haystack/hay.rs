@@ -38,8 +38,12 @@ pub trait Haystack<'a>: HaystackIter<'a> {
         self.next();
     }
 
-    fn slice(&self, cap: Range<usize>) -> Self::Slice {
-        self.slice_with(cap)
+    fn inner_slice(&self) -> Self::Slice {
+        self.whole_slice()
+    }
+
+    fn slice_with(&self, range: Range<usize>) -> Self::Slice {
+        self.inner_slice().slice_with(range)
     }
 
     fn reset(&mut self) {

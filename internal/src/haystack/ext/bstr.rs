@@ -6,6 +6,10 @@ use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack};
 
 impl<'a> HaystackSlice<'a> for &'a BStr {
     type Item = u8;
+
+    fn slice_with(&self, range: Range<usize>) -> Self {
+        &self[range]
+    }
 }
 
 /// A haystack type for matching against the [`u8`]s in a [`&'a BStr`](bstr::BStr). This type is a
@@ -56,10 +60,6 @@ impl<'a> HaystackIter<'a> for BStrStack<'a> {
 
     fn remainder_as_slice(&self) -> Self::Slice {
         &self.inner[self.index..]
-    }
-
-    fn slice_with(&self, range: Range<usize>) -> Self::Slice {
-        &self.inner[range]
     }
 
     fn go_to(&mut self, index: usize) {

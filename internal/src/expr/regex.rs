@@ -100,7 +100,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     ) -> Option<H::Slice> {
         let mut hay = hay.into_haystack();
         let range = range_of_match::<Self, _, _>(&mut hay)?;
-        Some(hay.slice(range))
+        Some(hay.slice_with(range))
     }
 
     /// Returns all slices of the provided haystack that match this Regex, optionally `overlapping`.
@@ -117,7 +117,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         let mut hay = hay.into_haystack();
         range_of_all_matches::<Self, _, _>(&mut hay, overlapping)
             .into_iter()
-            .map(|m| hay.slice(m))
+            .map(|m| hay.slice_with(m))
             .collect()
     }
 
@@ -146,7 +146,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
                 caps_fork.push(0, start..state_fork);
 
                 return Some(
-                    Self::Capture::from_ranges(caps_fork.into_array(), hay)
+                    Self::Capture::from_ranges(caps_fork.into_array(), hay.whole_slice())
                         .expect("failed to convert captures despite matching correctly")
                 );
             }
@@ -179,7 +179,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
                 caps_fork.push(0, start..state_fork);
 
                 return Some(
-                    Self::Capture::from_ranges(caps_fork.into_array(), hay)
+                    Self::Capture::from_ranges(caps_fork.into_array(), hay.inner_slice())
                         .expect("failed to convert captures despite matching correctly")
                 );
             }
@@ -216,7 +216,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
                 caps_fork.push(0, start..state_fork);
 
                 all_captures.push(
-                    Self::Capture::from_ranges(caps_fork.into_array(), hay.clone())
+                    Self::Capture::from_ranges(caps_fork.into_array(), hay.inner_slice())
                         .expect("failed to convert captures despite matching correctly")
                 );
 

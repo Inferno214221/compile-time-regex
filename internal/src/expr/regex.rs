@@ -16,7 +16,8 @@ use super::{CaptureFromRanges, IndexedCaptures};
 // Need to do something because the lifetime 'a prevents a mutable reference from also being made.
 
 /// A trait that is automatically implemented for types produced by the `regex!` macro. Various
-/// function are included that test this pattern against a provided [`Haystack`].
+/// function are included that test this pattern against a provided
+/// [`Haystack`](crate::haystack::Haystack).
 ///
 /// Altough rarely encountered, this trait's generic parameter, `I` refers to the item that can be
 /// matched individually from the provided `Haystack`. This is used so that the same expression can

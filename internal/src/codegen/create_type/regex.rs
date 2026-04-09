@@ -1,5 +1,5 @@
 use proc_macro2::{Span, TokenStream};
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::{Ident, Visibility};
 
 use crate::codegen::{AnonRegexArgs, RegexArgs, capture, parse};
@@ -19,6 +19,8 @@ pub fn make_regex(
     let Regex = quote!(::ct_regex::internal::expr::Regex);
     let AnonRegex = quote!(::ct_regex::internal::expr::AnonRegex);
 
+    let mod_name = format_ident!("__regex_{}", &name);
+
     let pat_str = pat.value();
 
     let doc = format!(
@@ -37,7 +39,7 @@ pub fn make_regex(
 
     let (type_expr_scalar, _) = parse::parse_regex::<char>(&pat_str, &config);
 
-    let (captures_name, captures_len, captures_impl) = capture::impl_captures(&vis, &name, groups);
+    let (captures_name, captures_len, captures_impl) = capture::impl_captures(&name, groups);
 
     let anon_impl = if impl_anon {
         quote! {
@@ -50,29 +52,35 @@ pub fn make_regex(
     };
 
     quote! {
-        #[doc = #doc]
-        #vis struct #name;
+        #[doc(hidden)]
+        mod #mod_name {
+            #[doc = #doc]
+            pub struct #name;
 
-        impl #Regex<u8, #captures_len> for #name {
-            type Pattern = #type_expr_byte;
+            impl #Regex<u8, #captures_len> for #name {
+                type Pattern = #type_expr_byte;
 
-            type Capture<'a, S: #HaystackSlice<'a>> = #captures_name<'a, S>;
-        }
-
-        impl #Regex<char, #captures_len> for #name {
-            type Pattern = #type_expr_scalar;
-            type Capture<'a, S: #HaystackSlice<'a>> = #captures_name<'a, S>;
-        }
-
-        #anon_impl
-
-        impl #fmt::Debug for #name {
-            fn fmt(&self, f: &mut #fmt::Formatter<'_>) -> #fmt::Result {
-                write!(f, "/{:?}/", <Self as #Regex<char, #captures_len>>::Pattern::default())
+                type Capture<'a, S: #HaystackSlice<'a>> = #captures_name<'a, S>;
             }
+
+            impl #Regex<char, #captures_len> for #name {
+                type Pattern = #type_expr_scalar;
+                type Capture<'a, S: #HaystackSlice<'a>> = #captures_name<'a, S>;
+            }
+
+            #anon_impl
+
+            impl #fmt::Debug for #name {
+                fn fmt(&self, f: &mut #fmt::Formatter<'_>) -> #fmt::Result {
+                    write!(f, "/{:?}/", <Self as #Regex<char, #captures_len>>::Pattern::default())
+                }
+            }
+
+            #captures_impl
         }
 
-        #captures_impl
+        #[doc(inline)]
+        #vis use #mod_name::*;
     }
 }
 

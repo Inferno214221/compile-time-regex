@@ -1,11 +1,10 @@
 use proc_macro2::{Literal, Span, TokenStream};
 use quote::{format_ident, quote};
-use syn::{Ident, Visibility};
+use syn::Ident;
 
 use crate::codegen::Group;
 
 pub fn impl_captures(
-    vis: &Visibility,
     regex_name: &Ident,
     groups: Vec<Group>
 ) -> (Ident, Literal, TokenStream) {
@@ -68,8 +67,8 @@ pub fn impl_captures(
     let captures_impl = quote! {
         #[doc = #doc]
         #[derive(Debug, Clone)]
-        #vis struct #name<'a, S: #HaystackSlice<'a>>(
-            pub S,
+        pub struct #name<'a, S: #HaystackSlice<'a>>(
+            S,
             #(#inner),*,
             #PhantomData<&'a ()>,
         );

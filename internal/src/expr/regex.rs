@@ -105,6 +105,10 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
 
     /// Returns all slices of the provided haystack that match this Regex, optionally `overlapping`.
     ///
+    /// Note that each match is still made greedily. Even with `overlapping = true`, if two possible
+    /// matches start at the same index in the haystack, only the first to match the regex will be
+    /// included.
+    ///
     /// This is the only match function that returns more than one result.
     fn slice_all_matches<'a, H: HaystackOf<'a, I>>(
         hay: impl IntoHaystack<'a, H>,
@@ -136,15 +140,14 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         };
         let count = ranges.len();
 
-        let mut delta = 0;
+        let mut delta = Delta::new();
 
         for mut range in ranges {
-            range.start += delta;
-            range.end += delta;
+            delta.apply_to(&mut range);
 
             let initial_len = hay_mut.len();
             hay_mut.replace_range(range, with);
-            delta += hay_mut.len() - initial_len;
+            delta.add_diff(hay_mut.len(), initial_len);
         }
 
         count
@@ -160,15 +163,14 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         };
         let count = ranges.len();
 
-        let mut delta = 0;
+        let mut delta = Delta::new();
 
         for mut range in ranges {
-            range.start += delta;
-            range.end += delta;
+            delta.apply_to(&mut range);
 
             let initial_len = hay_mut.len();
             hay_mut.replace_range(range, &using());
-            delta += hay_mut.len() - initial_len;
+            delta.add_diff(hay_mut.len(), initial_len);
         }
 
         count
@@ -217,18 +219,19 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     ) -> Option<Self::Capture<'a, H>> {
         let mut hay = hay.into_haystack();
 
-        let mut caps = IndexedCaptures::default();
-
         while hay.item().is_some() {
             let start = hay.index();
 
-            let first = Self::Pattern::all_captures(&mut hay.clone(), &mut caps)
+            let mut caps = IndexedCaptures::default();
+
+            let first = Self::Pattern::all_captures(&mut hay, &mut caps)
                 .into_iter()
                 .last();
 
+            hay.rollback(start);
+
             if let Some((state_fork, mut caps_fork)) = first {
                 caps_fork.push(0, start..state_fork);
-                hay.rollback(state_fork);
 
                 return Some(
                     Self::Capture::from_ranges(caps_fork.into_array(), hay)
@@ -243,11 +246,47 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// Returns a [`Self::Capture`] representing every full match of this Regex in the provided
     /// haystack, similar to [`slice_all_matches`](Self::slice_all_matches). This can optionally
     /// include `overlapping` matches.
+    ///
+    /// Note that each match is still made greedily. Even with `overlapping = true`, if two possible
+    /// matches start at the same index in the haystack, only the first to match the regex will be
+    /// included.
     fn find_all_captures<'a, H: HaystackOf<'a, I>>(
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool
     ) -> Vec<Self::Capture<'a, H>> {
-        todo!("find_all_matches equivalent ({:?}, {:?})", hay.into_haystack(), overlapping)
+        let mut hay = hay.into_haystack();
+
+        let mut all_captures = vec![];
+
+        while hay.item().is_some() {
+            let start = hay.index();
+
+            let mut caps = IndexedCaptures::default();
+
+            let first = Self::Pattern::all_captures(&mut hay.clone(), &mut caps)
+                .into_iter()
+                .last();
+
+            if let Some((state_fork, mut caps_fork)) = first {
+                caps_fork.push(0, start..state_fork);
+
+                all_captures.push(
+                    Self::Capture::from_ranges(caps_fork.into_array(), hay.clone())
+                        .expect("failed to convert captures despite matching correctly")
+                );
+
+                if overlapping {
+                    hay.rollback(start).progress();
+                } else {
+                    hay.rollback(state_fork);
+                    debug_assert_ne!(start, state_fork);
+                }
+            } else {
+                hay.rollback(start).progress();
+            }
+        }
+
+        all_captures
     }
 
     fn replace_captured<'a, M: HaystackMut<'a, I>>( // + 'a
@@ -277,18 +316,37 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
 
         let count = replacements.len();
 
-        let mut delta = 0;
+        let mut delta = Delta::new();
 
         for (mut range, replacement) in replacements {
-            range.start += delta;
-            range.end += delta;
+            delta.apply_to(&mut range);
 
             let initial_len = hay_mut.len();
             hay_mut.replace_range(range, &replacement);
-            delta += hay_mut.len() - initial_len;
+            delta.add_diff(hay_mut.len(), initial_len);
         }
 
         count
+    }
+}
+
+struct Delta(isize);
+
+impl Delta {
+    fn new() -> Delta {
+        Delta(0)
+    }
+
+    fn add_diff(&mut self, from: usize, to: usize) {
+        self.0 = self.0.strict_add(
+            from.checked_signed_diff(to)
+                .expect("difference between usizes doesn't fit in an isize")
+        )
+    }
+
+    fn apply_to(&self, range: &mut Range<usize>) {
+        range.start = range.start.strict_add_signed(self.0);
+        range.end = range.end.strict_add_signed(self.0);
     }
 }
 
@@ -316,15 +374,12 @@ fn range_of_all_matches<'a, R: Regex<I, N> + ?Sized, I: HaystackItem, const N: u
     while hay.item().is_some() {
         let start = hay.index();
 
-        if overlapping {
-            if let Some(state_fork) = R::Pattern::all_matches(hay).pop() {
-                all_matches.push(start..state_fork);
-            }
+        if let Some(state_fork) = R::Pattern::all_matches(hay).pop() {
+            all_matches.push(start..state_fork);
 
-            hay.rollback(start).progress();
-        } else {
-            if let Some(state_fork) = R::Pattern::all_matches(hay).pop() {
-                all_matches.push(start..state_fork);
+            if overlapping {
+                hay.rollback(start).progress();
+            } else {
                 hay.rollback(state_fork);
 
                 // This doesn't seem to make a difference...
@@ -333,9 +388,9 @@ fn range_of_all_matches<'a, R: Regex<I, N> + ?Sized, I: HaystackItem, const N: u
                 //     // We've already matched at this index.
                 //     hay.progress();
                 // }
-            } else {
-                hay.rollback(start).progress();
             }
+        } else {
+            hay.rollback(start).progress();
         }
     }
 

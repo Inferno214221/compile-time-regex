@@ -73,9 +73,12 @@ fn main() {
     dbg!(PhoneNum::replace_captured(&mut hay, do_the_thing));
     dbg!(hay);
 
-    // let mut hay = String::from("a bc bcc bccc d");
-    // dbg!(Re::replace_all_captured(&mut hay, do_the_other_thing));
-    // dbg!(hay);
+    let mut hay = String::from("a bc bcc bccc d");
+    dbg!(Re::replace_all_captured(&mut hay, do_the_other_thing));
+    dbg!(hay);
+
+    dbg!(regex!(r"e\w").find_all_captures("aeeced", true));
+    dbg!(regex!(r"e\w").find_all_captures("aeeced", false));
 }
 
 fn do_the_thing<'a>(value: PhoneNumCapture<'a, StrStack<'a>>) -> String {

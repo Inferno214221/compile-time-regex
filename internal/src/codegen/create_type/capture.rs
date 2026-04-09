@@ -63,6 +63,8 @@ pub fn impl_captures(
         }
     });
 
+    // TODO: Manual debug implementation
+
     let captures_impl = quote! {
         #[doc = #doc]
         #[derive(Debug, Clone)]

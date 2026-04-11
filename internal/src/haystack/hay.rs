@@ -94,7 +94,7 @@ impl<'a, H: Haystack<'a>> IntoHaystack<'a, H> for H {
 //     }
 // }
 
-pub trait HaystackMut<'a, I: HaystackItem> {
+pub trait MutIntoHaystack<'a, I: HaystackItem> {
     type Hay<'b>: HaystackOf<'b, I> where Self: 'b;
 
     fn replace_range(&mut self, range: Range<usize>, with: &str);
@@ -104,7 +104,7 @@ pub trait HaystackMut<'a, I: HaystackItem> {
     fn len(&self) -> usize;
 }
 
-impl<'a> HaystackMut<'a, char> for String {
+impl<'a> MutIntoHaystack<'a, char> for String {
     type Hay<'b> = StrStack<'b>;
 
     fn replace_range(&mut self, range: Range<usize>, with: &str) {

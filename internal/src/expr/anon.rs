@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use crate::haystack::{HaystackItem, HaystackIter, HaystackMut, HaystackOf, IntoHaystack};
+use crate::haystack::{HaystackItem, HaystackIter, MutIntoHaystack, HaystackOf, IntoHaystack};
 use super::Regex;
 
 /// A trait that is automatically implemented for 'anonymous' regular expression types. There is
@@ -89,17 +89,17 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
     }
 
     /// See [`Regex::replace`].
-    fn replace<'a, M: HaystackMut<'a, I>>(&self, hay_mut: &'a mut M, with: &str) -> bool {
+    fn replace<'a, M: MutIntoHaystack<'a, I>>(&self, hay_mut: &'a mut M, with: &str) -> bool {
         <Self as Regex<I, N>>::replace(hay_mut, with)
     }
 
     /// See [`Regex::replace_all`].
-    fn replace_all<'a, M: HaystackMut<'a, I>>(&self, hay_mut: &'a mut M, with: &str) -> usize {
+    fn replace_all<'a, M: MutIntoHaystack<'a, I>>(&self, hay_mut: &'a mut M, with: &str) -> usize {
         <Self as Regex<I, N>>::replace_all(hay_mut, with)
     }
 
     /// See [`Regex::replace_all_using`].
-    fn replace_all_using<'a, M: HaystackMut<'a, I>>(
+    fn replace_all_using<'a, M: MutIntoHaystack<'a, I>>(
         &self,
         hay_mut: &'a mut M,
         using: impl FnMut() -> String
@@ -111,7 +111,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
     fn replace_captured<'a, M, F>(&self, hay_mut: &'a mut M, replacer: F) -> bool
     where
         I: 'a,
-        M: HaystackMut<'a, I>,
+        M: MutIntoHaystack<'a, I>,
         F: for<'b> FnOnce(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> String
     {
         <Self as Regex<I, N>>::replace_captured::<M, F>(hay_mut, replacer)
@@ -121,7 +121,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
     fn replace_all_captured<'a, M, F>(&self, hay_mut: &'a mut M, replacer: F) -> usize
     where
         I: 'a,
-        M: HaystackMut<'a, I>,
+        M: MutIntoHaystack<'a, I>,
         F: for<'b> FnMut(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> String
     {
         <Self as Regex<I, N>>::replace_all_captured::<M, F>(hay_mut, replacer)

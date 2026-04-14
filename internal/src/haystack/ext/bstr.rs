@@ -50,6 +50,10 @@ impl<'a> HaystackIter<'a> for BStrStack<'a> {
         self.inner.get(self.index).copied()
     }
 
+    fn prev_item(&self) -> Option<Self::Item> {
+        self.inner.get(self.index.checked_sub(1)?).copied()
+    }
+
     fn current_index(&self) -> usize {
         self.index
     }

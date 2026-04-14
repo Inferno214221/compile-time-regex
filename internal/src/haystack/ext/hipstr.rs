@@ -2,9 +2,7 @@ use std::{fmt::{self, Debug}, ops::Range};
 
 use hipstr::{Backend, bytes::HipByt, string::HipStr};
 
-use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack, get_first_char};
-
-fn get_item<I>((_, item): (usize, I)) -> I { item }
+use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack, first_char, first_char_and_width};
 
 impl<'a, B: Backend> HaystackSlice<'a> for HipStr<'a, B> {
     type Item = char;
@@ -33,7 +31,7 @@ impl<'a, B: Backend> Iterator for HipStrStack<'a, B> {
     type Item = char;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let (width, first) = get_first_char(&self.remainder_as_slice());
+        let (width, first) = first_char_and_width(&self.remainder_as_slice());
         // The width won't exceed the remaining slice, so it can't overflow then length.
         self.index += width;
         first
@@ -44,7 +42,12 @@ impl<'a, B: Backend> HaystackIter<'a> for HipStrStack<'a, B> {
     type Slice = HipStr<'a, B>;
 
     fn current_item(&self) -> Option<Self::Item> {
-        get_item(get_first_char(&self.remainder_as_slice()))
+        first_char(&self.remainder_as_slice())
+    }
+
+    fn prev_item(&self) -> Option<Self::Item> {
+        let prev_index = self.inner.floor_char_boundary(self.index.checked_sub(1)?);
+        first_char(&self.inner[prev_index..])
     }
 
     fn current_index(&self) -> usize {
@@ -118,6 +121,10 @@ impl<'a, B: Backend> HaystackIter<'a> for HipBytStack<'a, B> {
 
     fn current_item(&self) -> Option<Self::Item> {
         self.inner.get(self.index).copied()
+    }
+
+    fn prev_item(&self) -> Option<Self::Item> {
+        self.inner.get(self.index.checked_sub(1)?).copied()
     }
 
     fn current_index(&self) -> usize {

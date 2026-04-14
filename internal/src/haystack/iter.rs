@@ -36,6 +36,8 @@ pub trait HaystackIter<'a>: Debug + Clone
     /// should return the same item, until progressed with [`Iterator::next`].
     fn current_item(&self) -> Option<Self::Item>;
 
+    fn prev_item(&self) -> Option<Self::Item>;
+
     /// Returns the index of the current item in the original haystack. The returned value should be
     /// valid to pass to [`Self::go_to`] without causing a panic.
     fn current_index(&self) -> usize;
@@ -55,16 +57,18 @@ pub trait HaystackIter<'a>: Debug + Clone
 
 /// A helper for getting the first `char` of a provided `&str`. Returns the width of the character
 /// (possibly zero) and the character itself.
-pub fn get_first_char(value: &str) -> (usize, Option<char>) {
+pub fn first_char_and_width(value: &str) -> (usize, Option<char>) {
     // Unfortunately, I don't think there is a stable way to get `char`s from a `str` without using
     // the `chars` or `char_indicies` iterators. We can calculate the width easily but may as well
     // have it done for us.
     let mut iter = value.char_indices();
     let first = iter.next();
-    (iter.offset(), first.map(get_item))
+    (iter.offset(), first.map(|(_, c)| c))
 }
 
-fn get_item<I>((_, item): (usize, I)) -> I { item }
+pub fn first_char(value: &str) -> Option<char> {
+    value.chars().next()
+}
 
 /// A haystack type for matching against the [`char`]s in a [`&str`](str). This type abstracts over
 /// the variable width scalars contained, to allow indexing without panics.
@@ -100,7 +104,7 @@ impl<'a> Iterator for StrStack<'a> {
     type Item = char;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let (width, first) = get_first_char(self.remainder_as_slice());
+        let (width, first) = first_char_and_width(self.remainder_as_slice());
         // The width won't exceed the remaining slice, so it can't overflow then length.
         self.index += width;
         first
@@ -111,7 +115,12 @@ impl<'a> HaystackIter<'a> for StrStack<'a> {
     type Slice = &'a str;
 
     fn current_item(&self) -> Option<Self::Item> {
-        get_item(get_first_char(self.remainder_as_slice()))
+        first_char(self.remainder_as_slice())
+    }
+
+    fn prev_item(&self) -> Option<Self::Item> {
+        let prev_index = self.inner.floor_char_boundary(self.index.checked_sub(1)?);
+        first_char(&self.inner[prev_index..])
     }
 
     fn current_index(&self) -> usize {
@@ -195,6 +204,10 @@ impl<'a> HaystackIter<'a> for ByteStack<'a> {
 
     fn current_item(&self) -> Option<Self::Item> {
         self.inner.get(self.index).copied()
+    }
+
+    fn prev_item(&self) -> Option<Self::Item> {
+        self.inner.get(self.index.checked_sub(1)?).copied()
     }
 
     fn current_index(&self) -> usize {

@@ -158,17 +158,17 @@ impl Debug for Always {
 }
 
 #[derive(Default)]
-pub struct Beginning;
+pub struct Start;
 
-impl<I: HaystackItem> Matcher<I> for Beginning {
+impl<I: HaystackItem> Matcher<I> for Start {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         hay.is_start()
     }
 }
 
-impl Debug for Beginning {
+impl Debug for Start {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "^")
+        write!(f, "\\A")
     }
 }
 
@@ -182,6 +182,66 @@ impl<I: HaystackItem> Matcher<I> for End {
 }
 
 impl Debug for End {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "\\z")
+    }
+}
+
+#[derive(Default)]
+pub struct LineStart;
+
+impl<I: HaystackItem> Matcher<I> for LineStart {
+    fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
+        hay.is_line_start()
+    }
+}
+
+impl Debug for LineStart {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "^")
+    }
+}
+
+#[derive(Default)]
+pub struct LineEnd;
+
+impl<I: HaystackItem> Matcher<I> for LineEnd {
+    fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
+        hay.is_line_end()
+    }
+}
+
+impl Debug for LineEnd {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "$")
+    }
+}
+
+#[derive(Default)]
+pub struct CRLFStart;
+
+impl<I: HaystackItem> Matcher<I> for CRLFStart {
+    fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
+        hay.is_crlf_start()
+    }
+}
+
+impl Debug for CRLFStart {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "^")
+    }
+}
+
+#[derive(Default)]
+pub struct CRLFEnd;
+
+impl<I: HaystackItem> Matcher<I> for CRLFEnd {
+    fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
+        hay.is_crlf_end()
+    }
+}
+
+impl Debug for CRLFEnd {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "$")
     }

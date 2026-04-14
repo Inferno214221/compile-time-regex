@@ -20,6 +20,10 @@ pub trait HaystackItem: Debug + Default + Copy + Eq + Ord + Sealed {
     /// parsed regular expressions into individual `HaystackItem`s that can be matched in a
     /// haystack.
     fn vec_from_str(value: &str) -> Vec<Self>;
+
+    fn is_newline(self) -> bool;
+
+    fn is_return(self) -> bool;
 }
 
 /// A trait representing a slice of the underlying haystack for various
@@ -47,6 +51,14 @@ impl HaystackItem for char {
     fn vec_from_str(value: &str) -> Vec<Self> {
         value.chars().collect()
     }
+
+    fn is_newline(self) -> bool {
+        self == '\n'
+    }
+
+    fn is_return(self) -> bool {
+        self == '\r'
+    }
 }
 
 impl<'a> HaystackSlice<'a> for &'a str {
@@ -62,6 +74,14 @@ impl Sealed for u8 {}
 impl HaystackItem for u8 {
     fn vec_from_str(s: &str) -> Vec<Self> {
         s.as_bytes().to_vec()
+    }
+
+    fn is_newline(self) -> bool {
+        self == b'\n'
+    }
+
+    fn is_return(self) -> bool {
+        self == b'\r'
     }
 }
 

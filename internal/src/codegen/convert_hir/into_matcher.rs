@@ -138,12 +138,12 @@ impl IntoMatcherExpr for Class {
 impl IntoMatcherExpr for Look {
     fn into_matcher_expr<I: CodegenItem>(self, _caps: &mut Groups) -> TokenStream {
         match self {
-            Look::Start => quote!(::ct_regex::internal::matcher::Beginning),
+            Look::Start => quote!(::ct_regex::internal::matcher::Start),
             Look::End => quote!(::ct_regex::internal::matcher::End),
-            Look::StartLF => todo!("complex looking"),
-            Look::EndLF => todo!("complex looking"),
-            Look::StartCRLF => todo!("complex looking"),
-            Look::EndCRLF => todo!("complex looking"),
+            Look::StartLF => quote!(::ct_regex::internal::matcher::LineStart),
+            Look::EndLF => quote!(::ct_regex::internal::matcher::LineEnd),
+            Look::StartCRLF => quote!(::ct_regex::internal::matcher::CRLFStart),
+            Look::EndCRLF => quote!(::ct_regex::internal::matcher::CRLFEnd),
             _ => unimplemented!("complex look arounds"),
         }
     }

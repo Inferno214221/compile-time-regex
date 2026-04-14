@@ -17,14 +17,6 @@ use crate::haystack::{HaystackItem, HaystackIter, HaystackSlice, StrStack};
 /// [`rollback`](Self::rollback). Additionally, `Haystack`s are cheap to clone, relying on shallow
 /// clones or reference counting.
 pub trait Haystack<'a>: HaystackIter<'a> {
-    fn is_start(&self) -> bool {
-        self.current_index() == 0
-    }
-
-    fn is_end(&self) -> bool {
-        self.item().is_none()
-    }
-
     fn item(&self) -> Option<Self::Item> {
         self.current_item()
     }
@@ -53,6 +45,41 @@ pub trait Haystack<'a>: HaystackIter<'a> {
     fn rollback(&mut self, state: usize) -> &mut Self {
         self.go_to(state);
         self
+    }
+
+    fn is_start(&self) -> bool {
+        self.current_index() == 0
+    }
+
+    fn is_end(&self) -> bool {
+        self.item().is_none()
+    }
+
+    fn is_line_start(&self) -> bool {
+        self.prev_item().is_none_or(HaystackItem::is_newline)
+    }
+
+    fn is_line_end(&self) -> bool {
+        self.item().is_none_or(HaystackItem::is_newline)
+    }
+
+    fn is_crlf_start(&self) -> bool {
+        match self.prev_item() {
+            Some(n) if n.is_newline() => true,
+            Some(r) if r.is_return() => !self.item().is_some_and(HaystackItem::is_newline),
+            Some(_) => false,
+            None => true,
+        }
+    }
+
+    fn is_crlf_end(&self) -> bool {
+        // TODO: Clarify semantics surrounding "\r?(EndCRLF)"
+        match self.item() {
+            Some(n) if n.is_newline() => !self.prev_item().is_some_and(HaystackItem::is_return),
+            Some(r) if r.is_return() => true,
+            Some(_) => false,
+            None => true,
+        }
     }
 }
 

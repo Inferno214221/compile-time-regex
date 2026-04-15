@@ -7,3 +7,6 @@ pub use capture::*;
 pub use composite::*;
 pub use primitive::*;
 pub use quantifier::*;
+
+#[cfg(test)]
+mod tests;

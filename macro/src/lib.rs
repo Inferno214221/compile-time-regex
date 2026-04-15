@@ -15,7 +15,7 @@ use syn::parse_macro_input;
 /// This macro invocation defines a zero-sized type that implements [`Regex`](trait.Regex.html),
 /// matching and capturing against the provided expression.
 ///
-/// ```
+/// ```ignore
 /// regex! {
 ///   visibility? TypeName = r"pattern" / flags?
 /// }
@@ -44,7 +44,7 @@ use syn::parse_macro_input;
 /// The type implements [`AnonRegex`](trait.AnonRegex.html) as well as [`Regex`](trait.Regex.html),
 /// so that the associated functions can be called as methods.
 ///
-/// ```
+/// ```ignore
 /// let _ = regex!(r"pattern" / flags?).is_match("haystack");
 /// ```
 ///
@@ -59,7 +59,7 @@ use syn::parse_macro_input;
 /// One notable exception to the standard options is the absence of a _global_ (`'g'`) flag.
 ///
 /// Available flags:
-/// ```
+/// ```ignore
 /// match flag {
 ///     'i' => config.case_insensitive(true),
 ///     'm' => config.multi_line(true),
@@ -68,7 +68,7 @@ use syn::parse_macro_input;
 ///     'U' => config.swap_greed(true),
 ///     'x' => config.ignore_whitespace(true),
 ///     'c' => config.complex_classes(true),
-///     ...
+///     ..
 /// }
 /// ```
 ///

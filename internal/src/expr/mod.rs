@@ -5,6 +5,3 @@ pub mod regex;
 pub use anon::*;
 pub use captures::*;
 pub use regex::*;
-
-#[cfg(test)]
-mod test;

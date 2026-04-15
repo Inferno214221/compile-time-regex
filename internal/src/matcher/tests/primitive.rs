@@ -1,3 +1,4 @@
+use crate::expr::IndexedCaptures;
 use crate::haystack::{Haystack, IntoHaystack};
 
 use super::*;
@@ -12,8 +13,26 @@ macro_rules! test_matches {
     ($pattern:ty, $hay:literal+$progress:literal, $index:literal) => {
         let mut hay = $hay.into_haystack();
         hay.rollback($progress);
-        assert!(<$pattern>::matches(&mut hay));
-        assert_eq!(hay.index(), $index);
+
+        let mut hay_match = hay.clone();
+        let mut hay_capture = hay_match.clone();
+        let caps = IndexedCaptures::default();
+        let mut caps_capture = caps.clone();
+
+        assert!(<$pattern>::matches(&mut hay_match));
+        assert!(<$pattern>::captures(&mut hay_capture, &mut caps_capture));
+
+        assert_eq!(caps, caps);
+        assert_eq!(hay_match, hay_capture);
+
+        assert_eq!(
+            <$pattern>::all_matches(&mut hay.clone()),
+            vec![$index]
+        );
+        assert_eq!(
+            <$pattern>::all_captures(&mut hay.clone(), &mut caps.clone()),
+            vec![($index, caps)]
+        );
     };
 }
 
@@ -27,8 +46,17 @@ macro_rules! test_no_matches {
     ($pattern:ty, $hay:literal+$progress:literal, $index:literal) => {
         let mut hay = $hay.into_haystack();
         hay.rollback($progress);
-        assert!(!<$pattern>::matches(&mut hay));
-        assert_eq!(hay.index(), $index);
+
+        let mut hay_match = hay.clone();
+        let mut hay_capture = hay_match.clone();
+        let caps = IndexedCaptures::default();
+        let mut caps_capture = caps.clone();
+
+        assert!(!<$pattern>::matches(&mut hay_match));
+        assert!(!<$pattern>::captures(&mut hay_capture, &mut caps_capture));
+
+        assert_eq!(<$pattern>::all_matches(&mut hay.clone()), vec![]);
+        assert_eq!(<$pattern>::all_captures(&mut hay.clone(), &mut caps.clone()), vec![]);
     };
 }
 

@@ -76,7 +76,7 @@ pub fn first_char(value: &str) -> Option<char> {
 /// To accomodate, calls to [`go_to`](Self::go_to) should only be made with an index previously
 /// produced by this type for the specific haystack. Failure to do so, may cause a panic if indexing
 /// on an invalid unicode boundary.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct StrStack<'a> {
     inner: &'a str,
     index: usize,
@@ -161,7 +161,7 @@ impl<'a> Debug for StrStack<'a> {
 
 /// A haystack type for matching against the [`u8`]s in a [`&[u8]`](slice). This type provides very
 /// straightforward indexing and iteration over the contained slice.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct ByteStack<'a> {
     inner: &'a [u8],
     index: usize,

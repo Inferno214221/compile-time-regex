@@ -110,11 +110,14 @@ pub struct QuantifierNToM<I: HaystackItem, A: Matcher<I>, const N: usize, const 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> for QuantifierNToM<I, A, N, M> {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         let mut count = 0;
-        while A::matches(hay) {
-            count += 1;
-
-            if count == M && count >= N {
+        loop {
+            if count >= N && count == M {
                 return true;
+            }
+            if A::matches(hay) {
+                count += 1;
+            } else {
+                break;
             }
         }
         N <= count && count <= M
@@ -144,11 +147,14 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
 
     fn captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
         let mut count = 0;
-        while A::captures(hay, caps) {
-            count += 1;
-
-            if count == M && count >= N {
+        loop {
+            if count >= N && count == M {
                 return true;
+            }
+            if A::captures(hay, caps) {
+                count += 1;
+            } else {
+                break;
             }
         }
         N <= count && count <= M

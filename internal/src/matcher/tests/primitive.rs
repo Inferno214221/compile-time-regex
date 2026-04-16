@@ -3,6 +3,20 @@ use crate::haystack::{Haystack, IntoHaystack};
 
 use super::*;
 
+/// Macro to test primitive successful matches and default implementations for Matcher methods.
+///
+/// # Arguments
+/// ```ignore
+/// test_matches!(pattern, hay+progress?, index?)
+/// ```
+///
+/// # Generates
+/// Code to test the following functionality:
+/// - `pattern` matches the haystack when starting at `progress`, leaving the haystack at `index`.
+/// - `pattern::captures` matches exactly the same as `pattern::matches` without performing any
+/// capturing.
+/// - `pattern::all_matches` and `pattern::all_captures` produce a single value which is `index`.
+#[macro_export]
 macro_rules! test_matches {
     ($pattern:ty, $hay:literal, $index:literal) => {
         test_matches!($pattern, $hay+0, $index)
@@ -22,8 +36,10 @@ macro_rules! test_matches {
         assert!(<$pattern>::matches(&mut hay_match));
         assert!(<$pattern>::captures(&mut hay_capture, &mut caps_capture));
 
-        assert_eq!(caps, caps);
-        assert_eq!(hay_match, hay_capture);
+        assert_eq!(caps_capture, caps);
+
+        assert_eq!(hay_match.index(), $index);
+        assert_eq!(hay_capture.index(), $index);
 
         assert_eq!(
             <$pattern>::all_matches(&mut hay.clone()),
@@ -36,6 +52,20 @@ macro_rules! test_matches {
     };
 }
 
+/// Macro to test primitive unsuccessful matches and default implementations for Matcher methods.
+///
+/// # Arguments
+/// ```ignore
+/// test_no_matches!(pattern, hay+progress?, index?)
+/// ```
+///
+/// # Generates
+/// Code to test the following functionality:
+/// - `pattern` doesn't matches the haystack when starting at `progress`, leaving the haystack at
+/// `index`. Note that in general, `Matcher` doesn't specify where the index of the haystack should
+/// sit after a failed match but for primitives, we're testing it anyway.
+/// - `pattern::all_matches` and `pattern::all_captures` produce no values.
+#[macro_export]
 macro_rules! test_no_matches {
     ($pattern:ty, $hay:literal, $index:literal) => {
         test_no_matches!($pattern, $hay+0, $index)
@@ -54,6 +84,9 @@ macro_rules! test_no_matches {
 
         assert!(!<$pattern>::matches(&mut hay_match));
         assert!(!<$pattern>::captures(&mut hay_capture, &mut caps_capture));
+
+        assert_eq!(hay_match.index(), $index);
+        assert_eq!(hay_capture.index(), $index);
 
         assert_eq!(<$pattern>::all_matches(&mut hay.clone()), vec![]);
         assert_eq!(<$pattern>::all_captures(&mut hay.clone(), &mut caps.clone()), vec![]);

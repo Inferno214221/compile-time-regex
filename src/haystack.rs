@@ -5,7 +5,7 @@
 //! different strings and other types, but not all of the traits will be required.
 //!
 //! The main traits in this crate are chained together with associated items:
-//! ```
+//! ```no_run
 //! trait HaystackItem {}
 //!
 //! trait HaystackSlice<'a> {

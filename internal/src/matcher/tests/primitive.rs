@@ -7,7 +7,7 @@ use super::*;
 ///
 /// # Arguments
 /// ```ignore
-/// test_matches!(pattern, hay+progress?, index?)
+/// test_matches_with_index!(pattern, hay+progress?, index?)
 /// ```
 ///
 /// # Generates
@@ -17,12 +17,12 @@ use super::*;
 /// capturing.
 /// - `pattern::all_matches` and `pattern::all_captures` produce a single value which is `index`.
 #[macro_export]
-macro_rules! test_matches {
+macro_rules! test_matches_with_index {
     ($pattern:ty, $hay:literal, $index:literal) => {
-        test_matches!($pattern, $hay+0, $index)
+        test_matches_with_index!($pattern, $hay+0, $index)
     };
     ($pattern:ty, $hay:literal+$progress:literal) => {
-        test_matches!($pattern, $hay+$progress, $progress)
+        test_matches_with_index!($pattern, $hay+$progress, $progress)
     };
     ($pattern:ty, $hay:literal+$progress:literal, $index:literal) => {
         let mut hay = $hay.into_haystack();
@@ -56,7 +56,7 @@ macro_rules! test_matches {
 ///
 /// # Arguments
 /// ```ignore
-/// test_no_matches!(pattern, hay+progress?, index?)
+/// test_doesnt_match_with_index!(pattern, hay+progress?, index?)
 /// ```
 ///
 /// # Generates
@@ -66,12 +66,12 @@ macro_rules! test_matches {
 /// sit after a failed match but for primitives, we're testing it anyway.
 /// - `pattern::all_matches` and `pattern::all_captures` produce no values.
 #[macro_export]
-macro_rules! test_no_matches {
+macro_rules! test_doesnt_match_with_index {
     ($pattern:ty, $hay:literal, $index:literal) => {
-        test_no_matches!($pattern, $hay+0, $index)
+        test_doesnt_match_with_index!($pattern, $hay+0, $index)
     };
     ($pattern:ty, $hay:literal+$progress:literal) => {
-        test_no_matches!($pattern, $hay+$progress, $progress)
+        test_doesnt_match_with_index!($pattern, $hay+$progress, $progress)
     };
     ($pattern:ty, $hay:literal+$progress:literal, $index:literal) => {
         let mut hay = $hay.into_haystack();
@@ -100,17 +100,17 @@ mod byte {
 
     #[test]
     fn correct_match() {
-        test_matches!(ByteA, b"a", 1);
+        test_matches_with_index!(ByteA, b"a", 1);
     }
 
     #[test]
     fn incorrect_doesnt_match_or_progress() {
-        test_no_matches!(ByteA, b"b", 0);
+        test_doesnt_match_with_index!(ByteA, b"b", 0);
     }
 
     #[test]
     fn empty_doesnt_match_or_progress() {
-        test_no_matches!(ByteA, b"", 0);
+        test_doesnt_match_with_index!(ByteA, b"", 0);
     }
 }
 
@@ -121,23 +121,23 @@ mod byte_range {
 
     #[test]
     fn correct_match() {
-        test_matches!(ByteRangeAC, b"b", 1);
+        test_matches_with_index!(ByteRangeAC, b"b", 1);
     }
 
     #[test]
     fn bounds_match() {
-        test_matches!(ByteRangeAC, b"a", 1);
-        test_matches!(ByteRangeAC, b"c", 1);
+        test_matches_with_index!(ByteRangeAC, b"a", 1);
+        test_matches_with_index!(ByteRangeAC, b"c", 1);
     }
 
     #[test]
     fn incorrect_match() {
-        test_no_matches!(ByteRangeAC, b"d", 0);
+        test_doesnt_match_with_index!(ByteRangeAC, b"d", 0);
     }
 
     #[test]
     fn empty_doesnt_match_or_progress() {
-        test_no_matches!(ByteRangeAC, b"", 0);
+        test_doesnt_match_with_index!(ByteRangeAC, b"", 0);
     }
 }
 
@@ -148,17 +148,17 @@ mod scalar {
 
     #[test]
     fn correct_match() {
-        test_matches!(ScalarA, "a", 1);
+        test_matches_with_index!(ScalarA, "a", 1);
     }
 
     #[test]
     fn incorrect_doesnt_match_or_progress() {
-        test_no_matches!(ScalarA, "b", 0);
+        test_doesnt_match_with_index!(ScalarA, "b", 0);
     }
 
     #[test]
     fn empty_doesnt_match_or_progress() {
-        test_no_matches!(ScalarA, "", 0);
+        test_doesnt_match_with_index!(ScalarA, "", 0);
     }
 }
 
@@ -169,23 +169,23 @@ mod scalar_range {
 
     #[test]
     fn correct_match() {
-        test_matches!(ScalarRangeAC, "b", 1);
+        test_matches_with_index!(ScalarRangeAC, "b", 1);
     }
 
     #[test]
     fn bounds_match() {
-        test_matches!(ScalarRangeAC, "a", 1);
-        test_matches!(ScalarRangeAC, "c", 1);
+        test_matches_with_index!(ScalarRangeAC, "a", 1);
+        test_matches_with_index!(ScalarRangeAC, "c", 1);
     }
 
     #[test]
     fn incorrect_doesnt_match() {
-        test_no_matches!(ScalarRangeAC, "d", 0);
+        test_doesnt_match_with_index!(ScalarRangeAC, "d", 0);
     }
 
     #[test]
     fn empty_doesnt_match() {
-        test_no_matches!(ScalarRangeAC, "", 0);
+        test_doesnt_match_with_index!(ScalarRangeAC, "", 0);
     }
 }
 
@@ -194,12 +194,12 @@ mod always {
 
     #[test]
     fn full_match() {
-        test_matches!(Always, "a", 0);
+        test_matches_with_index!(Always, "a", 0);
     }
 
     #[test]
     fn empty_match() {
-        test_matches!(Always, "", 0);
+        test_matches_with_index!(Always, "", 0);
     }
 }
 
@@ -208,17 +208,17 @@ mod start {
 
     #[test]
     fn correct_match() {
-        test_matches!(Start, "ab", 0);
+        test_matches_with_index!(Start, "ab", 0);
     }
 
     #[test]
     fn incorrect_doesnt_match() {
-        test_no_matches!(Start, "ab"+1);
+        test_doesnt_match_with_index!(Start, "ab"+1);
     }
 
     #[test]
     fn empty_match() {
-        test_matches!(Start, "", 0);
+        test_matches_with_index!(Start, "", 0);
     }
 }
 
@@ -227,17 +227,17 @@ mod end {
 
     #[test]
     fn correct_match() {
-        test_matches!(End, "a"+1);
+        test_matches_with_index!(End, "a"+1);
     }
 
     #[test]
     fn incorrect_doesnt_match() {
-        test_no_matches!(End, "a", 0);
+        test_doesnt_match_with_index!(End, "a", 0);
     }
 
     #[test]
     fn empty_match() {
-        test_matches!(End, "", 0);
+        test_matches_with_index!(End, "", 0);
     }
 }
 
@@ -246,32 +246,32 @@ mod line_start {
 
     #[test]
     fn first_pos_match() {
-        test_matches!(LineStart, "", 0);
-        test_matches!(LineStart, "a", 0);
+        test_matches_with_index!(LineStart, "", 0);
+        test_matches_with_index!(LineStart, "a", 0);
     }
 
     #[test]
     fn post_newline_match() {
-        test_matches!(LineStart, "a\n"+2);
-        test_matches!(LineStart, "a\nb"+2);
+        test_matches_with_index!(LineStart, "a\n"+2);
+        test_matches_with_index!(LineStart, "a\nb"+2);
     }
 
     #[test]
     fn non_first_pos_doesnt_match() {
-        test_no_matches!(LineStart, "a"+1);
-        test_no_matches!(LineStart, "ab"+1);
+        test_doesnt_match_with_index!(LineStart, "a"+1);
+        test_doesnt_match_with_index!(LineStart, "ab"+1);
     }
 
     #[test]
     fn newline_adjacent_doesnt_match() {
-        test_no_matches!(LineStart, "a\nb"+1);
-        test_no_matches!(LineStart, "a\nb"+3);
+        test_doesnt_match_with_index!(LineStart, "a\nb"+1);
+        test_doesnt_match_with_index!(LineStart, "a\nb"+3);
     }
 
     #[test]
     fn post_return_doesnt_match() {
-        test_no_matches!(LineStart, "a\r"+2);
-        test_no_matches!(LineStart, "a\rb"+2);
+        test_doesnt_match_with_index!(LineStart, "a\r"+2);
+        test_doesnt_match_with_index!(LineStart, "a\rb"+2);
     }
 }
 
@@ -280,32 +280,32 @@ mod line_end {
 
     #[test]
     fn last_pos_match() {
-        test_matches!(LineEnd, ""+0);
-        test_matches!(LineEnd, "a"+1);
+        test_matches_with_index!(LineEnd, ""+0);
+        test_matches_with_index!(LineEnd, "a"+1);
     }
 
     #[test]
     fn pre_newline_match() {
-        test_matches!(LineEnd, "\n"+0);
-        test_matches!(LineEnd, "a\n"+1);
+        test_matches_with_index!(LineEnd, "\n"+0);
+        test_matches_with_index!(LineEnd, "a\n"+1);
     }
 
     #[test]
     fn non_last_pos_doesnt_match() {
-        test_no_matches!(LineEnd, "a"+0);
-        test_no_matches!(LineEnd, "ab"+1);
+        test_doesnt_match_with_index!(LineEnd, "a"+0);
+        test_doesnt_match_with_index!(LineEnd, "ab"+1);
     }
 
     #[test]
     fn newline_adjacent_doesnt_match() {
-        test_no_matches!(LineEnd, "a\nb"+0);
-        test_no_matches!(LineEnd, "a\nb"+2);
+        test_doesnt_match_with_index!(LineEnd, "a\nb"+0);
+        test_doesnt_match_with_index!(LineEnd, "a\nb"+2);
     }
 
     #[test]
     fn pre_return_doesnt_match() {
-        test_no_matches!(LineEnd, "\r"+0);
-        test_no_matches!(LineEnd, "a\rb"+1);
+        test_doesnt_match_with_index!(LineEnd, "\r"+0);
+        test_doesnt_match_with_index!(LineEnd, "a\rb"+1);
     }
 }
 
@@ -314,50 +314,50 @@ mod crlf_start {
 
     #[test]
     fn first_pos_match() {
-        test_matches!(CRLFStart, "", 0);
-        test_matches!(CRLFStart, "a", 0);
+        test_matches_with_index!(CRLFStart, "", 0);
+        test_matches_with_index!(CRLFStart, "a", 0);
     }
 
     #[test]
     fn post_newline_match() {
-        test_matches!(CRLFStart, "a\n"+2);
-        test_matches!(CRLFStart, "a\nb"+2);
+        test_matches_with_index!(CRLFStart, "a\n"+2);
+        test_matches_with_index!(CRLFStart, "a\nb"+2);
     }
 
     #[test]
     fn post_return_match() {
-        test_matches!(CRLFStart, "a\r"+2);
-        test_matches!(CRLFStart, "a\rb"+2);
+        test_matches_with_index!(CRLFStart, "a\r"+2);
+        test_matches_with_index!(CRLFStart, "a\rb"+2);
     }
 
     #[test]
     fn post_return_newline_match() {
-        test_matches!(CRLFStart, "a\r\n"+3);
-        test_matches!(CRLFStart, "a\r\nb"+3);
+        test_matches_with_index!(CRLFStart, "a\r\n"+3);
+        test_matches_with_index!(CRLFStart, "a\r\nb"+3);
     }
 
     #[test]
     fn non_first_pos_doesnt_match() {
-        test_no_matches!(CRLFStart, "a"+1);
-        test_no_matches!(CRLFStart, "ab"+1);
+        test_doesnt_match_with_index!(CRLFStart, "a"+1);
+        test_doesnt_match_with_index!(CRLFStart, "ab"+1);
     }
 
     #[test]
     fn newline_adjacent_doesnt_match() {
-        test_no_matches!(CRLFStart, "a\nb"+1);
-        test_no_matches!(CRLFStart, "a\nb"+3);
+        test_doesnt_match_with_index!(CRLFStart, "a\nb"+1);
+        test_doesnt_match_with_index!(CRLFStart, "a\nb"+3);
     }
 
     #[test]
     fn return_adjacent_doesnt_match() {
-        test_no_matches!(CRLFStart, "a\rb"+1);
-        test_no_matches!(CRLFStart, "a\rb"+3);
+        test_doesnt_match_with_index!(CRLFStart, "a\rb"+1);
+        test_doesnt_match_with_index!(CRLFStart, "a\rb"+3);
     }
 
     #[test]
     fn post_return_pre_newline_match() {
-        test_no_matches!(CRLFStart, "a\r\n"+2);
-        test_no_matches!(CRLFStart, "a\r\nb"+2);
+        test_doesnt_match_with_index!(CRLFStart, "a\r\n"+2);
+        test_doesnt_match_with_index!(CRLFStart, "a\r\nb"+2);
     }
 }
 
@@ -366,49 +366,49 @@ mod crlf_end {
 
     #[test]
     fn last_pos_match() {
-        test_matches!(CRLFEnd, ""+0);
-        test_matches!(CRLFEnd, "a"+1);
+        test_matches_with_index!(CRLFEnd, ""+0);
+        test_matches_with_index!(CRLFEnd, "a"+1);
     }
 
     #[test]
     fn pre_newline_match() {
-        test_matches!(CRLFEnd, "\n"+0);
-        test_matches!(CRLFEnd, "a\n"+1);
+        test_matches_with_index!(CRLFEnd, "\n"+0);
+        test_matches_with_index!(CRLFEnd, "a\n"+1);
     }
 
     #[test]
     fn pre_return_match() {
-        test_matches!(CRLFEnd, "a\r"+1);
-        test_matches!(CRLFEnd, "a\rb"+1);
+        test_matches_with_index!(CRLFEnd, "a\r"+1);
+        test_matches_with_index!(CRLFEnd, "a\rb"+1);
     }
 
     #[test]
     fn pre_return_newline_match() {
-        test_matches!(CRLFEnd, "a\r\n"+1);
-        test_matches!(CRLFEnd, "a\r\nb"+1);
+        test_matches_with_index!(CRLFEnd, "a\r\n"+1);
+        test_matches_with_index!(CRLFEnd, "a\r\nb"+1);
     }
 
     #[test]
     fn non_last_pos_doesnt_match() {
-        test_no_matches!(CRLFEnd, "a"+0);
-        test_no_matches!(CRLFEnd, "ab"+1);
+        test_doesnt_match_with_index!(CRLFEnd, "a"+0);
+        test_doesnt_match_with_index!(CRLFEnd, "ab"+1);
     }
 
     #[test]
     fn newline_adjacent_doesnt_match() {
-        test_no_matches!(CRLFEnd, "a\nb"+0);
-        test_no_matches!(CRLFEnd, "a\nb"+2);
+        test_doesnt_match_with_index!(CRLFEnd, "a\nb"+0);
+        test_doesnt_match_with_index!(CRLFEnd, "a\nb"+2);
     }
 
     #[test]
     fn return_adjacent_doesnt_match() {
-        test_no_matches!(CRLFEnd, "a\rb"+0);
-        test_no_matches!(CRLFEnd, "a\rb"+2);
+        test_doesnt_match_with_index!(CRLFEnd, "a\rb"+0);
+        test_doesnt_match_with_index!(CRLFEnd, "a\rb"+2);
     }
 
     #[test]
     fn post_return_pre_newline_match() {
-        test_no_matches!(CRLFEnd, "a\r\n"+2);
-        test_no_matches!(CRLFEnd, "a\r\nb"+2);
+        test_doesnt_match_with_index!(CRLFEnd, "a\r\n"+2);
+        test_doesnt_match_with_index!(CRLFEnd, "a\r\nb"+2);
     }
 }

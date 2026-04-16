@@ -3,7 +3,7 @@ use crate::haystack::{Haystack, IntoHaystack};
 
 use super::*;
 
-use crate::test_matches_with_index;
+use crate::{implements_debug, test_matches_with_index};
 
 /// Macro to test unsuccessful matches and default implementations for Matcher methods.
 ///
@@ -16,6 +16,7 @@ use crate::test_matches_with_index;
 /// Code to test the following functionality:
 /// - `pattern` doesn't matches the haystack when starting at `progress`.
 /// - `pattern::all_matches` and `pattern::all_captures` produce no values.
+#[macro_export]
 macro_rules! test_doesnt_match_no_index {
     ($pattern:ty, $hay:literal) => {
         test_doesnt_match_no_index!($pattern, $hay+0)
@@ -49,6 +50,7 @@ macro_rules! test_doesnt_match_no_index {
 /// - `pattern` matches the haystack when starting at `progress`, leaving the haystack at the last
 /// value of `indices`.
 /// - `pattern::all_matches` and `pattern::all_captures` produce values equal to `indices`.
+#[macro_export]
 macro_rules! test_matches_with_indicies {
     ($pattern:ty, $hay:literal, $indices:expr) => {
         test_matches_with_indicies!($pattern, $hay+0, $indices)
@@ -200,7 +202,11 @@ mod quantifer_then {
     fn performs_rollback_match() {
         test_doesnt_match_no_index!(QuantifierThen<_, QuantifierNOrMoreA<2>, ScalarA>, "aa");
         test_matches_with_index!(QuantifierThen<_, QuantifierNOrMoreA<2>, ScalarA>, "aaa", 3);
-        test_matches_with_indicies!(QuantifierThen<_, QuantifierNOrMoreA<2>, ScalarA>, "aaaa", vec![3, 4]);
+        test_matches_with_indicies!(
+            QuantifierThen<_, QuantifierNOrMoreA<2>, ScalarA>,
+            "aaaa",
+            vec![3, 4]
+        );
     }
 
     #[test]
@@ -223,9 +229,9 @@ mod quantifer_then {
     #[test]
     fn captures_prioritised_correctly() {
         let expected_caps = [
-            ["bb", "aa"],
+            ["bba", "aa"],
             ["bb", "aaa"],
-            ["bba", "aa"]
+            ["bb", "aa"],
         ];
 
         let mut hay = "bbaaa".into_haystack();
@@ -233,14 +239,26 @@ mod quantifer_then {
 
         let all_caps = QuadraticLetterOrA::all_captures(&mut hay, &mut caps)
             .into_iter()
-            .map(|(_, caps)| caps);
+            .map(|(_, caps)| caps)
+            .rev();
 
         for (index, caps) in all_caps.enumerate() {
             let caps_array = caps.into_array::<2>()
                 .into_iter()
                 .map(|cap_range| hay.slice_with(cap_range.unwrap()))
                 .collect::<Vec<_>>();
+
             assert_eq!(caps_array, expected_caps[index]);
         }
     }
+}
+
+#[test]
+fn implements_debug() {
+    implements_debug!(
+        QuantifierNA<1>,
+        QuantifierNOrMoreA<1>,
+        QuantifierNToMA<1, 2>,
+        QuantifierThen<char, QuantifierNOrMoreA<1>, ScalarA>
+    );
 }

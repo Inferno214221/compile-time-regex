@@ -93,10 +93,14 @@ macro_rules! test_doesnt_match_with_index {
     };
 }
 
+type ByteA = Byte<b'a'>;
+type ByteRangeAC = ByteRange<b'a', b'c'>;
+
+type ScalarA = Scalar<'a'>;
+type ScalarRangeAC = ScalarRange<'a', 'c'>;
+
 mod byte {
     use super::*;
-
-    type ByteA = Byte<b'a'>;
 
     #[test]
     fn correct_match() {
@@ -116,8 +120,6 @@ mod byte {
 
 mod byte_range {
     use super::*;
-
-    type ByteRangeAC = ByteRange<b'a', b'c'>;
 
     #[test]
     fn correct_match() {
@@ -144,8 +146,6 @@ mod byte_range {
 mod scalar {
     use super::*;
 
-    type ScalarA = Scalar<'a'>;
-
     #[test]
     fn correct_match() {
         test_matches_with_index!(ScalarA, "a", 1);
@@ -164,8 +164,6 @@ mod scalar {
 
 mod scalar_range {
     use super::*;
-
-    type ScalarRangeAC = ScalarRange<'a', 'c'>;
 
     #[test]
     fn correct_match() {
@@ -411,4 +409,32 @@ mod crlf_end {
         test_doesnt_match_with_index!(CRLFEnd, "a\r\n"+2);
         test_doesnt_match_with_index!(CRLFEnd, "a\r\nb"+2);
     }
+}
+
+#[macro_export]
+macro_rules! implements_debug {
+    ($pattern:ty, $($more:ty),+) => {
+        println!("{:?}", <$pattern>::default());
+        implements_debug!($($more),+);
+    };
+    ($pattern:ty) => {
+        println!("{:?}", <$pattern>::default());
+    };
+}
+
+#[test]
+fn implements_debug() {
+    implements_debug!(
+        ByteA,
+        ByteRangeAC,
+        ScalarA,
+        ScalarRangeAC,
+        Always,
+        Start,
+        End,
+        LineStart,
+        LineEnd,
+        CRLFStart,
+        CRLFEnd
+    );
 }

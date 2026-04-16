@@ -38,6 +38,7 @@
           gcc
           cargo-expand
           cargo-public-api
+          cargo-llvm-cov
           man-pages
           rust-analyzer-nightly
         ] ++ buildInputs;

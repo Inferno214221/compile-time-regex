@@ -38,11 +38,11 @@ macro_rules! test_doesnt_match_no_index {
     };
 }
 
-/// Macro to test successful matches with multiples hastack indicies.
+/// Macro to test successful matches with multiples hastack indices.
 ///
 /// # Arguments
 /// ```ignore
-/// test_matches_with_indicies!(pattern, hay+progress?, indices?)
+/// test_matches_with_indices!(pattern, hay+progress?, indices?)
 /// ```
 ///
 /// # Generates
@@ -51,12 +51,12 @@ macro_rules! test_doesnt_match_no_index {
 /// value of `indices`.
 /// - `pattern::all_matches` and `pattern::all_captures` produce values equal to `indices`.
 #[macro_export]
-macro_rules! test_matches_with_indicies {
+macro_rules! test_matches_with_indices {
     ($pattern:ty, $hay:literal, $indices:expr) => {
-        test_matches_with_indicies!($pattern, $hay+0, $indices)
+        test_matches_with_indices!($pattern, $hay+0, $indices)
     };
     ($pattern:ty, $hay:literal+$progress:literal) => {
-        test_matches_with_indicies!($pattern, $hay+$progress, vec![$progress])
+        test_matches_with_indices!($pattern, $hay+$progress, vec![$progress])
     };
     ($pattern:ty, $hay:literal+$progress:literal, $indices:expr) => {
         let mut hay = $hay.into_haystack();
@@ -125,8 +125,8 @@ mod quantifier_n_or_more {
 
     #[test]
     fn more_than_n_match() {
-        test_matches_with_indicies!(QuantifierNOrMoreA<1>, "aa", vec![1, 2]);
-        test_matches_with_indicies!(QuantifierNOrMoreA<2>, "aaaaa", vec![2, 3, 4, 5]);
+        test_matches_with_indices!(QuantifierNOrMoreA<1>, "aa", vec![1, 2]);
+        test_matches_with_indices!(QuantifierNOrMoreA<2>, "aaaaa", vec![2, 3, 4, 5]);
     }
 
     #[test]
@@ -150,11 +150,11 @@ mod quantifier_n_to_m {
 
     #[test]
     fn n_to_m_match() {
-        test_matches_with_indicies!(QuantifierNToMA<1, 3>, "a", vec![1]);
-        test_matches_with_indicies!(QuantifierNToMA<1, 3>, "aa", vec![1, 2]);
-        test_matches_with_indicies!(QuantifierNToMA<1, 3>, "aaa", vec![1, 2, 3]);
-        test_matches_with_indicies!(QuantifierNToMA<0, 1>, "", vec![0]);
-        test_matches_with_indicies!(QuantifierNToMA<0, 1>, "a", vec![0, 1]);
+        test_matches_with_indices!(QuantifierNToMA<1, 3>, "a", vec![1]);
+        test_matches_with_indices!(QuantifierNToMA<1, 3>, "aa", vec![1, 2]);
+        test_matches_with_indices!(QuantifierNToMA<1, 3>, "aaa", vec![1, 2, 3]);
+        test_matches_with_indices!(QuantifierNToMA<0, 1>, "", vec![0]);
+        test_matches_with_indices!(QuantifierNToMA<0, 1>, "a", vec![0, 1]);
     }
 
     #[test]
@@ -167,8 +167,8 @@ mod quantifier_n_to_m {
 
     #[test]
     fn more_than_m_restricted_match() {
-        test_matches_with_indicies!(QuantifierNToMA<0, 1>, "aa", vec![0, 1]);
-        test_matches_with_indicies!(QuantifierNToMA<1, 3>, "aaaa", vec![1, 2, 3]);
+        test_matches_with_indices!(QuantifierNToMA<0, 1>, "aa", vec![0, 1]);
+        test_matches_with_indices!(QuantifierNToMA<1, 3>, "aaaa", vec![1, 2, 3]);
     }
 
     #[test]
@@ -202,7 +202,7 @@ mod quantifer_then {
     fn performs_rollback_match() {
         test_doesnt_match_no_index!(QuantifierThen<_, QuantifierNOrMoreA<2>, ScalarA>, "aa");
         test_matches_with_index!(QuantifierThen<_, QuantifierNOrMoreA<2>, ScalarA>, "aaa", 3);
-        test_matches_with_indicies!(
+        test_matches_with_indices!(
             QuantifierThen<_, QuantifierNOrMoreA<2>, ScalarA>,
             "aaaa",
             vec![3, 4]
@@ -211,8 +211,8 @@ mod quantifer_then {
 
     #[test]
     fn quadratic_all_matches() {
-        test_matches_with_indicies!(QuadraticA2, "aaaa", vec![4]);
-        test_matches_with_indicies!(QuadraticA2, "aaaaa", vec![4, 5, 5]);
+        test_matches_with_indices!(QuadraticA2, "aaaa", vec![4]);
+        test_matches_with_indices!(QuadraticA2, "aaaaa", vec![4, 5, 5]);
     }
 
     #[test]

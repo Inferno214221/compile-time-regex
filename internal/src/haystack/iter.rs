@@ -59,7 +59,7 @@ pub trait HaystackIter<'a>: Debug + Clone
 /// (possibly zero) and the character itself.
 pub fn first_char_and_width(value: &str) -> (usize, Option<char>) {
     // Unfortunately, I don't think there is a stable way to get `char`s from a `str` without using
-    // the `chars` or `char_indicies` iterators. We can calculate the width easily but may as well
+    // the `chars` or `char_indices` iterators. We can calculate the width easily but may as well
     // have it done for us.
     let mut iter = value.char_indices();
     let first = iter.next();

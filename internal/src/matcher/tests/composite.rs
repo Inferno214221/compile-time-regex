@@ -3,7 +3,7 @@ use crate::haystack::{Haystack, IntoHaystack};
 
 use super::*;
 
-use crate::{implements_debug, test_matches_with_index, test_matches_with_indicies};
+use crate::{implements_debug, test_matches_with_index, test_matches_with_indices};
 
 type ScalarA = Scalar<'a'>;
 type ScalarB = Scalar<'b'>;
@@ -15,7 +15,7 @@ mod or {
     fn a_or_b_match() {
         test_matches_with_index!(Or<_, ScalarA, ScalarB>, "a", 1);
         test_matches_with_index!(Or<_, ScalarA, ScalarB>, "b", 1);
-        test_matches_with_indicies!(
+        test_matches_with_indices!(
             QuantifierNOrMore<_, Or<_, ScalarA, ScalarB>, 1>,
             "ab",
             vec![1, 2]

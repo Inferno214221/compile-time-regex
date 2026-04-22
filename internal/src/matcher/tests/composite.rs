@@ -124,7 +124,9 @@ mod or {
 #[test]
 fn implements_debug() {
     implements_debug!(
-        Or<char, ScalarA, ScalarB>,
-        Then<char, ScalarA, ScalarB>
+        Or<char, ScalarA, ScalarA>,
+        Or4<char, ScalarA, ScalarA, ScalarA, ScalarA>,
+        Then<char, ScalarA, ScalarA>,
+        Then4<char, ScalarA, ScalarA, ScalarA, ScalarA>
     );
 }

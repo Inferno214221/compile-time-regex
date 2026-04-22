@@ -207,6 +207,11 @@ mod quantifer_then {
             "aaaa",
             vec![3, 4]
         );
+        test_matches_with_indices!(
+            QuantifierThen<_, Quantifier2OrMore<ScalarRange<'a', 'z'>>, Then<_, ScalarA, End>>,
+            "bba",
+            vec![3]
+        );
     }
 
     #[test]

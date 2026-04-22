@@ -195,20 +195,20 @@ mod quantifer_then {
     type Capturing2OrMoreLetters = CaptureGroup<char, Quantifier2OrMore<ScalarRange<'a', 'z'>>, 0>;
     type Capturing2OrMoreA = CaptureGroup<char, Quantifier2OrMore<ScalarA>, 1>;
 
-    type QuadraticA2 = QuantifierThen<char, QuantifierNOrMoreA<2>, QuantifierNOrMoreA<2>>;
-    type QuadraticLetterOrA = QuantifierThen<char, Capturing2OrMoreLetters, Capturing2OrMoreA>;
+    type QuadraticA2 = Then<char, QuantifierNOrMoreA<2>, QuantifierNOrMoreA<2>>;
+    type QuadraticLetterOrA = Then<char, Capturing2OrMoreLetters, Capturing2OrMoreA>;
 
     #[test]
     fn performs_rollback_match() {
-        test_doesnt_match_no_index!(QuantifierThen<_, QuantifierNOrMoreA<2>, ScalarA>, "aa");
-        test_matches_with_index!(QuantifierThen<_, QuantifierNOrMoreA<2>, ScalarA>, "aaa", 3);
+        test_doesnt_match_no_index!(Then<_, QuantifierNOrMoreA<2>, ScalarA>, "aa");
+        test_matches_with_index!(Then<_, QuantifierNOrMoreA<2>, ScalarA>, "aaa", 3);
         test_matches_with_indices!(
-            QuantifierThen<_, QuantifierNOrMoreA<2>, ScalarA>,
+            Then<_, QuantifierNOrMoreA<2>, ScalarA>,
             "aaaa",
             vec![3, 4]
         );
         test_matches_with_indices!(
-            QuantifierThen<_, Quantifier2OrMore<ScalarRange<'a', 'z'>>, Then<_, ScalarA, End>>,
+            Then<_, Quantifier2OrMore<ScalarRange<'a', 'z'>>, Then<_, ScalarA, End>>,
             "bba",
             vec![3]
         );
@@ -263,7 +263,6 @@ fn implements_debug() {
     implements_debug!(
         QuantifierNA<1>,
         QuantifierNOrMoreA<1>,
-        QuantifierNToMA<1, 2>,
-        QuantifierThen<char, QuantifierNOrMoreA<1>, ScalarA>
+        QuantifierNToMA<1, 2>
     );
 }

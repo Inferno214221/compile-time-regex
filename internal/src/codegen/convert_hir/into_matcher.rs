@@ -56,12 +56,6 @@ struct Concat(pub Vec<Hir>);
 #[derive(Debug)]
 struct Alternation(pub Vec<Hir>);
 
-#[derive(Debug)]
-struct Backtrack {
-    rep: Repetition,
-    then: Vec<Hir>,
-}
-
 impl IntoMatcherExpr for u8 {
     fn into_matcher_expr<I: CodegenItem>(self, _caps: &mut Groups) -> TokenStream {
         assert_eq!(type_name::<I>(), type_name::<u8>());
@@ -211,57 +205,6 @@ impl IntoMatcherExpr for Alternation {
 
 impl IntoMatcherExpr for Concat {
     fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
-        let mut iter = self.0.into_iter();
-        let mut rep_item = None;
-        let concat = Concat(
-            iter.by_ref()
-                .take_while(|i| if let HirKind::Repetition(rep) = i.kind() {
-                    rep_item = Some(rep.clone());
-                    false
-                } else {
-                    true
-                })
-                .collect()
-        );
-        if let Some(rep) = rep_item {
-            let backtrack = Backtrack {
-                rep,
-                then: iter.collect(),
-            };
-
-            match (concat.0.len(), backtrack.then.len()) {
-                (0, 0) => unreachable!(),
-                (0, _) => backtrack.into_matcher_expr::<I>(caps),
-                (_, _) => {
-                    let item_type = type_ident::<I>();
-                    let concat_matcher = concat.write_type_basic::<I>(caps);
-                    let backtrack_matcher = backtrack.into_matcher_expr::<I>(caps);
-
-                    quote!(::ct_regex::internal::matcher::Then<#item_type, #concat_matcher, #backtrack_matcher>)
-                },
-            }
-        } else {
-            concat.write_type_basic::<I>(caps)
-        }
-    }
-}
-
-impl IntoMatcherExpr for Backtrack {
-    fn into_matcher_expr<I: CodegenItem>(mut self, caps: &mut Groups) -> TokenStream {
-        let item_type = type_ident::<I>();
-        let rep_matcher = self.rep.into_matcher_expr::<I>(caps);
-        let then_matcher = match self.then.len() {
-            0 => return rep_matcher,
-            1 => self.then.pop().unwrap().into_matcher_expr::<I>(caps),
-            _ => Concat(self.then).into_matcher_expr::<I>(caps)
-        };
-
-        quote!(::ct_regex::internal::matcher::QuantifierThen<#item_type, #rep_matcher, #then_matcher>)
-    }
-}
-
-impl Concat {
-    fn write_type_basic<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
         write_chunked::<Then<u8, A, A>, I, _>(caps, self.0)
     }
 }

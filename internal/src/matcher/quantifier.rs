@@ -201,12 +201,13 @@ pub struct QuantifierThen<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>>(
 
 impl<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>> Matcher<I> for QuantifierThen<I, Q, T> {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
-        let mut rollback = hay.clone();
+        let start = hay.index();
         if Then::<I, Q, T>::matches(hay) {
             true
         } else {
             // Try all valid match points for Q in reverse order (greedy).
-            let match_points = Q::all_matches(&mut rollback);
+            hay.rollback(start);
+            let match_points = Q::all_matches(hay);
 
             for point in match_points.into_iter().rev() {
                 // Overwrite the provided haystack with the progressed version.
@@ -224,12 +225,14 @@ impl<I: HaystackItem, Q: Matcher<I>, T: Matcher<I>> Matcher<I> for QuantifierThe
     }
 
     fn captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
-        let mut rollback = (hay.clone(), caps.clone());
+        let (initial_state, initial_caps) = (hay.index(), caps.clone());
         if Then::<I, Q, T>::captures(hay, caps) {
             true
         } else {
             // Try all valid match points for Q in reverse order (greedy).
-            let match_points = Q::all_captures(&mut rollback.0, &mut rollback.1);
+            hay.rollback(initial_state);
+            *caps = initial_caps;
+            let match_points = Q::all_captures(hay, caps);
 
             for (point_state, mut point_caps) in match_points.into_iter().rev() {
                 // Overwrite the provided haystack with the progressed version.

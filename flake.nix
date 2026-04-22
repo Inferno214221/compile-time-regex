@@ -40,7 +40,6 @@
           cargo-public-api
           cargo-llvm-cov
           man-pages
-          rust-analyzer-nightly
         ] ++ buildInputs;
       in with pkgs; rec
       {

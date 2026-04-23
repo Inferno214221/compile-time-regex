@@ -38,7 +38,7 @@ macro_rules! test_doesnt_match_no_index {
     };
 }
 
-/// Macro to test successful matches with multiples hastack indices.
+/// Macro to test successful matches with multiples haystack indices.
 ///
 /// # Arguments
 /// ```ignore
@@ -75,9 +75,7 @@ macro_rules! test_matches_with_indices {
         assert_eq!(hay_match.index(), *$indices.last().unwrap());
         assert_eq!(hay_capture.index(), *$indices.last().unwrap());
 
-        assert_eq!(
-            <$pattern>::all_matches(&mut hay.clone()), $indices
-        );
+        assert_eq!(<$pattern>::all_matches(&mut hay.clone()), $indices);
         assert_eq!(
             <$pattern>::all_captures(&mut hay.clone(), &mut caps.clone()),
             $indices.into_iter()

@@ -1,6 +1,6 @@
-use std::{fmt::{self, Debug}, marker::PhantomData, vec};
+use std::{fmt::{self, Debug}, iter, marker::PhantomData, vec};
 
-use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::{AllMatchesMultiple, Matcher, impl_all_matches_single}};
+use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::{Matcher, impl_all_captures_single, impl_all_matches_single}};
 
 #[derive(Default)]
 pub struct QuantifierN<I: HaystackItem, A: Matcher<I>, const N: usize>(
@@ -26,6 +26,8 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierN<
         }
         count == N
     }
+
+    impl_all_captures_single!(I);
 }
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> Debug for QuantifierN<I, A, N> {
@@ -34,6 +36,8 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Debug for QuantifierN<I, A,
     }
 }
 
+pub type AllMatchesMultiple = iter::Rev<vec::IntoIter<usize>>;
+pub type AllCapturesMultiple = iter::Rev<vec::IntoIter<(usize, IndexedCaptures)>>;
 
 #[derive(Default)]
 pub struct QuantifierNOrMore<I: HaystackItem, A: Matcher<I>, const N: usize>(
@@ -43,6 +47,7 @@ pub struct QuantifierNOrMore<I: HaystackItem, A: Matcher<I>, const N: usize>(
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNOrMore<I, A, N> {
     type AllMatches<'a, H: HaystackOf<'a, I>> = AllMatchesMultiple;
+    type AllCaptures<'a, H: HaystackOf<'a, I>> = AllCapturesMultiple;
 
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         let mut count = 0;
@@ -68,7 +73,8 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNO
                 matches.push(hay.index());
             }
         }
-        matches.into_iter()
+
+        matches.into_iter().rev()
     }
 
     fn captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
@@ -82,7 +88,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNO
     fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
         caps: &mut IndexedCaptures
-    ) -> Vec<(usize, IndexedCaptures)> {
+    ) -> Self::AllCaptures<'a, H> {
         let mut captures = vec![];
         let mut count = 0;
 
@@ -97,7 +103,8 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNO
                 captures.push((hay.index(), caps.clone()));
             }
         }
-        captures
+
+        captures.into_iter().rev()
     }
 }
 
@@ -115,6 +122,7 @@ pub struct QuantifierNToM<I: HaystackItem, A: Matcher<I>, const N: usize, const 
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> for QuantifierNToM<I, A, N, M> {
     type AllMatches<'a, H: HaystackOf<'a, I>> = AllMatchesMultiple;
+    type AllCaptures<'a, H: HaystackOf<'a, I>> = AllCapturesMultiple;
 
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         let mut count = 0;
@@ -146,11 +154,12 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
                 matches.push(hay.index());
 
                 if count == M {
-                    return matches.into_iter();
+                    return matches.into_iter().rev();
                 }
             }
         }
-        matches.into_iter()
+
+        matches.into_iter().rev()
     }
 
     fn captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
@@ -171,7 +180,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
     fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
         caps: &mut IndexedCaptures
-    ) -> Vec<(usize, IndexedCaptures)> {
+    ) -> Self::AllCaptures<'a, H> {
         let mut captures = vec![];
         let mut count = 0;
 
@@ -186,11 +195,12 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
                 captures.push((hay.index(), caps.clone()));
 
                 if count == M {
-                    return captures;
+                    return captures.into_iter().rev();
                 }
             }
         }
-        captures
+
+        captures.into_iter().rev()
     }
 }
 

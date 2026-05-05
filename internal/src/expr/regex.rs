@@ -151,9 +151,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         let mut caps = IndexedCaptures::default();
         let start = hay.index();
 
-        let all_captures = Self::Pattern::all_captures(&mut hay, &mut caps)
-            .into_iter()
-            .rev();
+        let all_captures = Self::Pattern::all_captures(&mut hay, &mut caps);
 
         for (state_fork, mut caps_fork) in all_captures {
             if hay.rollback(state_fork).is_end() {
@@ -183,9 +181,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
 
             let mut caps = IndexedCaptures::default();
 
-            let first = Self::Pattern::all_captures(&mut hay, &mut caps)
-                .into_iter()
-                .last();
+            let first = Self::Pattern::all_captures(&mut hay, &mut caps).next();
 
             hay.rollback(start);
 
@@ -221,9 +217,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
 
             let mut caps = IndexedCaptures::default();
 
-            let first = Self::Pattern::all_captures(&mut hay.clone(), &mut caps)
-                .into_iter()
-                .last();
+            let first = Self::Pattern::all_captures(&mut hay.clone(), &mut caps).next();
 
             if let Some((state_fork, mut caps_fork)) = first {
                 caps_fork.push(0, start..state_fork);

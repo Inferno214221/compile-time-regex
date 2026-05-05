@@ -1,6 +1,6 @@
 use std::fmt::{self, Debug};
 
-use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::impl_all_matches_single};
+use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::{impl_all_captures_single, impl_all_matches_single}};
 
 // New strategy: use Iterators. Lazy can wrap quantifiers which implement a Quantifier trait or
 // similar. Lazy's iterator method calls all_matches_lazy or similar and does nothing else.
@@ -41,6 +41,8 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
         Self::matches(hay)
     }
 
+    type AllCaptures<'a, H: HaystackOf<'a, I>>: Iterator<Item = (usize, IndexedCaptures)>;
+
     /// Produces a Vec of all valid captures (and accompanying haystack states) present at the start
     /// of `hay`. Used to implement backtracking for capturing methods. As with
     /// [`all_matches`](Matcher::all_matches), the resulting Vec is produced in reverse priority
@@ -52,13 +54,7 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
     fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
         caps: &mut IndexedCaptures
-    ) -> Vec<(usize, IndexedCaptures)> {
-        if Self::captures(hay, caps) {
-            vec![(hay.index(), caps.clone())]
-        } else {
-            vec![]
-        }
-    }
+    ) -> Self::AllCaptures<'a, H>;
 }
 
 #[derive(Default)]
@@ -75,6 +71,7 @@ impl<const N: u8> Matcher<u8> for Byte<N> {
     }
 
     impl_all_matches_single!(u8);
+    impl_all_captures_single!(u8);
 }
 
 impl<const N: u8> Debug for Byte<N> {
@@ -98,6 +95,7 @@ impl<const A: u8, const B: u8> Matcher<u8> for ByteRange<A, B> {
     }
 
     impl_all_matches_single!(u8);
+    impl_all_captures_single!(u8);
 }
 
 impl<const A: u8, const B: u8> Debug for ByteRange<A, B> {
@@ -120,6 +118,7 @@ impl<const N: char> Matcher<char> for Scalar<N> {
     }
 
     impl_all_matches_single!(char);
+    impl_all_captures_single!(char);
 }
 
 impl<const N: char> Debug for Scalar<N> {
@@ -142,6 +141,7 @@ impl<const A: char, const B: char> Matcher<char> for ScalarRange<A, B> {
     }
 
     impl_all_matches_single!(char);
+    impl_all_captures_single!(char);
 }
 
 impl<const A: char, const B: char> Debug for ScalarRange<A, B> {
@@ -159,6 +159,7 @@ impl<I: HaystackItem> Matcher<I> for Always {
     }
 
     impl_all_matches_single!(I);
+    impl_all_captures_single!(I);
 }
 
 impl Debug for Always {
@@ -176,6 +177,7 @@ impl<I: HaystackItem> Matcher<I> for Start {
     }
 
     impl_all_matches_single!(I);
+    impl_all_captures_single!(I);
 }
 
 impl Debug for Start {
@@ -193,6 +195,7 @@ impl<I: HaystackItem> Matcher<I> for End {
     }
 
     impl_all_matches_single!(I);
+    impl_all_captures_single!(I);
 }
 
 impl Debug for End {
@@ -210,6 +213,7 @@ impl<I: HaystackItem> Matcher<I> for LineStart {
     }
 
     impl_all_matches_single!(I);
+    impl_all_captures_single!(I);
 }
 
 impl Debug for LineStart {
@@ -227,6 +231,7 @@ impl<I: HaystackItem> Matcher<I> for LineEnd {
     }
 
     impl_all_matches_single!(I);
+    impl_all_captures_single!(I);
 }
 
 impl Debug for LineEnd {
@@ -244,6 +249,7 @@ impl<I: HaystackItem> Matcher<I> for CRLFStart {
     }
 
     impl_all_matches_single!(I);
+    impl_all_captures_single!(I);
 }
 
 impl Debug for CRLFStart {
@@ -261,6 +267,7 @@ impl<I: HaystackItem> Matcher<I> for CRLFEnd {
     }
 
     impl_all_matches_single!(I);
+    impl_all_captures_single!(I);
 }
 
 impl Debug for CRLFEnd {

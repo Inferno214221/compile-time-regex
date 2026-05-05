@@ -2,6 +2,31 @@ use std::{fmt::{self, Debug}, marker::PhantomData};
 
 use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::Matcher};
 
+pub struct AllCapturesGroup<'a, I, H, A, const N: usize>
+where
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+    A: Matcher<I>
+{
+    captures: A::AllCaptures<'a, H>,
+    start: usize,
+}
+
+impl<'a, I, H, A, const N: usize> Iterator for AllCapturesGroup<'a, I, H, A, N>
+where
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+    A: Matcher<I>
+{
+    type Item = (usize, IndexedCaptures);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let (state_fork, mut caps_fork) = self.captures.next()?;
+        caps_fork.push(N, self.start..state_fork);
+        Some((state_fork, caps_fork))
+    }
+}
+
 #[derive(Default)]
 pub struct CaptureGroup<I: HaystackItem, A: Matcher<I>, const N: usize>(
     pub PhantomData<I>,
@@ -10,6 +35,7 @@ pub struct CaptureGroup<I: HaystackItem, A: Matcher<I>, const N: usize>(
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for CaptureGroup<I, A, N> {
     type AllMatches<'a, H: HaystackOf<'a, I>> = A::AllMatches<'a, H>;
+    type AllCaptures<'a, H: HaystackOf<'a, I>> = AllCapturesGroup<'a, I, H, A, N>;
 
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         A::matches(hay)
@@ -32,15 +58,11 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for CaptureGroup
     fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
         caps: &mut IndexedCaptures
-    ) -> Vec<(usize, IndexedCaptures)> {
-        let start = hay.index();
-        let mut captures = A::all_captures(hay, caps);
-
-        for (state_fork, caps_fork) in captures.iter_mut() {
-            caps_fork.push(N, start..*state_fork);
+    ) -> Self::AllCaptures<'a, H> {
+        AllCapturesGroup {
+            start: hay.index(),
+            captures: A::all_captures(hay, caps),
         }
-
-        captures
     }
 }
 

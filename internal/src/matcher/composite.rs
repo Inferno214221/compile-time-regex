@@ -13,9 +13,14 @@ type AllMatchesOr<'a, I, H, A, B> = Chain<
     <A as Matcher<I>>::AllMatches<'a, H>,
     <B as Matcher<I>>::AllMatches<'a, H>
 >;
+type AllCapturesOr<'a, I, H, A, B> = Chain<
+    <A as Matcher<I>>::AllCaptures<'a, H>,
+    <B as Matcher<I>>::AllCaptures<'a, H>
+>;
 
 impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
     type AllMatches<'a, H: HaystackOf<'a, I>> = AllMatchesOr<'a, I, H, A, B>;
+    type AllCaptures<'a, H: HaystackOf<'a, I>> = AllCapturesOr<'a, I, H, A, B>;
 
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         let start = hay.index();
@@ -55,13 +60,12 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
     fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
         caps: &mut IndexedCaptures
-    ) -> Vec<(usize, IndexedCaptures)> {
+    ) -> Self::AllCaptures<'a, H> {
         let (state_fork, mut caps_fork) = (hay.index(), caps.clone());
-        // We match B first because the output needs to be reversed for greedy matching.
-        let mut vec = B::all_captures(hay, caps);
+
+        let a_captures = A::all_captures(hay, caps);
         hay.rollback(state_fork);
-        vec.append(&mut A::all_captures(hay, &mut caps_fork));
-        vec
+        a_captures.chain(B::all_captures(hay, &mut caps_fork))
     }
 }
 
@@ -98,6 +102,40 @@ where
     }
 }
 
+pub struct AllCapturesThen<'a, I, H, A, B>
+where
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+    A: Matcher<I>,
+    B: Matcher<I>
+{
+    a_captures: A::AllCaptures<'a, H>,
+    b_captures: Option<B::AllCaptures<'a, H>>,
+    hay: H,
+}
+
+impl<'a, I, H, A, B> Iterator for AllCapturesThen<'a, I, H, A, B>
+where
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+    A: Matcher<I>,
+    B: Matcher<I>
+{
+    type Item = (usize, IndexedCaptures);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.b_captures.as_mut().and_then(Iterator::next) {
+            Some(b) => Some(b),
+            None => {
+                let (state_fork, mut caps_fork) = self.a_captures.next()?;
+                self.hay.rollback(state_fork);
+                self.b_captures = Some(B::all_captures(&mut self.hay, &mut caps_fork));
+                self.next()
+            },
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct Then<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
     pub PhantomData<I>,
@@ -107,6 +145,7 @@ pub struct Then<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
 
 impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B> {
     type AllMatches<'a, H: HaystackOf<'a, I>> = AllMatchesThen<'a, I, H, A, B>;
+    type AllCaptures<'a, H: HaystackOf<'a, I>> = AllCapturesThen<'a, I, H, A, B>;
 
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         if let Some(state_fork) = Self::all_matches(hay).next() {
@@ -128,7 +167,7 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B>
     }
 
     fn captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
-        if let Some((state_fork, caps_fork)) = Self::all_captures(hay, caps).pop() {
+        if let Some((state_fork, caps_fork)) = Self::all_captures(hay, caps).next() {
             hay.rollback(state_fork);
             *caps = caps_fork;
             true
@@ -140,11 +179,12 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B>
     fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
         caps: &mut IndexedCaptures
-    ) -> Vec<(usize, IndexedCaptures)> {
-        A::all_captures(hay, caps).into_iter().flat_map(|(state_fork, mut caps_fork)| {
-            hay.rollback(state_fork);
-            B::all_captures(hay, &mut caps_fork)
-        }).collect()
+    ) -> Self::AllCaptures<'a, H> {
+        AllCapturesThen {
+            a_captures: A::all_captures(hay, caps),
+            b_captures: None,
+            hay: hay.clone(),
+        }
     }
 }
 
@@ -182,6 +222,10 @@ macro_rules! define_paired_n {
                 $combiner::<Z, $($pair<Z, $a, $b>),+> as Matcher<Z>
             >::AllMatches<'a, Y>;
 
+            type AllCaptures<'a, Y: HaystackOf<'a, Z>> = <
+                $combiner::<Z, $($pair<Z, $a, $b>),+> as Matcher<Z>
+            >::AllCaptures<'a, Y>;
+
             fn matches<'a, Y: HaystackOf<'a, Z>>(hay: &mut Y) -> bool {
                 $combiner::<Z, $($pair<Z, $a, $b>),+>::matches(hay)
             }
@@ -197,7 +241,7 @@ macro_rules! define_paired_n {
             fn all_captures<'a, Y: HaystackOf<'a, Z>>(
                 hay: &mut Y,
                 caps: &mut IndexedCaptures
-            ) -> Vec<(usize, IndexedCaptures)> {
+            ) -> Self::AllCaptures<'a, Y> {
                 $combiner::<Z, $($pair<Z, $a, $b>),+>::all_captures(hay, caps)
             }
         }

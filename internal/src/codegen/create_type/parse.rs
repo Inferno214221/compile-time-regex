@@ -1,5 +1,10 @@
 use proc_macro2::TokenStream;
-use regex_syntax::{ast::{Ast, ClassAscii, ClassAsciiKind, ClassBracketed, ClassPerl, ClassPerlKind, ClassSet, ClassSetBinaryOp, ClassSetItem, parse::ParserBuilder}, hir::translate::TranslatorBuilder};
+use regex_syntax::ast::parse::ParserBuilder;
+use regex_syntax::ast::{
+    Ast, ClassAscii, ClassAsciiKind, ClassBracketed, ClassPerl, ClassPerlKind, ClassSet,
+    ClassSetBinaryOp, ClassSetItem,
+};
+use regex_syntax::hir::translate::TranslatorBuilder;
 
 use crate::codegen::{CodegenItem, Group, HirExtension};
 

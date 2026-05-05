@@ -1,6 +1,8 @@
-use std::{collections::HashSet, fmt::{self, Display}};
+use std::collections::HashSet;
+use std::fmt::{self, Display};
 
-use syn::{Ident, LitStr, Token, Visibility, parse::{Parse, ParseStream}};
+use syn::parse::{Parse, ParseStream};
+use syn::{Ident, LitStr, Token, Visibility};
 
 use crate::codegen::ConfigExt;
 

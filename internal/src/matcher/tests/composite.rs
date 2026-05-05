@@ -1,9 +1,10 @@
+use super::*;
 use crate::expr::IndexedCaptures;
 use crate::haystack::{Haystack, IntoHaystack};
-
-use super::*;
-
-use crate::{implements_debug, test_doesnt_match_no_index, test_matches_with_index, test_matches_with_indices};
+use crate::{
+    implements_debug, test_doesnt_match_no_index, test_matches_with_index,
+    test_matches_with_indices,
+};
 
 type ScalarA = Scalar<'a'>;
 type ScalarB = Scalar<'b'>;

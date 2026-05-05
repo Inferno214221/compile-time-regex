@@ -1,8 +1,13 @@
-use std::{fmt::{self, Debug}, ops::Range};
+use std::fmt::{self, Debug};
+use std::ops::Range;
 
-use hipstr::{Backend, bytes::HipByt, string::HipStr};
+use hipstr::Backend;
+use hipstr::bytes::HipByt;
+use hipstr::string::HipStr;
 
-use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack, first_char, first_char_and_width};
+use crate::haystack::{
+    HaystackIter, HaystackSlice, IntoHaystack, first_char, first_char_and_width,
+};
 
 impl<'a, B: Backend> HaystackSlice<'a> for HipStr<'a, B> {
     type Item = char;

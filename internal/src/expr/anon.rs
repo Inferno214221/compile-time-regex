@@ -1,7 +1,8 @@
 use std::ops::Range;
 
-use crate::{expr::{FindAllCaptures, RangeOfAllMatches, SliceAllMatches}, haystack::{HaystackItem, HaystackIter, HaystackOf, IntoHaystack, MutIntoHaystack}};
 use super::Regex;
+use crate::expr::{FindAllCaptures, RangeOfAllMatches, SliceAllMatches};
+use crate::haystack::{HaystackItem, HaystackIter, HaystackOf, IntoHaystack, MutIntoHaystack};
 
 /// A trait that is automatically implemented for 'anonymous' regular expression types. There is
 /// only one difference between this and [`Regex`]: all functions take self as the first parameter,

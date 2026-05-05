@@ -1,6 +1,12 @@
-use std::{fmt::{self, Debug}, iter, marker::PhantomData};
+use std::fmt::{self, Debug};
+use std::iter;
+use std::marker::PhantomData;
 
-use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::{AllCapturesSingle, AllMatchesSingle, LazyMatcher, Matcher, QuantifierNOrMore, QuantifierNToM}};
+use crate::expr::IndexedCaptures;
+use crate::haystack::{HaystackItem, HaystackOf};
+use crate::matcher::{
+    AllCapturesSingle, AllMatchesSingle, LazyMatcher, Matcher, QuantifierNOrMore, QuantifierNToM,
+};
 
 #[derive(Default)]
 pub struct Lazy<I: HaystackItem, Q: LazyMatcher<I>> (

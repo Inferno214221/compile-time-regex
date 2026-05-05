@@ -1,6 +1,8 @@
 use std::option;
 
-use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::Matcher};
+use crate::expr::IndexedCaptures;
+use crate::haystack::{HaystackItem, HaystackOf};
+use crate::matcher::Matcher;
 
 pub type AllMatchesSingle = option::IntoIter<usize>;
 

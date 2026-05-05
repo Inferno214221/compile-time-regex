@@ -1,8 +1,6 @@
+use super::*;
 use crate::expr::IndexedCaptures;
 use crate::haystack::{Haystack, IntoHaystack};
-
-use super::*;
-
 use crate::{implements_debug, test_matches_with_index};
 
 /// Macro to test unsuccessful matches and default implementations for Matcher methods.

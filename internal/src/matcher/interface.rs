@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
-use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}};
+use crate::expr::IndexedCaptures;
+use crate::haystack::{HaystackItem, HaystackOf};
 
 pub trait Matcher<I: HaystackItem>: Debug + Default {
     type AllMatches<'a, H: HaystackOf<'a, I>>: Iterator<Item = usize>;

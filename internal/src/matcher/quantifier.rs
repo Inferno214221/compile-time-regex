@@ -1,6 +1,10 @@
-use std::{fmt::{self, Debug}, iter, marker::PhantomData, vec};
+use std::fmt::{self, Debug};
+use std::marker::PhantomData;
+use std::{iter, vec};
 
-use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::{LazyMatcher, Matcher, impl_all_captures_single, impl_all_matches_single}};
+use crate::expr::IndexedCaptures;
+use crate::haystack::{HaystackItem, HaystackOf};
+use crate::matcher::{LazyMatcher, Matcher, impl_all_captures_single, impl_all_matches_single};
 
 #[derive(Default)]
 pub struct QuantifierN<I: HaystackItem, A: Matcher<I>, const N: usize>(

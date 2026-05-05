@@ -1,8 +1,11 @@
-use std::{marker::PhantomData, ops::Range};
+use std::marker::PhantomData;
+use std::ops::Range;
 
 use arcstr::{ArcStr, Substr};
 
-use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack, first_char, first_char_and_width};
+use crate::haystack::{
+    HaystackIter, HaystackSlice, IntoHaystack, first_char, first_char_and_width,
+};
 
 impl<'a> HaystackSlice<'a> for Substr {
     type Item = char;

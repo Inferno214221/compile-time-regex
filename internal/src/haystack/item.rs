@@ -1,4 +1,5 @@
-use std::{fmt::Debug, ops::Range};
+use std::fmt::Debug;
+use std::ops::Range;
 
 mod haystack_item {
     pub trait Sealed {}
@@ -38,7 +39,6 @@ pub trait HaystackItem: Debug + Default + Copy + Eq + Ord + Sealed {
 pub trait HaystackSlice<'a>: Debug + Clone + Sized {
     /// The `HaystackItem` contained within this slice.
     type Item: HaystackItem;
-
 
     /// Slices the underlying slice with the provided (half-open) `range`, used for retrieving
     /// values of capture groups.

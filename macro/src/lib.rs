@@ -1,6 +1,7 @@
 extern crate proc_macro;
 
-use ct_regex_internal::codegen::{RegexArgType, regex::{make_anon_regex, make_regex}};
+use ct_regex_internal::codegen::RegexArgType;
+use ct_regex_internal::codegen::regex::{make_anon_regex, make_regex};
 use syn::parse_macro_input;
 
 // Doc links are broken until re-exported.

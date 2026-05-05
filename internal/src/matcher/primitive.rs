@@ -1,6 +1,8 @@
 use std::fmt::{self, Debug};
 
-use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::{Matcher, impl_all_captures_single, impl_all_matches_single}};
+use crate::expr::IndexedCaptures;
+use crate::haystack::{HaystackItem, HaystackOf};
+use crate::matcher::{Matcher, impl_all_captures_single, impl_all_matches_single};
 
 #[derive(Default)]
 pub struct Byte<const N: u8>;

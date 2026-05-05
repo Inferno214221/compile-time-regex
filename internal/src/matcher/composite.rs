@@ -1,6 +1,10 @@
-use std::{fmt::{self, Debug}, iter::Chain, marker::PhantomData};
+use std::fmt::{self, Debug};
+use std::iter::Chain;
+use std::marker::PhantomData;
 
-use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::Matcher};
+use crate::expr::IndexedCaptures;
+use crate::haystack::{HaystackItem, HaystackOf};
+use crate::matcher::Matcher;
 
 #[derive(Default)]
 pub struct Or<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(

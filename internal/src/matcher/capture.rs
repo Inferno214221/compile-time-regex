@@ -1,6 +1,9 @@
-use std::{fmt::{self, Debug}, marker::PhantomData};
+use std::fmt::{self, Debug};
+use std::marker::PhantomData;
 
-use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::Matcher};
+use crate::expr::IndexedCaptures;
+use crate::haystack::{HaystackItem, HaystackOf};
+use crate::matcher::Matcher;
 
 pub struct AllCapturesGroup<'a, I, H, A, const N: usize>
 where

@@ -1,7 +1,12 @@
-use std::{fmt::Debug, ops::Range};
+use std::fmt::Debug;
+use std::ops::Range;
 
-use crate::{expr::{FindAllCaptures, RangeOfAllMatches, SliceAllMatches}, haystack::{HaystackItem, HaystackIter, HaystackOf, HaystackSlice, IntoHaystack, MutIntoHaystack}, matcher::Matcher};
 use super::{CaptureFromRanges, IndexedCaptures};
+use crate::expr::{FindAllCaptures, RangeOfAllMatches, SliceAllMatches};
+use crate::haystack::{
+    HaystackItem, HaystackIter, HaystackOf, HaystackSlice, IntoHaystack, MutIntoHaystack,
+};
+use crate::matcher::Matcher;
 
 /// A trait that is automatically implemented for types produced by the `regex!` macro. Various
 /// function are included that test this pattern against a provided

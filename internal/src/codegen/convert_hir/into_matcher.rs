@@ -2,9 +2,12 @@ use std::any;
 
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
-use regex_syntax::hir::{Capture, Class, ClassBytesRange, ClassUnicodeRange, Hir, HirKind, Literal, Look, Repetition};
+use regex_syntax::hir::{
+    Capture, Class, ClassBytesRange, ClassUnicodeRange, Hir, HirKind, Literal, Look, Repetition,
+};
 
-use crate::{codegen::{CodegenItem, Group, Groups}, matcher::{Always as A, Or, Then}};
+use crate::codegen::{CodegenItem, Group, Groups};
+use crate::matcher::{Always as A, Or, Then};
 
 pub fn type_name<T>() -> &'static str {
     any::type_name::<T>()

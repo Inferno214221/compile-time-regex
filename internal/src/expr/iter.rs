@@ -1,6 +1,9 @@
-use std::{marker::PhantomData, ops::Range};
+use std::marker::PhantomData;
+use std::ops::Range;
 
-use crate::{expr::{CaptureFromRanges, IndexedCaptures, Regex}, haystack::{HaystackItem, HaystackOf}, matcher::Matcher};
+use crate::expr::{CaptureFromRanges, IndexedCaptures, Regex};
+use crate::haystack::{HaystackItem, HaystackOf};
+use crate::matcher::Matcher;
 
 #[derive(Debug, Clone)]
 pub struct RangeOfAllMatches<'a, I: HaystackItem, H: HaystackOf<'a, I>, M: Matcher<I>> {

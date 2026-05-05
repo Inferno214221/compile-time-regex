@@ -1,6 +1,7 @@
 use regex_syntax::hir::Class;
 
-use crate::{codegen::IntoMatcherExpr, haystack::HaystackItem};
+use crate::codegen::IntoMatcherExpr;
+use crate::haystack::HaystackItem;
 
 pub trait CodegenItem: HaystackItem + IntoMatcherExpr + NormalizeClass {}
 

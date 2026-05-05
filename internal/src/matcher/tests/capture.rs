@@ -29,7 +29,7 @@ macro_rules! test_matches_with_captures {
 
         let mut hay_match = hay.clone();
         let mut hay_capture = hay_match.clone();
-        let expected_caps = $caps.last().unwrap().clone();
+        let expected_caps = $caps.first().unwrap().clone();
         let mut real_caps = IndexedCaptures::default();
 
         assert!(<$pattern>::matches(&mut hay_match));
@@ -37,15 +37,15 @@ macro_rules! test_matches_with_captures {
 
         assert_eq!(real_caps, expected_caps);
 
-        assert_eq!(hay_match.index(), *$indices.last().unwrap());
-        assert_eq!(hay_capture.index(), *$indices.last().unwrap());
+        assert_eq!(hay_match.index(), *$indices.first().unwrap());
+        assert_eq!(hay_capture.index(), *$indices.first().unwrap());
 
         assert!(<$pattern>::all_matches(&mut hay.clone()).eq($indices));
-        assert_eq!(
-            <$pattern>::all_captures(&mut hay.clone(), &mut IndexedCaptures::default()),
-            $indices.into_iter()
-                .zip($caps)
-                .collect::<Vec<_>>()
+        assert!(
+            <$pattern>::all_captures(&mut hay.clone(), &mut IndexedCaptures::default()).eq(
+                $indices.into_iter()
+                    .zip($caps)
+            )
         );
     };
 }

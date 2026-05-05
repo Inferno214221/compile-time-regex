@@ -41,12 +41,9 @@ macro_rules! test_matches_with_index {
         assert_eq!(hay_match.index(), $index);
         assert_eq!(hay_capture.index(), $index);
 
+        assert!(<$pattern>::all_matches(&mut hay.clone()).eq(vec![$index]));
         assert!(
-            <$pattern>::all_matches(&mut hay.clone()).eq(vec![$index])
-        );
-        assert_eq!(
-            <$pattern>::all_captures(&mut hay.clone(), &mut caps.clone()),
-            vec![($index, caps)]
+            <$pattern>::all_captures(&mut hay.clone(), &mut caps.clone()).eq(vec![($index, caps)])
         );
     };
 }
@@ -88,7 +85,7 @@ macro_rules! test_doesnt_match_with_index {
         assert_eq!(hay_capture.index(), $index);
 
         assert!(<$pattern>::all_matches(&mut hay.clone()).eq(vec![]));
-        assert_eq!(<$pattern>::all_captures(&mut hay.clone(), &mut caps.clone()), vec![]);
+        assert!(<$pattern>::all_captures(&mut hay.clone(), &mut caps.clone()).eq(vec![]));
     };
 }
 

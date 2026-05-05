@@ -60,9 +60,7 @@ mod or {
         type CapOr = Or<char, CapA, CapRangeAB>;
 
         let all_caps = CapOr::all_captures(&mut hay, &mut caps)
-            .into_iter()
-            .map(|(_, caps)| caps)
-            .rev();
+            .map(|(_, caps)| caps);
 
         for (index, caps) in all_caps.enumerate() {
             let caps_array = caps.into_array::<2>()
@@ -93,9 +91,7 @@ mod or {
         type CapOr = Or<char, CapA, CapAThenB>;
 
         let all_caps = CapOr::all_captures(&mut hay, &mut caps)
-            .into_iter()
-            .map(|(_, caps)| caps)
-            .rev();
+            .map(|(_, caps)| caps);
 
         for (index, caps) in all_caps.enumerate() {
             let caps_array = caps.into_array::<2>()
@@ -121,9 +117,7 @@ mod or {
         type CapOr = CaptureGroup<char, Then<char, Or<char, CapA, CapAThenB>, ScalarB>, 0>;
 
         let all_caps = CapOr::all_captures(&mut hay, &mut caps)
-            .into_iter()
-            .map(|(_, caps)| caps)
-            .rev();
+            .map(|(_, caps)| caps);
 
         for (index, caps) in all_caps.enumerate() {
             let caps_array = caps.into_array::<3>()

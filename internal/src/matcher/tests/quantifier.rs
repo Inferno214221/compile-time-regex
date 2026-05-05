@@ -34,7 +34,7 @@ macro_rules! test_doesnt_match_no_index {
         assert!(!<$pattern>::captures(&mut hay_capture, &mut caps_capture));
 
         assert!(<$pattern>::all_matches(&mut hay.clone()).eq(vec![]));
-        assert_eq!(<$pattern>::all_captures(&mut hay.clone(), &mut caps.clone()), vec![]);
+        assert!(<$pattern>::all_captures(&mut hay.clone(), &mut caps.clone()).eq(vec![]));
     };
 }
 
@@ -72,15 +72,15 @@ macro_rules! test_matches_with_indices {
 
         assert_eq!(caps_capture, caps);
 
-        assert_eq!(hay_match.index(), *$indices.last().unwrap());
-        assert_eq!(hay_capture.index(), *$indices.last().unwrap());
+        assert_eq!(hay_match.index(), *$indices.first().unwrap());
+        assert_eq!(hay_capture.index(), *$indices.first().unwrap());
 
         assert!(<$pattern>::all_matches(&mut hay.clone()).eq($indices));
-        assert_eq!(
-            <$pattern>::all_captures(&mut hay.clone(), &mut caps.clone()),
-            $indices.into_iter()
-                .zip(std::iter::repeat(caps))
-                .collect::<Vec<_>>()
+        assert!(
+            <$pattern>::all_captures(&mut hay.clone(), &mut caps.clone()).eq(
+                $indices.into_iter()
+                    .zip(std::iter::repeat(caps))
+            )
         );
     };
 }

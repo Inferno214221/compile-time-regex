@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use crate::haystack::{HaystackItem, HaystackIter, MutIntoHaystack, HaystackOf, IntoHaystack};
+use crate::{expr::{FindAllCaptures, RangeOfAllMatches, SliceAllMatches}, haystack::{HaystackItem, HaystackIter, HaystackOf, IntoHaystack, MutIntoHaystack}};
 use super::Regex;
 
 /// A trait that is automatically implemented for 'anonymous' regular expression types. There is
@@ -42,7 +42,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         &self,
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool
-    ) -> Vec<Range<usize>> {
+    ) -> RangeOfAllMatches<'a, I, H, Self::Pattern> {
         <Self as Regex<I, N>>::range_of_all_matches(hay, overlapping)
     }
 
@@ -59,7 +59,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         &self,
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool
-    ) -> Vec<H::Slice> {
+    ) -> SliceAllMatches<'a, I, H, Self::Pattern> {
         <Self as Regex<I, N>>::slice_all_matches(hay, overlapping)
     }
 
@@ -84,7 +84,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         &self,
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool
-    ) -> Vec<Self::Capture<'a, H::Slice>> {
+    ) -> FindAllCaptures<'a, Self, I, H, N> {
         <Self as Regex<I, N>>::find_all_captures(hay, overlapping)
     }
 

@@ -25,6 +25,7 @@ fn main() {
     dbg!(regex!(r"(a|b)+c").is_match("abc"));
 
     dbg!(regex!(r"bc*").slice_match("abcccd"));
+    dbg!(regex!(r"bc+?").slice_match("abcccd"));
 
     dbg!(PhoneNum);
 

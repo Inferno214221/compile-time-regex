@@ -138,6 +138,17 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> LazyMatcher<I> for Quantifi
         )
     }
 
+    fn lazy_captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
+        let mut count = 0;
+        while A::captures(hay, caps) {
+            count += 1;
+            if count >= N {
+                return true;
+            }
+        }
+        false
+    }
+
     fn lazy_all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
         caps: &mut IndexedCaptures
@@ -261,6 +272,21 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> LazyMatcher
                 _phantom: PhantomData,
             }
         )
+    }
+
+    fn lazy_captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
+        let mut count = 0;
+        loop {
+            if count >= N && count <= M {
+                return true;
+            }
+            if A::captures(hay, caps) {
+                count += 1;
+            } else {
+                break;
+            }
+        }
+        false
     }
 
     fn lazy_all_captures<'a, H: HaystackOf<'a, I>>(

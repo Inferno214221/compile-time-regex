@@ -9,11 +9,13 @@ pub struct CaptureGroup<I: HaystackItem, A: Matcher<I>, const N: usize>(
 );
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for CaptureGroup<I, A, N> {
+    type AllMatches<'a, H: HaystackOf<'a, I>> = A::AllMatches<'a, H>;
+
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         A::matches(hay)
     }
 
-    fn all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Vec<usize> {
+    fn all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Self::AllMatches<'a, H> {
         A::all_matches(hay)
     }
 

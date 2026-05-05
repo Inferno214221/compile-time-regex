@@ -1,4 +1,4 @@
-use std::{fmt::{self, Debug}, marker::PhantomData};
+use std::{fmt::{self, Debug}, iter::Chain, marker::PhantomData};
 
 use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::Matcher};
 
@@ -9,7 +9,14 @@ pub struct Or<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
     pub PhantomData<B>,
 );
 
+type AllMatchesOr<'a, I, H, A, B> = Chain<
+    <A as Matcher<I>>::AllMatches<'a, H>,
+    <B as Matcher<I>>::AllMatches<'a, H>
+>;
+
 impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
+    type AllMatches<'a, H: HaystackOf<'a, I>> = AllMatchesOr<'a, I, H, A, B>;
+
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         let start = hay.index();
 
@@ -22,15 +29,16 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
     }
 
     // /(a*|b*)c/ should prefer aa, a, bb, b -> vec![b, bb, a, aa]
-    fn all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Vec<usize> {
+    fn all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Self::AllMatches<'a, H> {
         let state_fork = hay.index();
-        // We match B first because the output needs to be reversed for greedy matching.
+        // ~~We match B first because the output needs to be reversed for greedy matching.~~
         // TODO: Consider implications for lazy matching.
-        let mut vec = B::all_matches(hay);
-        hay.rollback(state_fork);
-        vec.append(&mut A::all_matches(hay));
+        // What was I saying, you can't make a whole alternation lazy, only optional!
 
-        vec
+        // There is no reversing anymore, yield elements in order of greediest to least greedy.
+        let a_matches = A::all_matches(hay);
+        hay.rollback(state_fork);
+        a_matches.chain(B::all_matches(hay))
     }
 
     fn captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
@@ -63,6 +71,33 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Debug for Or<I, A, B> {
     }
 }
 
+pub struct AllMatchesThen<'a, I: HaystackItem, H: HaystackOf<'a, I>, A: Matcher<I>, B: Matcher<I>> {
+    a_matches: A::AllMatches<'a, H>,
+    b_matches: Option<B::AllMatches<'a, H>>,
+    hay: H,
+}
+
+impl<'a, I, H, A, B> Iterator for AllMatchesThen<'a, I, H, A, B>
+where
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+    A: Matcher<I>,
+    B: Matcher<I>
+{
+    type Item = usize;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.b_matches.as_mut().and_then(Iterator::next) {
+            Some(b) => Some(b),
+            None => {
+                self.hay.rollback(self.a_matches.next()?);
+                self.b_matches = Some(B::all_matches(&mut self.hay));
+                self.next()
+            },
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct Then<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
     pub PhantomData<I>,
@@ -71,8 +106,10 @@ pub struct Then<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
 );
 
 impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B> {
+    type AllMatches<'a, H: HaystackOf<'a, I>> = AllMatchesThen<'a, I, H, A, B>;
+
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
-        if let Some(state_fork) = Self::all_matches(hay).pop() {
+        if let Some(state_fork) = Self::all_matches(hay).next() {
             hay.rollback(state_fork);
             true
         } else {
@@ -80,11 +117,14 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B>
         }
     }
 
-    fn all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Vec<usize> {
-        A::all_matches(hay).into_iter().flat_map(|state_fork| {
-            hay.rollback(state_fork);
-            B::all_matches(hay)
-        }).collect()
+    fn all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Self::AllMatches<'a, H> {
+        AllMatchesThen {
+            a_matches: A::all_matches(hay),
+            b_matches: None,
+            // The state of hay is unspecified because we're forking. Therefore, we just clone hay
+            // to remove the need for (very) complicated lifetime bounds.
+            hay: hay.clone()
+        }
     }
 
     fn captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
@@ -124,7 +164,7 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Debug for Then<I, A, B> {
 /// - Second arg: the combiner type (Or for Or4, Or4 for Or8, etc.)
 /// - Remaining args: pairs of type parameter names in brackets
 macro_rules! define_paired_n {
-    ($pair:ident, $name:ident, $combiner:ident, $([$a:ident $b:ident])+) => {
+    ($pair:ident, $all_matches:ident, $name:ident, $combiner:ident, $([$a:ident $b:ident])+) => {
         #[derive(Default)]
         pub struct $name<
             Z: HaystackItem,
@@ -138,11 +178,15 @@ macro_rules! define_paired_n {
             Z: HaystackItem,
             $($a: Matcher<Z>, $b: Matcher<Z>),+
         > Matcher<Z> for $name<Z, $($a, $b),+> {
+            type AllMatches<'a, Y: HaystackOf<'a, Z>> = <
+                $combiner::<Z, $($pair<Z, $a, $b>),+> as Matcher<Z>
+            >::AllMatches<'a, Y>;
+
             fn matches<'a, Y: HaystackOf<'a, Z>>(hay: &mut Y) -> bool {
                 $combiner::<Z, $($pair<Z, $a, $b>),+>::matches(hay)
             }
 
-            fn all_matches<'a, Y: HaystackOf<'a, Z>>(hay: &mut Y) -> Vec<usize> {
+            fn all_matches<'a, Y: HaystackOf<'a, Z>>(hay: &mut Y) -> Self::AllMatches<'a, Y> {
                 $combiner::<Z, $($pair<Z, $a, $b>),+>::all_matches(hay)
             }
 
@@ -166,10 +210,10 @@ macro_rules! define_paired_n {
     };
 }
 
-define_paired_n!(Or, Or4, Or, [A B] [C D]);
-define_paired_n!(Or, Or8, Or4, [A B] [C D] [E F] [G H]);
-define_paired_n!(Or, Or16, Or8, [A B] [C D] [E F] [G H] [I J] [K L] [M N] [O P]);
+define_paired_n!(Or, AllMatchesOr, Or4, Or, [A B] [C D]);
+define_paired_n!(Or, AllMatchesOr, Or8, Or4, [A B] [C D] [E F] [G H]);
+define_paired_n!(Or, AllMatchesOr, Or16, Or8, [A B] [C D] [E F] [G H] [I J] [K L] [M N] [O P]);
 
-define_paired_n!(Then, Then4, Then, [A B] [C D]);
-define_paired_n!(Then, Then8, Then4, [A B] [C D] [E F] [G H]);
-define_paired_n!(Then, Then16, Then8, [A B] [C D] [E F] [G H] [I J] [K L] [M N] [O P]);
+define_paired_n!(Then, AllMatchesThen, Then4, Then, [A B] [C D]);
+define_paired_n!(Then, AllMatchesThen, Then8, Then4, [A B] [C D] [E F] [G H]);
+define_paired_n!(Then, AllMatchesThen, Then16, Then8, [A B] [C D] [E F] [G H] [I J] [K L] [M N] [O P]);

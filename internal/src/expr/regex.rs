@@ -36,8 +36,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         let mut hay = hay.into_haystack();
 
         Self::Pattern::all_matches(&mut hay)
-            .iter()
-            .any(|state| hay.rollback(*state).is_end())
+            .any(|state| hay.rollback(state).is_end())
     }
 
     /// Returns `true` if this Regex matches any substring of the haystack provided. To retrieve the
@@ -52,7 +51,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         while hay.item().is_some() {
             let start = hay.index();
 
-            if Self::Pattern::all_matches(&mut hay).pop().is_some() {
+            if Self::Pattern::all_matches(&mut hay).next().is_some() {
                 return true;
             }
 
@@ -71,7 +70,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         while hay.item().is_some() {
             let start = hay.index();
 
-            if let Some(state_fork) = Self::Pattern::all_matches(&mut hay).pop() {
+            if let Some(state_fork) = Self::Pattern::all_matches(&mut hay).next() {
                 count += 1;
 
                 if overlapping {
@@ -373,7 +372,7 @@ fn range_of_match<'a, R: Regex<I, N> + ?Sized, I: HaystackItem, const N: usize>(
     while hay.item().is_some() {
         let start = hay.index();
 
-        if let Some(state_fork) = R::Pattern::all_matches(hay).pop() {
+        if let Some(state_fork) = R::Pattern::all_matches(hay).next() {
             return Some(start..state_fork);
         }
 
@@ -391,7 +390,7 @@ fn range_of_all_matches<'a, R: Regex<I, N> + ?Sized, I: HaystackItem, const N: u
     while hay.item().is_some() {
         let start = hay.index();
 
-        if let Some(state_fork) = R::Pattern::all_matches(hay).pop() {
+        if let Some(state_fork) = R::Pattern::all_matches(hay).next() {
             all_matches.push(start..state_fork);
 
             if overlapping {

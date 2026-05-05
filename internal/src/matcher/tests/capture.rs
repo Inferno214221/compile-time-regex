@@ -40,7 +40,7 @@ macro_rules! test_matches_with_captures {
         assert_eq!(hay_match.index(), *$indices.last().unwrap());
         assert_eq!(hay_capture.index(), *$indices.last().unwrap());
 
-        assert_eq!(<$pattern>::all_matches(&mut hay.clone()), $indices);
+        assert!(<$pattern>::all_matches(&mut hay.clone()).eq($indices));
         assert_eq!(
             <$pattern>::all_captures(&mut hay.clone(), &mut IndexedCaptures::default()),
             $indices.into_iter()

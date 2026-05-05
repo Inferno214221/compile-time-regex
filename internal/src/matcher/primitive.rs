@@ -1,12 +1,17 @@
 use std::fmt::{self, Debug};
 
-use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}};
+use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::impl_all_matches_single};
+
+// New strategy: use Iterators. Lazy can wrap quantifiers which implement a Quantifier trait or
+// similar. Lazy's iterator method calls all_matches_lazy or similar and does nothing else.
 
 pub trait Matcher<I: HaystackItem>: Debug + Default {
     /// Checks if the start of the haystack contains a match for this [`Matcher`]. If this method
     /// successfully matches the start of the haystack, `hay` is progressed so that `hay.item()`
     /// hasn't been matched yet. On a fail, the state of hay is undefined.
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool;
+
+    type AllMatches<'a, H: HaystackOf<'a, I>>: Iterator<Item = usize>;
 
     // It would be nice to use a custom Iterator here rather than a Vec, but reversing an arbitrary
     // match is not easy, so we just progress through linearly and store them all.
@@ -22,13 +27,7 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
     /// # Required
     /// This method needs to be implemented by all [`Matcher`]s that can match more than one string
     /// of characters from a haystack.
-    fn all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Vec<usize> {
-        if Self::matches(hay) {
-            vec![hay.index()]
-        } else {
-            vec![]
-        }
-    }
+    fn all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Self::AllMatches<'a, H>;
 
     /// Checks if the start of the haystack contains a match for this Matcher, writing any groups
     /// to `caps`. Similar to [`matches`], this method progresses `hay` and `caps` on a success. On
@@ -74,6 +73,8 @@ impl<const N: u8> Matcher<u8> for Byte<N> {
             false
         }
     }
+
+    impl_all_matches_single!(u8);
 }
 
 impl<const N: u8> Debug for Byte<N> {
@@ -86,6 +87,7 @@ impl<const N: u8> Debug for Byte<N> {
 pub struct ByteRange<const A: u8, const B: u8>;
 
 impl<const A: u8, const B: u8> Matcher<u8> for ByteRange<A, B> {
+
     fn matches<'a, H: HaystackOf<'a, u8>>(hay: &mut H) -> bool {
         if let Some(byte) = hay.item() && A <= byte && byte <= B {
             hay.progress();
@@ -94,6 +96,8 @@ impl<const A: u8, const B: u8> Matcher<u8> for ByteRange<A, B> {
             false
         }
     }
+
+    impl_all_matches_single!(u8);
 }
 
 impl<const A: u8, const B: u8> Debug for ByteRange<A, B> {
@@ -114,6 +118,8 @@ impl<const N: char> Matcher<char> for Scalar<N> {
             false
         }
     }
+
+    impl_all_matches_single!(char);
 }
 
 impl<const N: char> Debug for Scalar<N> {
@@ -134,6 +140,8 @@ impl<const A: char, const B: char> Matcher<char> for ScalarRange<A, B> {
             false
         }
     }
+
+    impl_all_matches_single!(char);
 }
 
 impl<const A: char, const B: char> Debug for ScalarRange<A, B> {
@@ -149,6 +157,8 @@ impl<I: HaystackItem> Matcher<I> for Always {
     fn matches<'a, H: HaystackOf<'a, I>>(_hay: &mut H) -> bool {
         true
     }
+
+    impl_all_matches_single!(I);
 }
 
 impl Debug for Always {
@@ -164,6 +174,8 @@ impl<I: HaystackItem> Matcher<I> for Start {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         hay.is_start()
     }
+
+    impl_all_matches_single!(I);
 }
 
 impl Debug for Start {
@@ -179,6 +191,8 @@ impl<I: HaystackItem> Matcher<I> for End {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         hay.is_end()
     }
+
+    impl_all_matches_single!(I);
 }
 
 impl Debug for End {
@@ -194,6 +208,8 @@ impl<I: HaystackItem> Matcher<I> for LineStart {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         hay.is_line_start()
     }
+
+    impl_all_matches_single!(I);
 }
 
 impl Debug for LineStart {
@@ -209,6 +225,8 @@ impl<I: HaystackItem> Matcher<I> for LineEnd {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         hay.is_line_end()
     }
+
+    impl_all_matches_single!(I);
 }
 
 impl Debug for LineEnd {
@@ -224,6 +242,8 @@ impl<I: HaystackItem> Matcher<I> for CRLFStart {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         hay.is_crlf_start()
     }
+
+    impl_all_matches_single!(I);
 }
 
 impl Debug for CRLFStart {
@@ -239,6 +259,8 @@ impl<I: HaystackItem> Matcher<I> for CRLFEnd {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         hay.is_crlf_end()
     }
+
+    impl_all_matches_single!(I);
 }
 
 impl Debug for CRLFEnd {

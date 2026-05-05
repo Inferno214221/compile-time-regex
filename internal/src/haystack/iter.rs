@@ -2,9 +2,6 @@ use std::fmt::{self, Debug};
 
 use crate::haystack::{HaystackSlice, IntoHaystack};
 
-// TODO: Document cheap cloning requirement, usize state. Understand slicing and iterating, often
-// dealing with variable width unicode characters...
-
 /// The main underlying trait for [`Haystack`](crate::haystack::Haystack) types, `HaystackIter`
 /// should be implemented on new types that understand slicing and iterating over a haystack that
 /// can be sliced into instances of `Self::Slice`.

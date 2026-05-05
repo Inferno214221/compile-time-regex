@@ -36,10 +36,6 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
     // /(a*|b*)c/ should prefer aa, a, bb, b -> vec![b, bb, a, aa]
     fn all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Self::AllMatches<'a, H> {
         let state_fork = hay.index();
-        // ~~We match B first because the output needs to be reversed for greedy matching.~~
-        // TODO: Consider implications for lazy matching.
-        // What was I saying, you can't make a whole alternation lazy, only optional!
-
         // There is no reversing anymore, yield elements in order of greediest to least greedy.
         let a_matches = A::all_matches(hay);
         hay.rollback(state_fork);

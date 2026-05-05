@@ -12,7 +12,6 @@ impl<'a> HaystackSlice<'a> for Substr {
     }
 }
 
-// TODO: Stale docs
 /// A haystack type for matching against the [`char`]s in an [`ArcStr`]. Although [`IntoHaystack`]
 /// is implemented for `ArcStr`, the associated `Slice` type for this `Haystack` is `Substr`.
 #[derive(Debug, Clone)]

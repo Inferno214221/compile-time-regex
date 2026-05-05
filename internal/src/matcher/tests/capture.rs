@@ -98,11 +98,11 @@ mod capture {
         test_matches_with_captures!(
             QuantifierNOrMore<_, Or<_, Or<_, CapA0, CapB1>, CapC2>, 1>,
             "acb",
-            vec![1, 2, 3],
+            vec![3, 2, 1],
             vec![
-                caps![(0, 0..1)],
+                caps![(0, 0..1), (2, 1..2), (1, 2..3)],
                 caps![(0, 0..1), (2, 1..2)],
-                caps![(0, 0..1), (2, 1..2), (1, 2..3)]
+                caps![(0, 0..1)],
             ]
         );
     }

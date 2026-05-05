@@ -123,8 +123,8 @@ mod quantifier_n_or_more {
 
     #[test]
     fn more_than_n_match() {
-        test_matches_with_indices!(QuantifierNOrMoreA<1>, "aa", vec![1, 2]);
-        test_matches_with_indices!(QuantifierNOrMoreA<2>, "aaaaa", vec![2, 3, 4, 5]);
+        test_matches_with_indices!(QuantifierNOrMoreA<1>, "aa", vec![2, 1]);
+        test_matches_with_indices!(QuantifierNOrMoreA<2>, "aaaaa", vec![5, 4, 3, 2]);
     }
 
     #[test]
@@ -149,10 +149,10 @@ mod quantifier_n_to_m {
     #[test]
     fn n_to_m_match() {
         test_matches_with_indices!(QuantifierNToMA<1, 3>, "a", vec![1]);
-        test_matches_with_indices!(QuantifierNToMA<1, 3>, "aa", vec![1, 2]);
-        test_matches_with_indices!(QuantifierNToMA<1, 3>, "aaa", vec![1, 2, 3]);
+        test_matches_with_indices!(QuantifierNToMA<1, 3>, "aa", vec![2, 1]);
+        test_matches_with_indices!(QuantifierNToMA<1, 3>, "aaa", vec![3, 2, 1]);
         test_matches_with_indices!(QuantifierNToMA<0, 1>, "", vec![0]);
-        test_matches_with_indices!(QuantifierNToMA<0, 1>, "a", vec![0, 1]);
+        test_matches_with_indices!(QuantifierNToMA<0, 1>, "a", vec![1, 0]);
     }
 
     #[test]
@@ -165,8 +165,8 @@ mod quantifier_n_to_m {
 
     #[test]
     fn more_than_m_restricted_match() {
-        test_matches_with_indices!(QuantifierNToMA<0, 1>, "aa", vec![0, 1]);
-        test_matches_with_indices!(QuantifierNToMA<1, 3>, "aaaa", vec![1, 2, 3]);
+        test_matches_with_indices!(QuantifierNToMA<0, 1>, "aa", vec![1, 0]);
+        test_matches_with_indices!(QuantifierNToMA<1, 3>, "aaaa", vec![3, 2, 1]);
     }
 
     #[test]

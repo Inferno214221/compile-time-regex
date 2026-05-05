@@ -24,7 +24,7 @@ mod or {
     fn a_or_b_match() {
         test_matches_with_index!(AOrB, "a", 1);
         test_matches_with_index!(AOrB, "b", 1);
-        test_matches_with_indices!(QuantifierNOrMore<_, AOrB, 1>, "ab", vec![1, 2]);
+        test_matches_with_indices!(QuantifierNOrMore<_, AOrB, 1>, "ab", vec![2, 1]);
     }
 
     #[test]
@@ -40,7 +40,7 @@ mod or {
     fn captures_prefers_first() {
         // Despite the second match being longer, the first is preferred and filtered out later if
         // required.
-        test_matches_with_indices!(Or<_, AThenB, Then<_, AThenB, ScalarB>>, "abb", vec![3, 2]);
+        test_matches_with_indices!(Or<_, AThenB, Then<_, AThenB, ScalarB>>, "abb", vec![2, 3]);
     }
 
     #[test]
@@ -146,7 +146,7 @@ mod then {
         test_matches_with_indices!(
             QuantifierNOrMore<_, AThenB, 1>,
             "abab",
-            vec![2, 4]
+            vec![4, 2]
         );
     }
 
@@ -157,7 +157,7 @@ mod then {
         test_matches_with_indices!(
             Then<_, QuantifierNOrMoreA<2>, ScalarA>,
             "aaaa",
-            vec![3, 4]
+            vec![4, 3]
         );
         test_matches_with_indices!(
             Then<_, Quantifier2OrMore<RangeAB>, Then<_, ScalarA, End>>,
@@ -169,7 +169,7 @@ mod then {
     #[test]
     fn quadratic_all_matches() {
         test_matches_with_indices!(QuadraticA2, "aaaa", vec![4]);
-        test_matches_with_indices!(QuadraticA2, "aaaaa", vec![4, 5, 5]);
+        test_matches_with_indices!(QuadraticA2, "aaaaa", vec![5, 5, 4]);
     }
 
     #[test]
@@ -195,9 +195,7 @@ mod then {
         let mut caps = IndexedCaptures::default();
 
         let all_caps = QuadraticRangeOrA::all_captures(&mut hay, &mut caps)
-            .into_iter()
-            .map(|(_, caps)| caps)
-            .rev();
+            .map(|(_, caps)| caps);
 
         for (index, caps) in all_caps.enumerate() {
             let caps_array = caps.into_array::<2>()
@@ -221,7 +219,7 @@ mod or4 {
         test_matches_with_index!(ABCOrD, "b", 1);
         test_matches_with_index!(ABCOrD, "c", 1);
         test_matches_with_index!(ABCOrD, "d", 1);
-        test_matches_with_indices!(QuantifierNOrMore<_, ABCOrD, 1>, "abcd", vec![1, 2, 3, 4]);
+        test_matches_with_indices!(QuantifierNOrMore<_, ABCOrD, 1>, "abcd", vec![4, 3, 2, 1]);
     }
 }
 

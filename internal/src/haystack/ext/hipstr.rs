@@ -69,13 +69,19 @@ impl<'a, B: Backend> HaystackIter<'a> for HipStrStack<'a, B> {
 
 impl<'a, B: Backend> Debug for HipStrStack<'a, B> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("HipStrStack").field("inner", &self.inner).field("index", &self.index).finish()
+        f.debug_struct("HipStrStack")
+            .field("inner", &self.inner)
+            .field("index", &self.index)
+            .finish()
     }
 }
 
 impl<'a, B: Backend> Clone for HipStrStack<'a, B> {
     fn clone(&self) -> Self {
-        Self { inner: self.inner.clone(), index: self.index.clone() }
+        Self {
+            inner: self.inner.clone(),
+            index: self.index
+        }
     }
 }
 
@@ -146,12 +152,18 @@ impl<'a, B: Backend> HaystackIter<'a> for HipBytStack<'a, B> {
 
 impl<'a, B: Backend> Debug for HipBytStack<'a, B> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("HipBytStack").field("inner", &self.inner).field("index", &self.index).finish()
+        f.debug_struct("HipBytStack")
+            .field("inner", &self.inner)
+            .field("index", &self.index)
+            .finish()
     }
 }
 
 impl<'a, B: Backend> Clone for HipBytStack<'a, B> {
     fn clone(&self) -> Self {
-        Self { inner: self.inner.clone(), index: self.index.clone() }
+        Self {
+            inner: self.inner.clone(),
+            index: self.index
+        }
     }
 }

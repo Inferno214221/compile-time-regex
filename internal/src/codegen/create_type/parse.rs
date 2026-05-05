@@ -5,7 +5,7 @@ use crate::codegen::{CodegenItem, Group, HirExtension};
 
 pub fn parse_regex<I: CodegenItem>(pat: &str, config: &ConfigExt) -> (TokenStream, Vec<Group>) {
     let mut ast = config.ast.build()
-        .parse(&pat)
+        .parse(pat)
         .expect("failed to parse regex");
 
     if !config.complex_classes {
@@ -13,7 +13,7 @@ pub fn parse_regex<I: CodegenItem>(pat: &str, config: &ConfigExt) -> (TokenStrea
     }
 
     config.hir.build()
-        .translate(&pat, &ast)
+        .translate(pat, &ast)
         .expect("failed to parse regex")
         .into_matcher::<I>()
 }

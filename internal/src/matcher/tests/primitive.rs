@@ -14,7 +14,7 @@ use super::*;
 /// Code to test the following functionality:
 /// - `pattern` matches the haystack when starting at `progress`, leaving the haystack at `index`.
 /// - `pattern::captures` matches exactly the same as `pattern::matches` without performing any
-/// capturing.
+///   capturing.
 /// - `pattern::all_matches` and `pattern::all_captures` produce a single value which is `index`.
 #[macro_export]
 macro_rules! test_matches_with_index {
@@ -61,8 +61,8 @@ macro_rules! test_matches_with_index {
 /// # Generates
 /// Code to test the following functionality:
 /// - `pattern` doesn't matches the haystack when starting at `progress`, leaving the haystack at
-/// `index`. Note that in general, `Matcher` doesn't specify where the index of the haystack should
-/// sit after a failed match but for primitives, we're testing it anyway.
+///   `index`. Note that in general, `Matcher` doesn't specify where the index of the haystack
+///   should sit after a failed match but for primitives, we're testing it anyway.
 /// - `pattern::all_matches` and `pattern::all_captures` produce no values.
 #[macro_export]
 macro_rules! test_doesnt_match_with_index {

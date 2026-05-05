@@ -19,9 +19,9 @@ type ScalarC = Scalar<'c'>;
 /// # Generates
 /// Code to test the following functionality:
 /// - `pattern` matches the haystack when starting at `progress`, leaving the haystack at the last
-/// value of `indices`.
+///   value of `indices`.
 /// - `pattern::all_matches` and `pattern::all_captures` produce values equal to `indices` and
-/// `caps`.
+///   `caps`.
 #[macro_export]
 macro_rules! test_matches_with_captures {
     ($pattern:ty, $hay:literal, $indices:expr, $caps:expr) => {
@@ -75,6 +75,7 @@ macro_rules! caps {
     };
 }
 
+#[allow(clippy::module_inception)]
 mod capture {
     use super::*;
 

@@ -165,7 +165,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
                 );
             }
         }
-        return None;
+        None
     }
 
     /// Returns the [`Self::Capture`] that matches this Regex first, similar to

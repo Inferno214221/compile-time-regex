@@ -25,13 +25,13 @@ use syn::parse_macro_input;
 ///
 /// Where the arguments are as follows:
 /// - `visibility`: An optional visibility modifier for the generated type, e.g. `pub`,
-/// `pub(crate)`.
+///   `pub(crate)`.
 /// - `TypeName`: The name for the generated type with an auto-generated impl of the
-/// [`Regex`](trait.Regex.html) trait.
+///   [`Regex`](trait.Regex.html) trait.
 /// - `pattern`: A string literal providing the regular expression that you'd like this type to
-/// match. Note, you probably want to pass this as a raw literal e.g. `r"expr"` or `r#expr#`.
+///   match. Note, you probably want to pass this as a raw literal e.g. `r"expr"` or `r#expr#`.
 /// - `flags`: An optional string literal providing a list of flags for this expression to use when
-/// matching. See [Flags](macro.regex.html#flags) below.
+///   matching. See [Flags](macro.regex.html#flags) below.
 ///
 /// A 'capture' type is also generated to represent the result of filling this expression's capture
 /// groups from a valid haystack. The generated type is named the same as `TypeNameCapture` and is

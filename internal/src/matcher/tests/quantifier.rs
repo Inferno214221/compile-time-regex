@@ -48,7 +48,7 @@ macro_rules! test_doesnt_match_no_index {
 /// # Generates
 /// Code to test the following functionality:
 /// - `pattern` matches the haystack when starting at `progress`, leaving the haystack at the last
-/// value of `indices`.
+///   value of `indices`.
 /// - `pattern::all_matches` and `pattern::all_captures` produce values equal to `indices`.
 #[macro_export]
 macro_rules! test_matches_with_indices {

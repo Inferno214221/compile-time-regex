@@ -121,6 +121,7 @@ impl<'a, H: Haystack<'a>> IntoHaystack<'a, H> for H {
 //     }
 // }
 
+#[allow(clippy::len_without_is_empty)]
 pub trait MutIntoHaystack<'a, I: HaystackItem> {
     type Hay<'b>: HaystackOf<'b, I> where Self: 'b;
 

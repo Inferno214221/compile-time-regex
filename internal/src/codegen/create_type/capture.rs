@@ -98,7 +98,7 @@ pub fn impl_captures(
         }
     };
 
-    return (name, len, captures_impl);
+    (name, len, captures_impl)
 }
 
 pub fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStream {

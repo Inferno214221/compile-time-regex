@@ -16,21 +16,21 @@
 //! opposed to runtime like most other implementations.
 //!
 //! 1. As with most crates, this one starts by parsing the provided expressions using the
-//! [`regex_syntax`](https://docs.rs/regex-syntax/latest/regex_syntax/) crate, producing an _abstract
-//! syntax tree_ before translating and optimising into a _high-level intermedite representation_
-//! (HIR).
+//!    [`regex_syntax`](https://docs.rs/regex-syntax/latest/regex_syntax/) crate, producing an
+//!    _abstract syntax tree_ before translating and optimising into a _high-level intermedite
+//!    representation_ (HIR).
 //!
 //! 2. Rather than using [NFAs](https://en.wikipedia.org/wiki/Thompson%27s_construction) or DFAs,
-//! the macro converts the HIR into a Rust type expression, made of
-//! [`Matcher`](ct_regex_internal::matcher::Matcher) components that describe the various actions
-//! needed to match / capture a regular expression. An _simple_ example of this generated type
-//! expression can be seen at
-//! [`demo::Email::Pattern`](demo/struct.Email.html#associatedtype.Pattern-1).
+//!    the macro converts the HIR into a Rust type expression, made of
+//!    [`Matcher`](ct_regex_internal::matcher::Matcher) components that describe the various actions
+//!    needed to match / capture a regular expression. An _simple_ example of this generated type
+//!    expression can be seen at
+//!    [`demo::Email::Pattern`](demo/struct.Email.html#associatedtype.Pattern-1).
 //!
 //! 3. The macro finishes and the binary is compiled normally, using a collection of associated
-//! functions on each `Matcher` to perform the relvant matching / capturing. In short, matching or
-//! capturing at runtime boils down to a series of function calls, which the Rust compile can
-//! optimise as it sees fit.
+//!    functions on each `Matcher` to perform the relvant matching / capturing. In short, matching
+//!    or capturing at runtime boils down to a series of function calls, which the Rust compile can
+//!    optimise as it sees fit.
 //!
 //! # When Not To Use This Crate
 //!

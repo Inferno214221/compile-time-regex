@@ -65,7 +65,7 @@ fn main() {
     dbg!(hay);
 
     let mut hay = String::from("a b b b c");
-    let mut it = "123".chars().map(|c| String::from(c));
+    let mut it = "123".chars().map(String::from);
     dbg!(Re::replace_all_using(&mut hay, || it.next().unwrap()));
     dbg!(hay);
 

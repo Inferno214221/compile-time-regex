@@ -56,6 +56,7 @@ pub use ct_regex_macro::regex;
 pub mod demo;
 
 pub mod haystack;
+pub mod iter;
 
 #[doc(hidden)]
 pub mod internal {

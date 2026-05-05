@@ -1,4 +1,4 @@
-//! A collection of traits and structs that form the haystack system. Although usually implicit,
+//! A collection of traits and structs that form the haystack system. Although usually inferred,
 //! these type may be needed on occasion for full type names etc.
 //!
 //! Additionally, it is be possible to implement these traits for other types to allow matching

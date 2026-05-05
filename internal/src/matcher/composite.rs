@@ -9,11 +9,11 @@ pub struct Or<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
     pub PhantomData<B>,
 );
 
-type AllMatchesOr<'a, I, H, A, B> = Chain<
+pub type AllMatchesOr<'a, I, H, A, B> = Chain<
     <A as Matcher<I>>::AllMatches<'a, H>,
     <B as Matcher<I>>::AllMatches<'a, H>
 >;
-type AllCapturesOr<'a, I, H, A, B> = Chain<
+pub type AllCapturesOr<'a, I, H, A, B> = Chain<
     <A as Matcher<I>>::AllCaptures<'a, H>,
     <B as Matcher<I>>::AllCaptures<'a, H>
 >;

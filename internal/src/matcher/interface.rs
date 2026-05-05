@@ -55,3 +55,22 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
         caps: &mut IndexedCaptures
     ) -> Self::AllCaptures<'a, H>;
 }
+
+pub trait LazyMatcher<I: HaystackItem>: Matcher<I> {
+    type LazyAllMatches<'a, H: HaystackOf<'a, I>>: Iterator<Item = usize>;
+    type LazyAllCaptures<'a, H: HaystackOf<'a, I>>: Iterator<Item = (usize, IndexedCaptures)>;
+
+    fn lazy_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool;
+
+    fn lazy_all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Self::LazyAllMatches<'a, H>;
+
+    fn lazy_captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
+        let _ = caps;
+        Self::matches(hay)
+    }
+
+    fn lazy_all_captures<'a, H: HaystackOf<'a, I>>(
+        hay: &mut H,
+        caps: &mut IndexedCaptures
+    ) -> Self::LazyAllCaptures<'a, H>;
+}

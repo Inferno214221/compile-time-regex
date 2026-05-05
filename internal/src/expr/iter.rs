@@ -98,7 +98,7 @@ where
         Self {
             hay,
             overlapping,
-            _phantom: PhantomData
+            _phantom: PhantomData,
         }
     }
 }

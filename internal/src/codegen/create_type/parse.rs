@@ -36,7 +36,7 @@ pub fn simplify_classes(ast: &mut Ast) {
     *ast = Ast::ClassBracketed(Box::new(ClassBracketed {
         span: *ast.span(),
         negated: false,
-        kind: ClassSet::Item(ClassSetItem::Ascii(replacement))
+        kind: ClassSet::Item(ClassSetItem::Ascii(replacement)),
     }));
 }
 

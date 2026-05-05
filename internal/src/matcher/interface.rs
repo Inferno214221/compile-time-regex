@@ -50,7 +50,7 @@ pub trait Matcher<I: HaystackItem>: Debug + Default {
     /// [`captures`](Matcher::captures) and [`all_matches`](Matcher::all_matches).
     fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
-        caps: &mut IndexedCaptures
+        caps: &mut IndexedCaptures,
     ) -> Self::AllCaptures<'a, H>;
 }
 
@@ -88,6 +88,6 @@ pub trait LazyMatcher<I: HaystackItem>: Matcher<I> {
     /// one first encountered in the haystack, not the one that produces the longest match.
     fn lazy_all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
-        caps: &mut IndexedCaptures
+        caps: &mut IndexedCaptures,
     ) -> Self::LazyAllCaptures<'a, H>;
 }

@@ -90,8 +90,10 @@ impl Flags {
                 'U' => config.swap_greed(true),
                 'x' => config.ignore_whitespace(true),
                 'c' => config.complex_classes(true),
-                'g' => panic!("the global flag is unsupported by this implementation, please read \
-                    the docs on the methods available on the Regex trait"),
+                'g' => panic!(
+                    "the global flag is unsupported by this implementation, please read the docs \
+                    on the methods available on the Regex trait"
+                ),
                 o => panic!("unknown flag provided for regex: {o:?}"),
             };
         }

@@ -21,7 +21,7 @@ impl Groups {
         });
         Groups {
             map,
-            required: true
+            required: true,
         }
     }
 
@@ -36,7 +36,11 @@ impl Groups {
         let mut items: Vec<_> = self.map.into_iter().collect();
         items.sort_by_key(|(i, _)| *i);
 
-        if items.iter().enumerate().any(|(num, (index, _))| num != *index as usize) {
+        if items
+            .iter()
+            .enumerate()
+            .any(|(num, (index, _))| num != *index as usize)
+        {
             panic!("missing a capture group");
         }
 

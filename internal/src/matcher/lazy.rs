@@ -9,10 +9,7 @@ use crate::matcher::{
 };
 
 #[derive(Default)]
-pub struct Lazy<I: HaystackItem, Q: LazyMatcher<I>> (
-    pub PhantomData<I>,
-    pub PhantomData<Q>,
-);
+pub struct Lazy<I: HaystackItem, Q: LazyMatcher<I>>(pub PhantomData<I>, pub PhantomData<Q>);
 
 impl<I: HaystackItem, Q: LazyMatcher<I>> Matcher<I> for Lazy<I, Q> {
     type AllMatches<'a, H: HaystackOf<'a, I>> = Q::LazyAllMatches<'a, H>;
@@ -32,7 +29,7 @@ impl<I: HaystackItem, Q: LazyMatcher<I>> Matcher<I> for Lazy<I, Q> {
 
     fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
-        caps: &mut IndexedCaptures
+        caps: &mut IndexedCaptures,
     ) -> Self::AllCaptures<'a, H> {
         Q::lazy_all_captures(hay, caps)
     }
@@ -164,7 +161,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> LazyMatcher<I> for Quantifi
 
     fn lazy_all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
-        caps: &mut IndexedCaptures
+        caps: &mut IndexedCaptures,
     ) -> Self::LazyAllCaptures<'a, H> {
         let zero_match = if N == 0 {
             Some((hay.index(), caps.clone()))
@@ -302,7 +299,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> LazyMatcher
 
     fn lazy_all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
-        caps: &mut IndexedCaptures
+        caps: &mut IndexedCaptures,
     ) -> Self::LazyAllCaptures<'a, H> {
         let zero_match = if N == 0 {
             Some((hay.index(), caps.clone()))

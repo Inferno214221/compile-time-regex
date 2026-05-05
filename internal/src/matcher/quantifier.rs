@@ -79,7 +79,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNO
 
     fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
-        caps: &mut IndexedCaptures
+        caps: &mut IndexedCaptures,
     ) -> Self::AllCaptures<'a, H> {
         Self::lazy_all_captures(hay, caps)
             .collect::<Vec<_>>()
@@ -143,7 +143,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
 
     fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
-        caps: &mut IndexedCaptures
+        caps: &mut IndexedCaptures,
     ) -> Self::AllCaptures<'a, H> {
         Self::lazy_all_captures(hay, caps)
             .collect::<Vec<_>>()

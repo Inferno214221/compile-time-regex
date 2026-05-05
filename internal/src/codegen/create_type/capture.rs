@@ -4,10 +4,7 @@ use syn::Ident;
 
 use crate::codegen::Group;
 
-pub fn impl_captures(
-    regex_name: &Ident,
-    groups: Vec<Group>
-) -> (Ident, Literal, TokenStream) {
+pub fn impl_captures(regex_name: &Ident, groups: Vec<Group>) -> (Ident, Literal, TokenStream) {
     #![allow(nonstandard_style)]
     let CaptureFromRanges = quote!(::ct_regex::internal::expr::CaptureFromRanges);
     let HaystackSlice = quote!(::ct_regex::internal::haystack::HaystackSlice);
@@ -35,21 +32,25 @@ pub fn impl_captures(
         panic!("empty groups")
     }
 
-    let inner = groups.iter().map(|cap| if cap.required {
-        quote!(#Range)
-    } else {
-        quote!(#Option<#Range>)
+    let inner = groups.iter().map(|cap| {
+        if cap.required {
+            quote!(#Range)
+        } else {
+            quote!(#Option<#Range>)
+        }
     });
 
-    let numbered_groups = groups.iter().enumerate().map(
-            |(index, cap)| impl_capture_getters(index, cap, format_ident!("cap_{}", index))
-        );
+    let numbered_groups = groups.iter()
+        .enumerate()
+        .map(|(index, cap)| impl_capture_getters(index, cap, format_ident!("cap_{}", index)));
 
-    let named_groups = groups.iter().enumerate().filter_map(
-        |(index, cap)| cap.name.as_ref().map(
-            |cap_name| impl_capture_getters(index, cap, Ident::new(cap_name, Span::call_site()))
-        )
-    );
+    let named_groups = groups.iter()
+        .enumerate()
+        .filter_map(|(index, cap)| {
+            cap.name.as_ref().map(|cap_name| {
+                impl_capture_getters(index, cap, Ident::new(cap_name, Span::call_site()))
+            })
+        });
 
     let capture_destructure = (0..groups.len()).map(|i| format_ident!("c{}", i));
 

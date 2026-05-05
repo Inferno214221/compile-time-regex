@@ -16,10 +16,7 @@ pub struct IndexedCapture {
 
 impl IndexedCaptures {
     pub fn push(&mut self, index: usize, cap: Range<usize>) {
-        self.0.push(IndexedCapture {
-            index,
-            cap
-        });
+        self.0.push(IndexedCapture { index, cap });
     }
 
     // May contain duplicates for a certain index. To avoid backtracking and overriding, we deal

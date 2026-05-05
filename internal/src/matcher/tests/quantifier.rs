@@ -75,10 +75,8 @@ macro_rules! test_matches_with_indices {
 
         assert!(<$pattern>::all_matches(&mut hay.clone()).eq($indices));
         assert!(
-            <$pattern>::all_captures(&mut hay.clone(), &mut caps.clone()).eq(
-                $indices.into_iter()
-                    .zip(std::iter::repeat(caps))
-            )
+            <$pattern>::all_captures(&mut hay.clone(), &mut caps.clone())
+                .eq($indices.into_iter().zip(std::iter::repeat(caps)))
         );
     };
 }

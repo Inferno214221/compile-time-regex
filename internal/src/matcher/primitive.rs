@@ -31,9 +31,11 @@ impl<const N: u8> Debug for Byte<N> {
 pub struct ByteRange<const A: u8, const B: u8>;
 
 impl<const A: u8, const B: u8> Matcher<u8> for ByteRange<A, B> {
-
     fn matches<'a, H: HaystackOf<'a, u8>>(hay: &mut H) -> bool {
-        if let Some(byte) = hay.item() && A <= byte && byte <= B {
+        if let Some(byte) = hay.item()
+            && A <= byte
+            && byte <= B
+        {
             hay.progress();
             true
         } else {
@@ -79,7 +81,10 @@ pub struct ScalarRange<const A: char, const B: char>;
 
 impl<const A: char, const B: char> Matcher<char> for ScalarRange<A, B> {
     fn matches<'a, H: HaystackOf<'a, char>>(hay: &mut H) -> bool {
-        if let Some(scalar) = hay.item() && A <= scalar && scalar <= B {
+        if let Some(scalar) = hay.item()
+            && A <= scalar
+            && scalar <= B
+        {
             hay.progress();
             true
         } else {

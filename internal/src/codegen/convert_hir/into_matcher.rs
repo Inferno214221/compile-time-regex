@@ -171,7 +171,7 @@ impl IntoMatcherExpr for Repetition {
                 quote!(::ct_regex::internal::matcher::QuantifierNOrMore<#item_type, #sub_matcher, #min>)
             },
             Some(max) if min == max => {
-                return quote!(::ct_regex::internal::matcher::QuantifierN<#item_type, #sub_matcher, #min>)
+                return quote!(::ct_regex::internal::matcher::QuantifierN<#item_type, #sub_matcher, #min>);
             },
             Some(max) => {
                 quote!(::ct_regex::internal::matcher::QuantifierNToM<#item_type, #sub_matcher, #min, #max>)
@@ -230,24 +230,30 @@ fn write_chunked<T, I: CodegenItem, W: IntoMatcherExpr>(
             let second = iter.next().unwrap().into_matcher_expr::<I>(caps);
 
             quote!(::ct_regex::internal::matcher::#base<#item_type, #first, #second>)
-        }
+        },
         3 => {
             let mut iter = items.into_iter();
             let first = iter.next().unwrap().into_matcher_expr::<I>(caps);
             let chunked = write_chunked::<T, I, W>(caps, iter.collect());
 
             quote!(::ct_regex::internal::matcher::#base<#item_type, #first, #chunked>)
-        }
+        },
         4 | 8 | 16 => write_n_items::<T, I, W>(caps, items, n),
         _ => {
             // Take largest chunk that fits, combine with remainder
-            let chunk_size = if n > 16 { 16 } else if n > 8 { 8 } else { 4 };
+            let chunk_size = if n > 16 {
+                16
+            } else if n > 8 {
+                8
+            } else {
+                4
+            };
             let remainder = items.split_off(chunk_size);
             let n_matcher = write_n_items::<T, I, W>(caps, items, chunk_size);
             let chunked = write_chunked::<T, I, W>(caps, remainder);
 
             quote!(::ct_regex::internal::matcher::#base<#item_type, #n_matcher, #chunked>)
-        }
+        },
     }
 }
 

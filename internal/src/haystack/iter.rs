@@ -144,7 +144,7 @@ impl<'a> Debug for StrStack<'a> {
 
         self.inner.char_indices().try_for_each(|(index, ch)| {
             let mut debug = ch.escape_debug();
-            if index < self.index  {
+            if index < self.index {
                 len += debug.len();
             }
             debug.try_for_each(|debug_ch| write!(f, "{debug_ch}"))

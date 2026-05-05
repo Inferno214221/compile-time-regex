@@ -59,7 +59,7 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
 
     fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
-        caps: &mut IndexedCaptures
+        caps: &mut IndexedCaptures,
     ) -> Self::AllCaptures<'a, H> {
         let (state_fork, mut caps_fork) = (hay.index(), caps.clone());
 
@@ -86,7 +86,7 @@ where
     I: HaystackItem,
     H: HaystackOf<'a, I>,
     A: Matcher<I>,
-    B: Matcher<I>
+    B: Matcher<I>,
 {
     type Item = usize;
 
@@ -107,7 +107,7 @@ where
     I: HaystackItem,
     H: HaystackOf<'a, I>,
     A: Matcher<I>,
-    B: Matcher<I>
+    B: Matcher<I>,
 {
     a_captures: A::AllCaptures<'a, H>,
     b_captures: Option<B::AllCaptures<'a, H>>,
@@ -119,7 +119,7 @@ where
     I: HaystackItem,
     H: HaystackOf<'a, I>,
     A: Matcher<I>,
-    B: Matcher<I>
+    B: Matcher<I>,
 {
     type Item = (usize, IndexedCaptures);
 
@@ -162,7 +162,7 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B>
             b_matches: None,
             // The state of hay is unspecified because we're forking. Therefore, we just clone hay
             // to remove the need for (very) complicated lifetime bounds.
-            hay: hay.clone()
+            hay: hay.clone(),
         }
     }
 
@@ -178,7 +178,7 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B>
 
     fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
-        caps: &mut IndexedCaptures
+        caps: &mut IndexedCaptures,
     ) -> Self::AllCaptures<'a, H> {
         AllCapturesThen {
             a_captures: A::all_captures(hay, caps),

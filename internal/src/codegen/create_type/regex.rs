@@ -11,7 +11,7 @@ pub fn make_regex(
         pat,
         flags,
     }: RegexArgs,
-    impl_anon: bool
+    impl_anon: bool,
 ) -> TokenStream {
     #![allow(nonstandard_style)]
     let fmt = quote!(::std::fmt);
@@ -26,8 +26,7 @@ pub fn make_regex(
     let doc = format!(
         "A macro-generated regular expression matching the pattern: `{pat_str}` with flags: \
         {flags}. See the [`Regex`](::ct_regex::internal::expr::Regex) trait for associated \
-        matching and capturing functions."
-        // TODO: Can be used for &str or &[u8]...
+        matching and capturing functions." // TODO: Can be used for &str or &[u8]...
     );
 
     let mut config = flags.create_config();
@@ -93,7 +92,7 @@ pub fn make_anon_regex(AnonRegexArgs { pat, flags }: AnonRegexArgs) -> TokenStre
             pat,
             flags,
         },
-        true
+        true,
     );
     quote! {
         {

@@ -85,7 +85,7 @@ impl<'a, B: Backend> Clone for HipStrStack<'a, B> {
     fn clone(&self) -> Self {
         Self {
             inner: self.inner.clone(),
-            index: self.index
+            index: self.index,
         }
     }
 }
@@ -168,7 +168,7 @@ impl<'a, B: Backend> Clone for HipBytStack<'a, B> {
     fn clone(&self) -> Self {
         Self {
             inner: self.inner.clone(),
-            index: self.index
+            index: self.index,
         }
     }
 }

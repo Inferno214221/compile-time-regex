@@ -9,7 +9,7 @@ pub struct AllCapturesGroup<'a, I, H, A, const N: usize>
 where
     I: HaystackItem,
     H: HaystackOf<'a, I>,
-    A: Matcher<I>
+    A: Matcher<I>,
 {
     captures: A::AllCaptures<'a, H>,
     start: usize,
@@ -19,7 +19,7 @@ impl<'a, I, H, A, const N: usize> Iterator for AllCapturesGroup<'a, I, H, A, N>
 where
     I: HaystackItem,
     H: HaystackOf<'a, I>,
-    A: Matcher<I>
+    A: Matcher<I>,
 {
     type Item = (usize, IndexedCaptures);
 
@@ -60,7 +60,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for CaptureGroup
 
     fn all_captures<'a, H: HaystackOf<'a, I>>(
         hay: &mut H,
-        caps: &mut IndexedCaptures
+        caps: &mut IndexedCaptures,
     ) -> Self::AllCaptures<'a, H> {
         AllCapturesGroup {
             start: hay.index(),

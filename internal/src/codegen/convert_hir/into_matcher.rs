@@ -146,9 +146,6 @@ impl IntoMatcherExpr for Look {
 impl IntoMatcherExpr for Repetition {
     fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
         let Repetition { min, max, greedy, sub } = self;
-        if !greedy {
-            todo!("lazy repetition")
-        }
 
         let required = caps.required;
         if min == 0 {
@@ -162,23 +159,27 @@ impl IntoMatcherExpr for Repetition {
         // the conversion process.
         let (min, max) = (min as usize, max.map(|m| m as usize));
 
+        if min == 0 {
+            caps.required = required;
+        }
+
         let tokens = match max {
             None => {
                 quote!(::ct_regex::internal::matcher::QuantifierNOrMore<#item_type, #sub_matcher, #min>)
             },
             Some(max) if min == max => {
-                quote!(::ct_regex::internal::matcher::QuantifierN<#item_type, #sub_matcher, #min>)
+                return quote!(::ct_regex::internal::matcher::QuantifierN<#item_type, #sub_matcher, #min>)
             },
             Some(max) => {
                 quote!(::ct_regex::internal::matcher::QuantifierNToM<#item_type, #sub_matcher, #min, #max>)
             },
         };
 
-        if min == 0 {
-            caps.required = required;
+        if greedy {
+            tokens
+        } else {
+            quote!(::ct_regex::internal::matcher::Lazy<#item_type, #tokens>)
         }
-
-        tokens
     }
 }
 

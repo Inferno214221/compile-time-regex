@@ -1,6 +1,6 @@
 use std::{fmt::{self, Debug}, iter, marker::PhantomData, vec};
 
-use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::{Matcher, impl_all_captures_single, impl_all_matches_single}};
+use crate::{expr::IndexedCaptures, haystack::{HaystackItem, HaystackOf}, matcher::{LazyMatcher, Matcher, impl_all_captures_single, impl_all_matches_single}};
 
 #[derive(Default)]
 pub struct QuantifierN<I: HaystackItem, A: Matcher<I>, const N: usize>(
@@ -59,22 +59,10 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNO
 
     // This **has to be** evaluated eagerly, so we use a vec.
     fn all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Self::AllMatches<'a, H> {
-        let mut matches = vec![];
-        let mut count = 0;
-
-        // Include zero-match position when N=0
-        if N == 0 {
-            matches.push(hay.index());
-        }
-
-        while A::matches(hay) {
-            count += 1;
-            if count >= N {
-                matches.push(hay.index());
-            }
-        }
-
-        matches.into_iter().rev()
+        Self::lazy_all_matches(hay)
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
     }
 
     fn captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
@@ -89,22 +77,10 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNO
         hay: &mut H,
         caps: &mut IndexedCaptures
     ) -> Self::AllCaptures<'a, H> {
-        let mut captures = vec![];
-        let mut count = 0;
-
-        // Include zero-match position when N=0
-        if N == 0 {
-            captures.push((hay.index(), caps.clone()));
-        }
-
-        while A::captures(hay, caps) {
-            count += 1;
-            if count >= N {
-                captures.push((hay.index(), caps.clone()));
-            }
-        }
-
-        captures.into_iter().rev()
+        Self::lazy_all_captures(hay, caps)
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
     }
 }
 
@@ -140,26 +116,10 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
     }
 
     fn all_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> Self::AllMatches<'a, H> {
-        let mut matches = vec![];
-        let mut count = 0;
-
-        // Include zero-match position when N=0
-        if N == 0 {
-            matches.push(hay.index());
-        }
-
-        while A::matches(hay) {
-            count += 1;
-            if N <= count && count <= M {
-                matches.push(hay.index());
-
-                if count == M {
-                    return matches.into_iter().rev();
-                }
-            }
-        }
-
-        matches.into_iter().rev()
+        Self::lazy_all_matches(hay)
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
     }
 
     fn captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
@@ -181,26 +141,10 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> 
         hay: &mut H,
         caps: &mut IndexedCaptures
     ) -> Self::AllCaptures<'a, H> {
-        let mut captures = vec![];
-        let mut count = 0;
-
-        // Include zero-match position when N=0
-        if N == 0 {
-            captures.push((hay.index(), caps.clone()));
-        }
-
-        while A::captures(hay, caps) {
-            count += 1;
-            if N <= count && count <= M {
-                captures.push((hay.index(), caps.clone()));
-
-                if count == M {
-                    return captures.into_iter().rev();
-                }
-            }
-        }
-
-        captures.into_iter().rev()
+        Self::lazy_all_captures(hay, caps)
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
     }
 }
 

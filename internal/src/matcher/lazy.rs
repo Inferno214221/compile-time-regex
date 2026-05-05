@@ -93,7 +93,6 @@ where
     type Item = (usize, IndexedCaptures);
 
     fn next(&mut self) -> Option<Self::Item> {
-        // N == 0 is handled before we create an Iterator.
         if A::captures(&mut self.hay, &mut self.caps) {
             self.count += 1;
             if self.count >= N {
@@ -113,10 +112,14 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> LazyMatcher<I> for Quantifi
 
     fn lazy_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         let mut count = 0;
-        while A::matches(hay) {
-            count += 1;
+        loop {
             if count >= N {
                 return true;
+            }
+            if A::matches(hay) {
+                count += 1;
+            } else {
+                break;
             }
         }
         false
@@ -140,10 +143,14 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> LazyMatcher<I> for Quantifi
 
     fn lazy_captures<'a, H: HaystackOf<'a, I>>(hay: &mut H, caps: &mut IndexedCaptures) -> bool {
         let mut count = 0;
-        while A::captures(hay, caps) {
-            count += 1;
+        loop {
             if count >= N {
                 return true;
+            }
+            if A::captures(hay, caps) {
+                count += 1;
+            } else {
+                break;
             }
         }
         false
@@ -190,7 +197,6 @@ where
     type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {
-        // N == 0 is handled before we create an Iterator.
         if A::matches(&mut self.hay) {
             self.count += 1;
             if N <= self.count && self.count <= M {
@@ -225,7 +231,6 @@ where
     type Item = (usize, IndexedCaptures);
 
     fn next(&mut self) -> Option<Self::Item> {
-        // N == 0 is handled before we create an Iterator.
         if A::captures(&mut self.hay, &mut self.caps) {
             self.count += 1;
             if N <= self.count && self.count <= M {

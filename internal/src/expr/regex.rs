@@ -4,7 +4,7 @@ use std::ops::Range;
 use super::{CaptureFromRanges, IndexedCaptures};
 use crate::expr::{FindAllCaptures, RangeOfAllMatches, SliceAllMatches};
 use crate::haystack::{
-    HaystackItem, HaystackIter, HaystackOf, HaystackSlice, IntoHaystack, MutIntoHaystack,
+    HaystackItem, HaystackIter, HaystackOf, HaystackSlice, IntoHaystack, OwnedHaystackable,
 };
 use crate::matcher::Matcher;
 
@@ -209,7 +209,10 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         FindAllCaptures::new(hay.into_haystack(), overlapping)
     }
 
-    fn replace<'a, M: MutIntoHaystack<'a, I>>(hay_mut: &'a mut M, with: &str) -> bool {
+    fn replace<'a, 'b, M: OwnedHaystackable<'a, I>>(
+        hay_mut: &'a mut M,
+        with: <M::Hay<'b> as HaystackIter<'b>>::Slice
+    ) -> bool {
         let Some(range) = ({
             let mut hay = hay_mut.as_haystack();
             range_of_match::<Self, _, _>(&mut hay)
@@ -220,7 +223,10 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         true
     }
 
-    fn replace_all<'a, M: MutIntoHaystack<'a, I>>(hay_mut: &'a mut M, with: &str) -> usize {
+    fn replace_all<'a, 'b, M: OwnedHaystackable<'a, I>>(
+        hay_mut: &'a mut M,
+        with: <M::Hay<'b> as HaystackIter<'b>>::Slice
+    ) -> usize {
         // Avoids redirecting to replace_all_using to avoid unnessecary clones.
         let ranges = RangeOfAllMatches::<I, M::Hay<'_>, Self::Pattern>::new(
             hay_mut.as_haystack(),
@@ -234,16 +240,16 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
             delta.apply_to(&mut range);
 
             let initial_len = hay_mut.len();
-            hay_mut.replace_range(range, with);
+            hay_mut.replace_range(range, with.clone());
             delta.add_diff(hay_mut.len(), initial_len);
         }
 
         count
     }
 
-    fn replace_all_using<'a, M: MutIntoHaystack<'a, I>>(
+    fn replace_all_using<'a, M: OwnedHaystackable<'a, I>>(
         hay_mut: &'a mut M,
-        mut using: impl FnMut() -> String,
+        mut using: impl FnMut() -> M,
     ) -> usize {
         let ranges = RangeOfAllMatches::<I, M::Hay<'_>, Self::Pattern>::new(
             hay_mut.as_haystack(),
@@ -257,7 +263,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
             delta.apply_to(&mut range);
 
             let initial_len = hay_mut.len();
-            hay_mut.replace_range(range, &using());
+            hay_mut.replace_range(range, using().as_slice());
             delta.add_diff(hay_mut.len(), initial_len);
         }
 
@@ -267,8 +273,8 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     fn replace_captured<'a, M, F>(hay_mut: &'a mut M, replacer: F) -> bool
     where
         I: 'a,
-        M: MutIntoHaystack<'a, I>,
-        F: for<'b> FnOnce(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> String,
+        M: OwnedHaystackable<'a, I>,
+        F: for<'b> FnOnce(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> M,
     {
         let (range, replacement) = {
             let Some(caps) = Self::find_capture(hay_mut.as_haystack()) else {
@@ -278,15 +284,15 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
 
             (first, replacer(caps))
         };
-        hay_mut.replace_range(range, &replacement);
+        hay_mut.replace_range(range, replacement.as_slice());
         true
     }
 
     fn replace_all_captured<'a, M, F>(hay_mut: &'a mut M, mut replacer: F) -> usize
     where
         I: 'a,
-        M: MutIntoHaystack<'a, I>,
-        F: for<'b> FnMut(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> String,
+        M: OwnedHaystackable<'a, I>,
+        F: for<'b> FnMut(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> M,
     {
         let replacements: Vec<_> = {
             let caps = Self::find_all_captures(hay_mut.as_haystack(), false);
@@ -302,7 +308,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
             delta.apply_to(&mut range);
 
             let initial_len = hay_mut.len();
-            hay_mut.replace_range(range, &replacement);
+            hay_mut.replace_range(range, replacement.as_slice());
             delta.add_diff(hay_mut.len(), initial_len);
         }
 

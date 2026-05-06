@@ -60,7 +60,7 @@ pub trait HaystackIter<'a>: Debug + Clone
 /// It should be noted that this trait is often implemented of a reference to the type in question,
 /// e.g. `&str` or `&[u8]` rather than `str` or `[u8]` themselves, so that the implementing type can
 /// be cloned as required.
-pub trait HaystackSlice<'a>: Debug + Clone + Sized {
+pub trait HaystackSlice<'a>: Debug + Clone + Sized + ToOwned {
     /// The `HaystackItem` contained within this slice.
     type Item: HaystackItem;
 
@@ -189,12 +189,18 @@ impl<'a, H: Haystack<'a>> IntoHaystack<'a, H> for H {
 // }
 
 #[allow(clippy::len_without_is_empty)]
-pub trait MutIntoHaystack<'a, I: HaystackItem> {
+pub trait OwnedHaystackable<'a, I: HaystackItem> {
     type Hay<'b>: HaystackOf<'b, I> where Self: 'b;
 
-    fn replace_range(&mut self, range: Range<usize>, with: &str);
+    fn replace_range<'b>(
+        &mut self,
+        range: Range<usize>,
+        with: <Self::Hay<'b> as HaystackIter<'b>>::Slice
+    );
 
     fn as_haystack<'b>(&'b self) -> Self::Hay<'b>;
+
+    fn as_slice<'b>(&'b self) -> <Self::Hay<'b> as HaystackIter<'b>>::Slice;
 
     fn len(&self) -> usize;
 }

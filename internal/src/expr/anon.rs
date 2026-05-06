@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use super::Regex;
 use crate::expr::{FindAllCaptures, RangeOfAllMatches, SliceAllMatches};
-use crate::haystack::{HaystackItem, HaystackIter, HaystackOf, IntoHaystack, MutIntoHaystack};
+use crate::haystack::{HaystackItem, HaystackIter, HaystackOf, IntoHaystack, OwnedHaystackable};
 
 /// A trait that is automatically implemented for 'anonymous' regular expression types. There is
 /// only one difference between this and [`Regex`]: all functions take self as the first parameter,
@@ -90,20 +90,28 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
     }
 
     /// See [`Regex::replace`].
-    fn replace<'a, M: MutIntoHaystack<'a, I>>(&self, hay_mut: &'a mut M, with: &str) -> bool {
+    fn replace<'a, 'b, M: OwnedHaystackable<'a, I>>(
+        &self,
+        hay_mut: &'a mut M,
+        with: <M::Hay<'b> as HaystackIter<'b>>::Slice
+    ) -> bool {
         <Self as Regex<I, N>>::replace(hay_mut, with)
     }
 
     /// See [`Regex::replace_all`].
-    fn replace_all<'a, M: MutIntoHaystack<'a, I>>(&self, hay_mut: &'a mut M, with: &str) -> usize {
+    fn replace_all<'a, 'b, M: OwnedHaystackable<'a, I>>(
+        &self,
+        hay_mut: &'a mut M,
+        with: <M::Hay<'b> as HaystackIter<'b>>::Slice
+    ) -> usize {
         <Self as Regex<I, N>>::replace_all(hay_mut, with)
     }
 
     /// See [`Regex::replace_all_using`].
-    fn replace_all_using<'a, M: MutIntoHaystack<'a, I>>(
+    fn replace_all_using<'a, M: OwnedHaystackable<'a, I>>(
         &self,
         hay_mut: &'a mut M,
-        using: impl FnMut() -> String,
+        using: impl FnMut() -> M,
     ) -> usize {
         <Self as Regex<I, N>>::replace_all_using(hay_mut, using)
     }
@@ -112,8 +120,8 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
     fn replace_captured<'a, M, F>(&self, hay_mut: &'a mut M, replacer: F) -> bool
     where
         I: 'a,
-        M: MutIntoHaystack<'a, I>,
-        F: for<'b> FnOnce(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> String,
+        M: OwnedHaystackable<'a, I>,
+        F: for<'b> FnOnce(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> M,
     {
         <Self as Regex<I, N>>::replace_captured::<M, F>(hay_mut, replacer)
     }
@@ -122,8 +130,8 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
     fn replace_all_captured<'a, M, F>(&self, hay_mut: &'a mut M, replacer: F) -> usize
     where
         I: 'a,
-        M: MutIntoHaystack<'a, I>,
-        F: for<'b> FnMut(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> String,
+        M: OwnedHaystackable<'a, I>,
+        F: for<'b> FnMut(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> M,
     {
         <Self as Regex<I, N>>::replace_all_captured::<M, F>(hay_mut, replacer)
     }

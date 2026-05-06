@@ -1,6 +1,6 @@
 use std::{fmt::{self, Debug}, ops::Range};
 
-use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack, MutIntoHaystack};
+use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack, OwnedHaystackable};
 
 /// A helper for getting the first `char` of a provided `&str`. Returns the width of the character
 /// (possibly zero) and the character itself.
@@ -114,10 +114,14 @@ impl<'a> IntoHaystack<'a, StrStack<'a>> for &'a String {
     }
 }
 
-impl<'a> MutIntoHaystack<'a, char> for String {
+impl<'a> OwnedHaystackable<'a, char> for String {
     type Hay<'b> = StrStack<'b>;
 
-    fn replace_range(&mut self, range: Range<usize>, with: &str) {
+    fn replace_range<'b>(
+        &mut self,
+        range: Range<usize>,
+        with: <Self::Hay<'b> as HaystackIter<'b>>::Slice
+    ) {
         self.replace_range(range, with);
     }
 
@@ -125,7 +129,11 @@ impl<'a> MutIntoHaystack<'a, char> for String {
         self.into_haystack()
     }
 
+    fn as_slice<'b>(&'b self) -> <Self::Hay<'b> as HaystackIter<'b>>::Slice {
+        self
+    }
+
     fn len(&self) -> usize {
-        String::len(self)
+        self.len()
     }
 }

@@ -32,7 +32,7 @@
 //! It needs to be noted that regardless of the haystack type being matched, the regular expression
 //! provided to the `regex!` macro needs to be valid UTF-8.
 
-pub use ct_regex_internal::haystack::{ByteStack, Haystack, HaystackItem, HaystackIter, MutIntoHaystack, HaystackOf, HaystackSlice, IntoHaystack, StrStack};
+pub use ct_regex_internal::haystack::{ByteStack, Haystack, HaystackItem, HaystackIter, OwnedHaystackable, HaystackOf, HaystackSlice, IntoHaystack, StrStack};
 
 #[cfg(feature = "arcstr")]
 #[doc(cfg(feature = "arcstr"))]

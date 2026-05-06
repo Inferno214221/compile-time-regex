@@ -1,6 +1,6 @@
 use std::{fmt::{self, Debug}, ops::Range};
 
-use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack};
+use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack, OwnedHaystackable};
 
 /// A haystack type for matching against the [`u8`]s in a [`&[u8]`](slice). This type provides very
 /// straightforward indexing and iteration over the contained slice.
@@ -88,5 +88,29 @@ impl<'a> IntoHaystack<'a, ByteStack<'a>> for &'a Vec<u8> {
             inner: self,
             index: 0,
         }
+    }
+}
+
+impl<'a> OwnedHaystackable<'a, u8> for Vec<u8> {
+    type Hay<'b> = ByteStack<'b>;
+
+    fn replace_range<'b>(
+        &mut self,
+        range: Range<usize>,
+        with: <Self::Hay<'b> as HaystackIter<'b>>::Slice
+    ) {
+        self.splice(range, with.iter().cloned());
+    }
+
+    fn as_haystack<'b>(&'b self) -> Self::Hay<'b> {
+        self.into_haystack()
+    }
+
+    fn as_slice<'b>(&'b self) -> <Self::Hay<'b> as HaystackIter<'b>>::Slice {
+        self
+    }
+
+    fn len(&self) -> usize {
+        self.len()
     }
 }

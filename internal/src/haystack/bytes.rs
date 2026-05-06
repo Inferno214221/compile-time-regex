@@ -1,4 +1,5 @@
-use std::{fmt::{self, Debug}, ops::Range};
+use std::fmt::{self, Debug};
+use std::ops::Range;
 
 use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack, OwnedHaystackable};
 

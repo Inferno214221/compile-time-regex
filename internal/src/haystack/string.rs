@@ -1,21 +1,8 @@
 use std::ops::Range;
 
-use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack, OwnedHaystackable};
-
-/// A helper for getting the first `char` of a provided `&str`. Returns the width of the character
-/// (possibly zero) and the character itself.
-pub fn first_char_and_width(value: &str) -> (usize, Option<char>) {
-    // Unfortunately, I don't think there is a stable way to get `char`s from a `str` without using
-    // the `chars` or `char_indices` iterators. We can calculate the width easily but may as well
-    // have it done for us.
-    let mut iter = value.char_indices();
-    let first = iter.next();
-    (iter.offset(), first.map(|(_, c)| c))
-}
-
-pub fn first_char(value: &str) -> Option<char> {
-    value.chars().next()
-}
+use crate::haystack::{
+    HaystackIter, HaystackSlice, IntoHaystack, OwnedHaystackable, first_char, first_char_and_width
+};
 
 /// A haystack type for matching against the [`char`]s in a [`&str`](str). This type abstracts over
 /// the variable width scalars contained, to allow indexing without panics.

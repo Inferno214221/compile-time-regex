@@ -1,5 +1,4 @@
 use std::fmt::Debug;
-use std::ops::Range;
 
 mod haystack_item {
     pub trait Sealed {}
@@ -27,24 +26,6 @@ pub trait HaystackItem: Debug + Default + Copy + Eq + Ord + Sealed {
     fn is_return(self) -> bool;
 }
 
-/// A trait representing a slice of the underlying haystack for various
-/// [`Haystack`](crate::haystack::Haystack) types.
-///
-/// The implementor of this trait is usually but not always, the only implementor of
-/// [`IntoHaystack`](crate::haystack::IntoHaystack) for a haystack type.
-///
-/// It should be noted that this trait is often implemented of a reference to the type in question,
-/// e.g. `&str` or `&[u8]` rather than `str` or `[u8]` themselves, so that the implementing type can
-/// be cloned as required.
-pub trait HaystackSlice<'a>: Debug + Clone + Sized {
-    /// The `HaystackItem` contained within this slice.
-    type Item: HaystackItem;
-
-    /// Slices the underlying slice with the provided (half-open) `range`, used for retrieving
-    /// values of capture groups.
-    fn slice_with(&self, range: Range<usize>) -> Self;
-}
-
 impl Sealed for char {}
 
 impl HaystackItem for char {
@@ -61,14 +42,6 @@ impl HaystackItem for char {
     }
 }
 
-impl<'a> HaystackSlice<'a> for &'a str {
-    type Item = char;
-
-    fn slice_with(&self, range: Range<usize>) -> Self {
-        &self[range]
-    }
-}
-
 impl Sealed for u8 {}
 
 impl HaystackItem for u8 {
@@ -82,13 +55,5 @@ impl HaystackItem for u8 {
 
     fn is_return(self) -> bool {
         self == b'\r'
-    }
-}
-
-impl<'a> HaystackSlice<'a> for &'a [u8] {
-    type Item = u8;
-
-    fn slice_with(&self, range: Range<usize>) -> Self {
-        &self[range]
     }
 }

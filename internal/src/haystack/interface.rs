@@ -1,6 +1,73 @@
-use std::ops::Range;
+use std::{fmt::Debug, ops::Range};
 
-use crate::haystack::{HaystackItem, HaystackIter, HaystackSlice, StrStack};
+use crate::haystack::HaystackItem;
+
+/// The main underlying trait for [`Haystack`] types, `HaystackIter` should be implemented on new
+/// types that understand slicing and iterating over a haystack that can be sliced into instances of
+/// `Self::Slice`.
+///
+/// For unicode-based haystacks like [`&str`](str), the implementing type needs to be able to deal
+/// with the contained variable width code points.
+///
+/// This trait requires that implementors also implement
+/// [`Iterator<Item = Self::Slice::Item>`](Iterator). When [`Iterator::next`] is called, on a
+/// `HaystackIter` it should return the same value that previous calls to
+/// [`current_item`](Self::current_item) have, before progressing the index to the next item. When
+/// the last item has been returned by `next`, the iterators should return None. Any future calls
+/// should avoid incrementing the index.
+///
+/// Additionally, `HaystackIter`s should be cheap to clone and able to produce and restore an index
+/// representing the current position.
+///
+/// Although possible, there is no point implementing a `HaystackIter` that shares a `Slice` with
+/// another `HaystackIter`.
+pub trait HaystackIter<'a>: Debug + Clone
+    + Iterator<Item = <Self::Slice as HaystackSlice<'a>>::Item>
+{
+    /// The `HaystackSlice` returned by this type when slicing the underlying haystack. This type is
+    /// usually also contained within the implementor used to create an instance via
+    /// [`IntoHaystack`].
+    type Slice: HaystackSlice<'a>;
+
+    /// Returns the item currently being matched in the haystack. Repeatedly calling this method
+    /// should return the same item, until progressed with [`Iterator::next`].
+    fn current_item(&self) -> Option<Self::Item>;
+
+    fn prev_item(&self) -> Option<Self::Item>;
+
+    /// Returns the index of the current item in the original haystack. The returned value should be
+    /// valid to pass to [`Self::go_to`] without causing a panic.
+    fn current_index(&self) -> usize;
+
+    /// Returns the underlying slice, as it was when this `HaystackIter` was created - representing
+    /// the entire haystack being matched against.
+    fn whole_slice(&self) -> Self::Slice;
+
+    /// Returns the remaining contents of this haystack, as a `Slice`. For slice based haystacks,
+    /// this is can be implemented as `&self.inner[self.index..]`.
+    fn remainder_as_slice(&self) -> Self::Slice;
+
+    /// Restores the `index` of the haystack to the provided one. This should only be called with
+    /// indexes obtained by calling [`current_index`](Self::current_index) on this `HaystackIter`.
+    fn go_to(&mut self, index: usize);
+}
+
+/// A trait representing a slice of the underlying haystack for various [`Haystack`] types.
+///
+/// The implementor of this trait is usually but not always, the only implementor of
+/// [`IntoHaystack`] for a haystack type.
+///
+/// It should be noted that this trait is often implemented of a reference to the type in question,
+/// e.g. `&str` or `&[u8]` rather than `str` or `[u8]` themselves, so that the implementing type can
+/// be cloned as required.
+pub trait HaystackSlice<'a>: Debug + Clone + Sized {
+    /// The `HaystackItem` contained within this slice.
+    type Item: HaystackItem;
+
+    /// Slices the underlying slice with the provided (half-open) `range`, used for retrieving
+    /// values of capture groups.
+    fn slice_with(&self, range: Range<usize>) -> Self;
+}
 
 /// A trait used to interface the haystack types use when matching of capturing against a
 /// [`Regex`](crate::expr::Regex), including tracking progression and slicing captures.
@@ -130,20 +197,4 @@ pub trait MutIntoHaystack<'a, I: HaystackItem> {
     fn as_haystack<'b>(&'b self) -> Self::Hay<'b>;
 
     fn len(&self) -> usize;
-}
-
-impl<'a> MutIntoHaystack<'a, char> for String {
-    type Hay<'b> = StrStack<'b>;
-
-    fn replace_range(&mut self, range: Range<usize>, with: &str) {
-        self.replace_range(range, with);
-    }
-
-    fn as_haystack<'b>(&'b self) -> Self::Hay<'b> {
-        self.into_haystack()
-    }
-
-    fn len(&self) -> usize {
-        String::len(self)
-    }
 }

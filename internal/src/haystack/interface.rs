@@ -189,18 +189,18 @@ impl<'a, H: Haystack<'a>> IntoHaystack<'a, H> for H {
 // }
 
 #[allow(clippy::len_without_is_empty)]
-pub trait OwnedHaystackable<'a, I: HaystackItem> {
-    type Hay<'b>: HaystackOf<'b, I> where Self: 'b;
+pub trait OwnedHaystackable<I: HaystackItem> {
+    type Hay<'a>: HaystackOf<'a, I> where Self: 'a;
 
-    fn replace_range<'b>(
+    fn replace_range<'a>(
         &mut self,
         range: Range<usize>,
-        with: <Self::Hay<'b> as HaystackIter<'b>>::Slice
+        with: <Self::Hay<'a> as HaystackIter<'a>>::Slice
     );
 
-    fn as_haystack<'b>(&'b self) -> Self::Hay<'b>;
+    fn as_haystack<'a>(&'a self) -> Self::Hay<'a>;
 
-    fn as_slice<'b>(&'b self) -> <Self::Hay<'b> as HaystackIter<'b>>::Slice;
+    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as HaystackIter<'a>>::Slice;
 
     fn len(&self) -> usize;
 }

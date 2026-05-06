@@ -114,22 +114,22 @@ impl<'a> IntoHaystack<'a, StrStack<'a>> for &'a String {
     }
 }
 
-impl<'a> OwnedHaystackable<'a, char> for String {
-    type Hay<'b> = StrStack<'b>;
+impl OwnedHaystackable<char> for String {
+    type Hay<'a> = StrStack<'a>;
 
-    fn replace_range<'b>(
+    fn replace_range<'a>(
         &mut self,
         range: Range<usize>,
-        with: <Self::Hay<'b> as HaystackIter<'b>>::Slice
+        with: <Self::Hay<'a> as HaystackIter<'a>>::Slice
     ) {
         self.replace_range(range, with);
     }
 
-    fn as_haystack<'b>(&'b self) -> Self::Hay<'b> {
+    fn as_haystack<'a>(&'a self) -> Self::Hay<'a> {
         self.into_haystack()
     }
 
-    fn as_slice<'b>(&'b self) -> <Self::Hay<'b> as HaystackIter<'b>>::Slice {
+    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as HaystackIter<'a>>::Slice {
         self
     }
 

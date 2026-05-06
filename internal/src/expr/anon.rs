@@ -90,48 +90,46 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
     }
 
     /// See [`Regex::replace`].
-    fn replace<'a, 'b, M: OwnedHaystackable<'a, I>>(
+    fn replace<'a, M: OwnedHaystackable<I>>(
         &self,
-        hay_mut: &'a mut M,
-        with: <M::Hay<'b> as HaystackIter<'b>>::Slice
+        hay_mut: &mut M,
+        with: <M::Hay<'a> as HaystackIter<'a>>::Slice
     ) -> bool {
         <Self as Regex<I, N>>::replace(hay_mut, with)
     }
 
     /// See [`Regex::replace_all`].
-    fn replace_all<'a, 'b, M: OwnedHaystackable<'a, I>>(
+    fn replace_all<'a, M: OwnedHaystackable<I>>(
         &self,
-        hay_mut: &'a mut M,
-        with: <M::Hay<'b> as HaystackIter<'b>>::Slice
+        hay_mut: &mut M,
+        with: <M::Hay<'a> as HaystackIter<'a>>::Slice
     ) -> usize {
         <Self as Regex<I, N>>::replace_all(hay_mut, with)
     }
 
     /// See [`Regex::replace_all_using`].
-    fn replace_all_using<'a, M: OwnedHaystackable<'a, I>>(
+    fn replace_all_using<M: OwnedHaystackable<I>>(
         &self,
-        hay_mut: &'a mut M,
+        hay_mut: &mut M,
         using: impl FnMut() -> M,
     ) -> usize {
         <Self as Regex<I, N>>::replace_all_using(hay_mut, using)
     }
 
     /// See [`Regex::replace_captured`].
-    fn replace_captured<'a, M, F>(&self, hay_mut: &'a mut M, replacer: F) -> bool
+    fn replace_captured<M, F>(&self, hay_mut: &mut M, replacer: F) -> bool
     where
-        I: 'a,
-        M: OwnedHaystackable<'a, I>,
-        F: for<'b> FnOnce(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> M,
+        M: OwnedHaystackable<I>,
+        F: for<'a> FnOnce(Self::Capture<'a, <M::Hay<'a> as HaystackIter<'a>>::Slice>) -> M,
     {
         <Self as Regex<I, N>>::replace_captured::<M, F>(hay_mut, replacer)
     }
 
     /// See [`Regex::replace_all_captured`].
-    fn replace_all_captured<'a, M, F>(&self, hay_mut: &'a mut M, replacer: F) -> usize
+    fn replace_all_captured<M, F>(&self, hay_mut: &mut M, replacer: F) -> usize
     where
-        I: 'a,
-        M: OwnedHaystackable<'a, I>,
-        F: for<'b> FnMut(Self::Capture<'b, <M::Hay<'b> as HaystackIter<'b>>::Slice>) -> M,
+        M: OwnedHaystackable<I>,
+        F: for<'a> FnMut(Self::Capture<'a, <M::Hay<'a> as HaystackIter<'a>>::Slice>) -> M,
     {
         <Self as Regex<I, N>>::replace_all_captured::<M, F>(hay_mut, replacer)
     }

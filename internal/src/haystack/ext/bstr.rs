@@ -1,8 +1,8 @@
 use std::ops::Range;
 
-use bstr::BStr;
+use bstr::{BStr, BString};
 
-use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack};
+use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack, OwnedHaystackable};
 
 impl<'a> HaystackSlice<'a> for &'a BStr {
     type Item = u8;
@@ -24,6 +24,19 @@ impl<'a> IntoHaystack<'a, BStrStack<'a>> for &'a BStr {
     fn into_haystack(self) -> BStrStack<'a> {
         BStrStack {
             inner: self,
+            index: 0,
+        }
+    }
+}
+
+// BString implements Deref<Target = Vec<u8>>, so it will implicitly go to the wrong haystack type.
+// This does raise the question of how different the types really are and what benefit there is to
+// restricting everything to BStr when conversions are cheap. Answer: Why not? Its pretty easy to
+// implement.
+impl<'a> IntoHaystack<'a, BStrStack<'a>> for &'a BString {
+    fn into_haystack(self) -> BStrStack<'a> {
+        BStrStack {
+            inner: BStr::new(self),
             index: 0,
         }
     }
@@ -68,5 +81,29 @@ impl<'a> HaystackIter<'a> for BStrStack<'a> {
 
     fn go_to(&mut self, index: usize) {
         self.index = index;
+    }
+}
+
+impl OwnedHaystackable<u8> for BString {
+    type Hay<'a> = BStrStack<'a>;
+
+    fn replace_range<'a>(
+        &mut self,
+        range: Range<usize>,
+        with: <Self::Hay<'a> as HaystackIter<'a>>::Slice
+    ) where Self: 'a {
+        self.splice(range, with.iter().copied());
+    }
+
+    fn as_haystack<'a>(&'a self) -> Self::Hay<'a> {
+        self.into_haystack()
+    }
+
+    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as HaystackIter<'a>>::Slice {
+        BStr::new(self)
+    }
+
+    fn len(&self) -> usize {
+        Vec::len(self)
     }
 }

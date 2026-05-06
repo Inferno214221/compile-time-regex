@@ -98,7 +98,7 @@ impl OwnedHaystackable<u8> for Vec<u8> {
         &mut self,
         range: Range<usize>,
         with: <Self::Hay<'a> as HaystackIter<'a>>::Slice
-    ) {
+    ) where Self: 'a {
         self.splice(range, with.iter().cloned());
     }
 

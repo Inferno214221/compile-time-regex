@@ -121,7 +121,7 @@ impl OwnedHaystackable<char> for String {
         &mut self,
         range: Range<usize>,
         with: <Self::Hay<'a> as HaystackIter<'a>>::Slice
-    ) {
+    ) where Self: 'a {
         self.replace_range(range, with);
     }
 

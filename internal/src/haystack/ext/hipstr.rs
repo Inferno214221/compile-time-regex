@@ -6,7 +6,7 @@ use hipstr::bytes::HipByt;
 use hipstr::string::HipStr;
 
 use crate::haystack::{
-    HaystackIter, HaystackSlice, IntoHaystack, first_char, first_char_and_width,
+    HaystackIter, HaystackSlice, IntoHaystack, OwnedHaystackable, first_char, first_char_and_width
 };
 
 impl<'a, B: Backend> HaystackSlice<'a> for HipStr<'a, B> {
@@ -72,6 +72,31 @@ impl<'a, B: Backend> HaystackIter<'a> for HipStrStack<'a, B> {
     }
 }
 
+impl<'s, B: Backend> OwnedHaystackable<char> for HipStr<'s, B> {
+    type Hay<'a> = HipStrStack<'a, B> where Self: 'a;
+
+    fn replace_range<'a>(
+        &mut self,
+        range: Range<usize>,
+        with: <Self::Hay<'a> as HaystackIter<'a>>::Slice
+    ) where Self: 'a {
+        self.mutate().replace_range(range, &with);
+    }
+
+    fn as_haystack<'a>(&'a self) -> Self::Hay<'a> {
+        self.clone().into_haystack()
+    }
+
+    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as HaystackIter<'a>>::Slice {
+        self.clone()
+    }
+
+    fn len(&self) -> usize {
+        self.len()
+    }
+}
+
+// Implemented to relax B: Debug bound.
 impl<'a, B: Backend> Debug for HipStrStack<'a, B> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("HipStrStack")
@@ -170,5 +195,29 @@ impl<'a, B: Backend> Clone for HipBytStack<'a, B> {
             inner: self.inner.clone(),
             index: self.index,
         }
+    }
+}
+
+impl<'s, B: Backend> OwnedHaystackable<u8> for HipByt<'s, B> {
+    type Hay<'a> = HipBytStack<'a, B> where Self: 'a;
+
+    fn replace_range<'a>(
+        &mut self,
+        range: Range<usize>,
+        with: <Self::Hay<'a> as HaystackIter<'a>>::Slice
+    ) where Self: 'a {
+        self.mutate().splice(range, with.iter().copied());
+    }
+
+    fn as_haystack<'a>(&'a self) -> Self::Hay<'a> {
+        self.clone().into_haystack()
+    }
+
+    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as HaystackIter<'a>>::Slice {
+        self.clone()
+    }
+
+    fn len(&self) -> usize {
+        self.len()
     }
 }

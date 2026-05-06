@@ -196,7 +196,7 @@ pub trait OwnedHaystackable<I: HaystackItem> {
         &mut self,
         range: Range<usize>,
         with: <Self::Hay<'a> as HaystackIter<'a>>::Slice
-    );
+    ) where Self: 'a;
 
     fn as_haystack<'a>(&'a self) -> Self::Hay<'a>;
 

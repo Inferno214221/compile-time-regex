@@ -12,10 +12,12 @@ ct-regex-macro = { path = "macro"}
 arcstr = { version = "1.2.0", optional = true }
 bstr = { version = "1.12.1", optional = true }
 hipstr = { version = "0.8.0", optional = true }
+ecow = { version = "0.2.6", optional = true }
 
 [features]
 default = []
 demo = []
 arcstr = ["dep:arcstr", "ct-regex-internal/arcstr"]
 bstr = ["dep:bstr", "ct-regex-internal/bstr"]
+ecow = ["dep:ecow", "ct-regex-internal/ecow"]
 hipstr = ["dep:hipstr", "ct-regex-internal/hipstr"]

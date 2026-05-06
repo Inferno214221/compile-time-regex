@@ -12,9 +12,11 @@ standard-lib = { git = "https://github.com/Inferno214221/standard-lib.git", feat
 arcstr = { version = "1.2.0", optional = true }
 bstr = { version = "1.12.1", optional = true }
 hipstr = { version = "0.8.0", optional = true }
+ecow = { version = "0.2.6", optional = true }
 
 [features]
-default = ["arcstr", "bstr", "hipstr"]
+default = ["arcstr", "bstr", "ecow", "hipstr"]
 arcstr = ["dep:arcstr"]
 bstr = ["dep:bstr"]
+ecow = ["dep:ecow"]
 hipstr = ["dep:hipstr"]

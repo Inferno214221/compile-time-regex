@@ -61,6 +61,7 @@ dependencies = [
  "bstr",
  "ct-regex-internal",
  "ct-regex-macro",
+ "ecow",
  "hipstr",
 ]
 
@@ -70,6 +71,7 @@ version = "0.1.0"
 dependencies = [
  "arcstr",
  "bstr",
+ "ecow",
  "hipstr",
  "proc-macro2",
  "quote",
@@ -108,6 +110,12 @@ dependencies = [
  "syn",
  "unicode-xid",
 ]
+
+[[package]]
+name = "ecow"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "78e4f79b296fbaab6ce2e22d52cb4c7f010fe0ebe7a32e34fa25885fd797bd02"
 
 [[package]]
 name = "find-msvc-tools"

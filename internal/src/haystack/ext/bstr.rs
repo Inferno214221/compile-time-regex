@@ -14,7 +14,7 @@ impl<'a> HaystackSlice<'a> for &'a BStr {
 
 /// A haystack type for matching against the [`u8`]s in a [`&'a BStr`](bstr::BStr). This type is a
 /// very basic example of how the haystack traits can be implemented outside of the crate itself.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 pub struct BStrStack<'a> {
     inner: &'a BStr,
     index: usize,

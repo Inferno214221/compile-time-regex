@@ -1,11 +1,10 @@
-use std::fmt::{self, Debug};
 use std::ops::Range;
 
 use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack, OwnedHaystackable};
 
 /// A haystack type for matching against the [`u8`]s in a [`&[u8]`](slice). This type provides very
 /// straightforward indexing and iteration over the contained slice.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ByteStack<'a> {
     inner: &'a [u8],
     index: usize,
@@ -51,18 +50,6 @@ impl<'a> HaystackIter<'a> for ByteStack<'a> {
 
     fn go_to(&mut self, index: usize) {
         self.index = index;
-    }
-}
-
-impl<'a> Debug for ByteStack<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "b\"")?;
-
-        self.inner.iter().try_for_each(|byte| write!(f, "{:02x}", byte))?;
-
-        write!(f, "\"\n  ")?;
-        (0..self.index).try_for_each(|_| write!(f, "  "))?;
-        write!(f, "^")
     }
 }
 

@@ -6,7 +6,7 @@ use crate::expr::IndexedCaptures;
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::{LazyMatcher, Matcher, impl_all_captures_single, impl_all_matches_single};
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct QuantifierN<I: HaystackItem, A: Matcher<I>, const N: usize>(
     pub PhantomData<I>,
     pub PhantomData<A>,
@@ -43,7 +43,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Debug for QuantifierN<I, A,
 pub type AllMatchesMultiple = iter::Rev<vec::IntoIter<usize>>;
 pub type AllCapturesMultiple = iter::Rev<vec::IntoIter<(usize, IndexedCaptures)>>;
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct QuantifierNOrMore<I: HaystackItem, A: Matcher<I>, const N: usize>(
     pub PhantomData<I>,
     pub PhantomData<A>,
@@ -94,7 +94,7 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Debug for QuantifierNOrMore
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct QuantifierNToM<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize>(
     pub PhantomData<I>,
     pub PhantomData<A>,

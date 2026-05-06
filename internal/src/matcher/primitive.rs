@@ -4,7 +4,7 @@ use crate::expr::IndexedCaptures;
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::{Matcher, impl_all_captures_single, impl_all_matches_single};
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct Byte<const N: u8>;
 
 impl<const N: u8> Matcher<u8> for Byte<N> {
@@ -27,7 +27,7 @@ impl<const N: u8> Debug for Byte<N> {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct ByteRange<const A: u8, const B: u8>;
 
 impl<const A: u8, const B: u8> Matcher<u8> for ByteRange<A, B> {
@@ -53,7 +53,7 @@ impl<const A: u8, const B: u8> Debug for ByteRange<A, B> {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct Scalar<const N: char>;
 
 impl<const N: char> Matcher<char> for Scalar<N> {
@@ -76,7 +76,7 @@ impl<const N: char> Debug for Scalar<N> {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct ScalarRange<const A: char, const B: char>;
 
 impl<const A: char, const B: char> Matcher<char> for ScalarRange<A, B> {
@@ -102,7 +102,7 @@ impl<const A: char, const B: char> Debug for ScalarRange<A, B> {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct Always;
 
 impl<I: HaystackItem> Matcher<I> for Always {
@@ -120,7 +120,7 @@ impl Debug for Always {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct Start;
 
 impl<I: HaystackItem> Matcher<I> for Start {
@@ -138,7 +138,7 @@ impl Debug for Start {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct End;
 
 impl<I: HaystackItem> Matcher<I> for End {
@@ -156,7 +156,7 @@ impl Debug for End {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct LineStart;
 
 impl<I: HaystackItem> Matcher<I> for LineStart {
@@ -174,7 +174,7 @@ impl Debug for LineStart {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct LineEnd;
 
 impl<I: HaystackItem> Matcher<I> for LineEnd {
@@ -192,7 +192,7 @@ impl Debug for LineEnd {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct CRLFStart;
 
 impl<I: HaystackItem> Matcher<I> for CRLFStart {
@@ -210,7 +210,7 @@ impl Debug for CRLFStart {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct CRLFEnd;
 
 impl<I: HaystackItem> Matcher<I> for CRLFEnd {

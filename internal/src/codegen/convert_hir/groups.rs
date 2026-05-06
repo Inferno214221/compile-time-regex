@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Group {
     pub name: Option<Box<str>>,
     pub required: bool,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Groups {
     pub map: HashMap<u32, Group>,
     pub required: bool,

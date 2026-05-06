@@ -5,10 +5,10 @@ use standard_lib::collections::cons::ConsBranch;
 
 use crate::haystack::HaystackSlice;
 
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct IndexedCaptures(pub ConsBranch<IndexedCapture>);
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct IndexedCapture {
     pub index: usize,
     pub cap: Range<usize>,

@@ -419,6 +419,7 @@ fn range_of_match<'a, R: Regex<I, N> + ?Sized, I: HaystackItem, const N: usize>(
     None
 }
 
+#[derive(Debug, Clone)]
 struct Delta(isize);
 
 impl Delta {

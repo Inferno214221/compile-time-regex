@@ -1,12 +1,13 @@
 use std::fmt::{self, Debug};
-use std::iter::Chain;
+use std::hash::{Hash};
+use std::iter::{Chain, FusedIterator};
 use std::marker::PhantomData;
 
 use crate::expr::IndexedCaptures;
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::Matcher;
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct Or<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
     pub PhantomData<I>,
     pub PhantomData<A>,
@@ -75,6 +76,7 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Debug for Or<I, A, B> {
     }
 }
 
+#[derive(Debug, Clone, Hash)]
 pub struct AllMatchesThen<'a, I: HaystackItem, H: HaystackOf<'a, I>, A: Matcher<I>, B: Matcher<I>> {
     a_matches: A::AllMatches<'a, H>,
     b_matches: Option<B::AllMatches<'a, H>>,
@@ -102,6 +104,15 @@ where
     }
 }
 
+impl<'a, I, H, A, B> FusedIterator for AllMatchesThen<'a, I, H, A, B>
+where
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+    A: Matcher<I>,
+    B: Matcher<I>,
+{}
+
+#[derive(Debug, Clone, Hash)]
 pub struct AllCapturesThen<'a, I, H, A, B>
 where
     I: HaystackItem,
@@ -136,7 +147,15 @@ where
     }
 }
 
-#[derive(Default)]
+impl<'a, I, H, A, B> FusedIterator for AllCapturesThen<'a, I, H, A, B>
+where
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+    A: Matcher<I>,
+    B: Matcher<I>,
+{}
+
+#[derive(Default, Clone, Copy)]
 pub struct Then<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
     pub PhantomData<I>,
     pub PhantomData<A>,
@@ -205,7 +224,7 @@ impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Debug for Then<I, A, B> {
 /// - Remaining args: pairs of type parameter names in brackets
 macro_rules! define_paired_n {
     ($pair:ident, $all_matches:ident, $name:ident, $combiner:ident, $([$a:ident $b:ident])+) => {
-        #[derive(Default)]
+        #[derive(Default, Clone, Copy)]
         pub struct $name<
             Z: HaystackItem,
             $($a: Matcher<Z>, $b: Matcher<Z>),+

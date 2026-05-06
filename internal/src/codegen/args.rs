@@ -58,6 +58,7 @@ impl Parse for AnonRegexArgs {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Flags(pub HashSet<char>);
 
 impl Parse for Flags {

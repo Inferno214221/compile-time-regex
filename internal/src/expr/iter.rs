@@ -1,3 +1,4 @@
+use std::iter::FusedIterator;
 use std::marker::PhantomData;
 use std::ops::Range;
 
@@ -5,7 +6,7 @@ use crate::expr::{CaptureFromRanges, IndexedCaptures, Regex};
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::Matcher;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 pub struct RangeOfAllMatches<'a, I: HaystackItem, H: HaystackOf<'a, I>, M: Matcher<I>> {
     pub(crate) hay: H,
     pub(crate) overlapping: bool,
@@ -57,7 +58,14 @@ where
     }
 }
 
-#[derive(Debug, Clone)]
+impl<'a, I, H, M> FusedIterator for RangeOfAllMatches<'a, I, H, M>
+where
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+    M: Matcher<I>,
+{}
+
+#[derive(Debug, Clone, Hash)]
 pub struct SliceAllMatches<'a, I: HaystackItem, H: HaystackOf<'a, I>, M: Matcher<I>> {
     pub(crate) inner: RangeOfAllMatches<'a, I, H, M>,
 }
@@ -76,7 +84,14 @@ where
     }
 }
 
-#[derive(Debug, Clone)]
+impl<'a, I, H, M> FusedIterator for SliceAllMatches<'a, I, H, M>
+where
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+    M: Matcher<I>,
+{}
+
+#[derive(Debug, Clone, Hash)]
 pub struct FindAllCaptures<'a, R, I, H, const N: usize>
 where
     R: Regex<I, N> + ?Sized,
@@ -140,3 +155,10 @@ where
         }
     }
 }
+
+impl<'a, R, I, H, const N: usize> FusedIterator for FindAllCaptures<'a, R, I, H, N>
+where
+    R: Regex<I, N> + ?Sized,
+    I: HaystackItem + 'a,
+    H: HaystackOf<'a, I>,
+{}

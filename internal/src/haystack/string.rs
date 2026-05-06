@@ -1,4 +1,3 @@
-use std::fmt::{self, Debug};
 use std::ops::Range;
 
 use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack, OwnedHaystackable};
@@ -24,7 +23,7 @@ pub fn first_char(value: &str) -> Option<char> {
 /// To accomodate, calls to [`go_to`](Self::go_to) should only be made with an index previously
 /// produced by this type for the specific haystack. Failure to do so, may cause a panic if indexing
 /// on an invalid unicode boundary.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct StrStack<'a> {
     inner: &'a str,
     index: usize,
@@ -67,25 +66,6 @@ impl<'a> HaystackIter<'a> for StrStack<'a> {
 
     fn go_to(&mut self, index: usize) {
         self.index = index;
-    }
-}
-
-impl<'a> Debug for StrStack<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut len = 0;
-        write!(f, "\"")?;
-
-        self.inner.char_indices().try_for_each(|(index, ch)| {
-            let mut debug = ch.escape_debug();
-            if index < self.index {
-                len += debug.len();
-            }
-            debug.try_for_each(|debug_ch| write!(f, "{debug_ch}"))
-        })?;
-
-        write!(f, "\"\n ")?;
-        (0..len).try_for_each(|_| write!(f, " "))?;
-        write!(f, "^")
     }
 }
 

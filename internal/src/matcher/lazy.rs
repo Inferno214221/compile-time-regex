@@ -1,5 +1,5 @@
 use std::fmt::{self, Debug};
-use std::iter;
+use std::iter::{self, FusedIterator};
 use std::marker::PhantomData;
 
 use crate::expr::IndexedCaptures;
@@ -8,7 +8,7 @@ use crate::matcher::{
     AllCapturesSingle, AllMatchesSingle, LazyMatcher, Matcher, QuantifierNOrMore, QuantifierNToM,
 };
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct Lazy<I: HaystackItem, Q: LazyMatcher<I>>(pub PhantomData<I>, pub PhantomData<Q>);
 
 impl<I: HaystackItem, Q: LazyMatcher<I>> Matcher<I> for Lazy<I, Q> {
@@ -41,6 +41,7 @@ impl<I: HaystackItem, Q: LazyMatcher<I>> Debug for Lazy<I, Q> {
     }
 }
 
+#[derive(Debug, Clone, Hash)]
 pub struct LazyAllMatchesNOrMore<'a, I, H, A, const N: usize>
 where
     I: HaystackItem,
@@ -75,6 +76,14 @@ where
     }
 }
 
+impl<'a, I, H, A, const N: usize> FusedIterator for LazyAllMatchesNOrMore<'a, I, H, A, N>
+where
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+    A: Matcher<I>,
+{}
+
+#[derive(Debug, Clone, Hash)]
 pub struct LazyAllCapturesNOrMore<'a, I, H, A, const N: usize>
 where
     I: HaystackItem,
@@ -108,6 +117,13 @@ where
         }
     }
 }
+
+impl<'a, I, H, A, const N: usize> FusedIterator for LazyAllCapturesNOrMore<'a, I, H, A, N>
+where
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+    A: Matcher<I>,
+{}
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> LazyMatcher<I> for QuantifierNOrMore<I, A, N> {
     type LazyAllMatches<'a, H: HaystackOf<'a, I>> = iter::Chain<AllMatchesSingle, LazyAllMatchesNOrMore<'a, I, H, A, N>>;

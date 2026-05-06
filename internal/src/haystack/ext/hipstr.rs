@@ -1,4 +1,5 @@
 use std::fmt::{self, Debug};
+use std::hash::{Hash, Hasher};
 use std::ops::Range;
 
 use hipstr::Backend;
@@ -115,6 +116,13 @@ impl<'a, B: Backend> Clone for HipStrStack<'a, B> {
     }
 }
 
+impl<'a, B: Backend + Hash> Hash for HipStrStack<'a, B> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.inner.hash(state);
+        self.index.hash(state);
+    }
+}
+
 impl<'a, B: Backend> HaystackSlice<'a> for HipByt<'a, B> {
     type Item = u8;
 
@@ -195,6 +203,13 @@ impl<'a, B: Backend> Clone for HipBytStack<'a, B> {
             inner: self.inner.clone(),
             index: self.index,
         }
+    }
+}
+
+impl<'a, B: Backend + Hash> Hash for HipBytStack<'a, B> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.inner.hash(state);
+        self.index.hash(state);
     }
 }
 

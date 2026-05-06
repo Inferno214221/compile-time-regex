@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use crate::expr::IndexedCaptures;
 use crate::haystack::{HaystackItem, HaystackOf};
 
-pub trait Matcher<I: HaystackItem>: Debug + Default {
+pub trait Matcher<I: HaystackItem>: Debug + Default + Clone + Copy {
     type AllMatches<'a, H: HaystackOf<'a, I>>: Iterator<Item = usize>;
     type AllCaptures<'a, H: HaystackOf<'a, I>>: Iterator<Item = (usize, IndexedCaptures)>;
 

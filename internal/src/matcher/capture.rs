@@ -1,10 +1,13 @@
 use std::fmt::{self, Debug};
+use std::hash::Hash;
+use std::iter::FusedIterator;
 use std::marker::PhantomData;
 
 use crate::expr::IndexedCaptures;
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::Matcher;
 
+#[derive(Debug, Clone, Hash)]
 pub struct AllCapturesGroup<'a, I, H, A, const N: usize>
 where
     I: HaystackItem,
@@ -30,7 +33,14 @@ where
     }
 }
 
-#[derive(Default)]
+impl<'a, I, H, A, const N: usize> FusedIterator for AllCapturesGroup<'a, I, H, A, N>
+where
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+    A: Matcher<I>,
+{}
+
+#[derive(Default, Clone, Copy)]
 pub struct CaptureGroup<I: HaystackItem, A: Matcher<I>, const N: usize>(
     pub PhantomData<I>,
     pub PhantomData<A>,

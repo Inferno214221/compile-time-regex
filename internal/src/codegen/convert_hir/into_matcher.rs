@@ -50,13 +50,13 @@ impl IntoMatcherExpr for Hir {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Empty;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Concat(pub Vec<Hir>);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Alternation(pub Vec<Hir>);
 
 impl IntoMatcherExpr for u8 {

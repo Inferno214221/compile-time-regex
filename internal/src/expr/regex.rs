@@ -24,6 +24,10 @@ use crate::matcher::Matcher;
 /// # Function Coverage
 ///
 #[doc = include_str!("coverage.md")]
+///
+/// \* Note that these function runs through the Regex first and then the haystack. This means that
+/// substring involved is the one that matches the Regex first, not necessarily the first match in
+/// the haystack. In many cases, this makes no difference.
 pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// This type is a macro generated combination of ZSTs responsible for doing all of the heavy
     /// lifting involved in actually matching or capturing against a `Haystack`. For realistic
@@ -110,10 +114,6 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// [`contains_match`](Self::contains_match). For the actual substring itself, see
     /// [`slice_match`](Self::slice_match).
     ///
-    /// This function runs through the Regex first and then the haystack. This means that result is
-    /// the one that matches the Regex first, not necessarily the first match in the haystack. In
-    /// many cases, this makes no difference.
-    ///
     /// Note that there is no range equivalent of [`is_match`](Self::is_match), because any match
     /// has to be the entire haystack.
     fn range_of_match<'a, H: HaystackOf<'a, I>>(
@@ -139,10 +139,6 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
 
     /// Returns the slice that matches this Regex first. This is the slicing variant of
     /// [`range_of_match`](Self::range_of_match).
-    ///
-    /// This function runs through the Regex first and then the haystack. This means that result is
-    /// the one that matches the Regex first, not necessarily the first match in the haystack. In
-    /// many cases, this makes no difference.
     ///
     /// Note that there is no slicing equivalent of [`is_match`](Self::is_match), because any match
     /// has to be the entire haystack.
@@ -248,10 +244,6 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// Replaces the first match of this Regex in the provided haystack with the provided slice. The
     /// slice type required is the one associated with the provided haystack. The return value is a
     /// boolean indicating whether a match was found and replaced.
-    ///
-    /// This function runs through the Regex first and then the haystack. This means that replaced
-    /// substring is the one that matches the Regex first, not necessarily the first match in the
-    /// haystack. In many cases, this makes no difference.
     fn replace<'a, M: OwnedHaystackable<I>>(
         hay_mut: &mut M,
         with: <M::Hay<'a> as HaystackIter<'a>>::Slice
@@ -347,10 +339,6 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     ///     assert_eq!(hay, "0234567890");
     /// }
     /// ```
-    ///
-    /// This function runs through the Regex first and then the haystack. This means that replaced
-    /// substring is the one that matches the Regex first, not necessarily the first match in the
-    /// haystack. In many cases, this makes no difference.
     fn replace_captured<M, F>(hay_mut: &mut M, replacer: F) -> bool
     where
         M: OwnedHaystackable<I>,
@@ -373,7 +361,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     ///
     /// The provided function is used to create a replacement value when given a capture. The
     /// replacement value shares a type with the provided haystack. Its simplified signature would
-    /// be `F: FnOnce(Self::Capture<'_, <M::Hay>::Slice>) -> M`. Because of limitations with higher
+    /// be `F: FnMut(Self::Capture<'_, <M::Hay>::Slice>) -> M`. Because of limitations with higher
     /// ranked trait bounds surrounding closure, it may be necessary to implement this as function
     /// with lifetime annotations as mentioned in the documentation for
     /// [`replace_captured`](Self::replace_captured).

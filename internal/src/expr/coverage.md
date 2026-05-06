@@ -1,4 +1,4 @@
-| Description                            | Whole                            | First                                        | All                                                                     |
+| Description                            | Whole                            | First*                                       | All                                                                     |
 |-|-|-|-|
 | Checks for a match                     | [`is_match`](Self::is_match)     | [`contains_match`](Self::contains_match)     | [`count_matches`](Self::count_matches)                                  |
 | Returns range of match                 | -                                | [`range_of_match`](Self::range_of_match)     | [`range_of_all_matches`](Self::range_of_all_matches)                    |

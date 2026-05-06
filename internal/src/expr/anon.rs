@@ -6,7 +6,7 @@ use crate::haystack::{HaystackItem, HaystackIter, HaystackOf, IntoHaystack, Owne
 
 /// A trait that is automatically implemented for 'anonymous' regular expression types. There is
 /// only one difference between this and [`Regex`]: all functions take self as the first parameter,
-/// removing the need to name the type itself.
+/// removing the need to name the expression itself.
 ///
 /// An `AnonRegex` can be created by invoking `regex!()` without a type identifier or visibility.
 /// The result is an instance of an unnamable type implementing `AnonRegex`.

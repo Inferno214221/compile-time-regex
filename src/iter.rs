@@ -1,4 +1,4 @@
-//! A collection of iterators used in return types for Regex methods. Although also usually
+//! A collection of [`Iterator`]s used in return types for Regex methods. Although also usually
 //! inferred, these may be needed to name types in some cases.
 //!
 //! Unfortunately, all of these types have many type parameters. To make code more concise, try

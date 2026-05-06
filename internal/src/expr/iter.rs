@@ -6,6 +6,8 @@ use crate::expr::{CaptureFromRanges, IndexedCaptures, Regex};
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::Matcher;
 
+/// An `Iterator` over each match in the haystack, as a [`Range<usize>`](Range). See
+/// [`Regex::range_of_all_matches`].
 #[derive(Debug, Clone, Hash)]
 pub struct RangeOfAllMatches<'a, I: HaystackItem, H: HaystackOf<'a, I>, M: Matcher<I>> {
     pub(crate) hay: H,
@@ -65,6 +67,8 @@ where
     M: Matcher<I>,
 {}
 
+/// An `Iterator` over each match in the haystack, as an `H::Slice`. See
+/// [`Regex::slice_all_matches`].
 #[derive(Debug, Clone, Hash)]
 pub struct SliceAllMatches<'a, I: HaystackItem, H: HaystackOf<'a, I>, M: Matcher<I>> {
     pub(crate) inner: RangeOfAllMatches<'a, I, H, M>,
@@ -91,6 +95,8 @@ where
     M: Matcher<I>,
 {}
 
+/// An `Iterator` over each capture in the haystack, as an `R::Capture`. See
+/// [`Regex::find_all_captures`].
 #[derive(Debug, Clone, Hash)]
 pub struct FindAllCaptures<'a, R, I, H, const N: usize>
 where

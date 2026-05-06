@@ -7,6 +7,11 @@ pub mod arcstr;
 pub mod bstr;
 
 /// Extra haystack implementations for the [`ecow`](https://docs.rs/bstr/latest/ecow/) crate.
+///
+/// This module doesn't actually contain any types but the feature gate enables
+/// [`OwnedHaystackable`](super::OwnedHaystackable) implementations for
+/// [`EcoString`](../trait.OwnedHaystackable.html#impl-OwnedHaystackable<char>-for-EcoString) and
+/// [`EcoVec<u8>`](../trait.OwnedHaystackable.html#impl-OwnedHaystackable<u8>-for-EcoVec<u8>).
 #[cfg(feature = "ecow")]
 pub mod ecow;
 

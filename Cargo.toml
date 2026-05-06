@@ -7,7 +7,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-ct-regex-internal = { path = "internal" }
+ct-regex-internal = { path = "internal", features = [] }
 ct-regex-macro = { path = "macro"}
 arcstr = { version = "1.2.0", optional = true }
 bstr = { version = "1.12.1", optional = true }

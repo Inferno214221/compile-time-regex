@@ -189,6 +189,11 @@ impl<'a, H: Haystack<'a>> IntoHaystack<'a, H> for H {
 //     }
 // }
 
+/// A trait representing an owned, mutable type that can be converted into a [`Haystack`] as
+/// required. This allows for [`Regex`](crate::expr::Regex) methods that replace matches or captures
+/// from the original `Haystack`.
+///
+/// It is also used as the return type of the closures take by a couple of `Regex` replace methods.
 #[allow(clippy::len_without_is_empty)]
 pub trait OwnedHaystackable<I: HaystackItem> {
     type Hay<'a>: HaystackOf<'a, I> where Self: 'a;

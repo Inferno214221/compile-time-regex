@@ -9,3 +9,6 @@ pub use ext::*;
 pub use interface::*;
 pub use item::*;
 pub use string::*;
+
+#[cfg(test)]
+mod tests;

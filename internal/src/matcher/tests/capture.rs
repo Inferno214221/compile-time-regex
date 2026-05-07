@@ -71,7 +71,6 @@ macro_rules! caps {
     };
 }
 
-#[allow(clippy::module_inception)]
 mod capture {
     use super::*;
 

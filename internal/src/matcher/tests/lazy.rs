@@ -9,7 +9,6 @@ type ScalarB = Scalar<'b'>;
 type QuantifierNOrMoreA<const N: usize> = QuantifierNOrMore<char, ScalarA, N>;
 type QuantifierNToMA<const N: usize, const M: usize> = QuantifierNToM<char, ScalarA, N, M>;
 
-#[allow(clippy::module_inception)]
 mod lazy {
     use super::*;
 

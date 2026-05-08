@@ -1,0 +1,22 @@
+[package]
+name = "ct-regex-bench"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+regex = "1.12.3"
+ct-regex = { path = "..", features = [] }
+criterion = "0.8.2"
+
+[[bench]]
+name = "all"
+harness = false
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+
+# [profile.release]
+# opt-level = 3        # Maximize optimization
+# lto = "fat"          # Enable full Link-Time Optimization for cross-crate inlining
+# codegen-units = 1    # Reduce parallel code generation to allow more optimizations
+# panic = "abort"      # Reduce binary size (optional)

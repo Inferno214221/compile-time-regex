@@ -1,5 +1,5 @@
 [workspace]
-members = ["internal", "macro"]
+members = ["bench", "internal", "macro"]
 
 [package]
 name = "ct-regex"

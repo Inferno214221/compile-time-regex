@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::{hint::black_box, sync::LazyLock, time::Duration};
 
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
@@ -24,7 +26,7 @@ static EMAIL: LazyLock<Regex> = LazyLock::new(
     || Regex::new(r"^([[:word:]]+)@(?<domain>([[:word:]]+)(\.[[:word:]]+))$").unwrap()
 );
 
-const EMAILS: [&str; 6] = [
+const EMAILS: &[&str] = &[
     "me@example.com",
     "spam@example.com",
     "example@gmail.com",
@@ -33,7 +35,7 @@ const EMAILS: [&str; 6] = [
     "example.com"
 ];
 
-const PHONE_NUMS: [&str; 6] = [
+const PHONE_NUMS: &[&str] = &[
     "+12123456789",
     "0123456789",
     "+9876543210",
@@ -91,7 +93,7 @@ fn bench_phones(c: &mut Criterion) {
     }
     group.finish();
 }
-// bench_emails
+
 criterion_group!(
     name = benches;
     config = Criterion::default()

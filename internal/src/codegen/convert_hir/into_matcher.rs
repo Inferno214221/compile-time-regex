@@ -60,8 +60,13 @@ struct Concat(pub Vec<Hir>);
 struct Alternation(pub Vec<Hir>);
 
 impl IntoMatcherExpr for u8 {
-    fn into_matcher_expr<I: CodegenItem>(self, _caps: &mut Groups) -> TokenStream {
+    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
         assert_eq!(type_name::<I>(), type_name::<u8>());
+
+        if !self.is_ascii_digit() {
+            caps.only_digits = false;
+        }
+
         quote!(::ct_regex::internal::matcher::Byte<#self>)
     }
 }
@@ -74,14 +79,24 @@ impl IntoMatcherExpr for &ClassBytesRange {
         } else {
             let start = self.start();
             let end = self.end();
+
+            if !start.is_ascii_digit() || !end.is_ascii_digit() {
+                caps.only_digits = false;
+            }
+
             quote!(::ct_regex::internal::matcher::ByteRange<#start, #end>)
         }
     }
 }
 
 impl IntoMatcherExpr for char {
-    fn into_matcher_expr<I: CodegenItem>(self, _caps: &mut Groups) -> TokenStream {
+    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
         assert_eq!(type_name::<I>(), type_name::<char>());
+
+        if !self.is_ascii_digit() {
+            caps.only_digits = false;
+        }
+
         quote!(::ct_regex::internal::matcher::Scalar<#self>)
     }
 }
@@ -94,6 +109,11 @@ impl IntoMatcherExpr for &ClassUnicodeRange {
         } else {
             let start = self.start();
             let end = self.end();
+
+            if !start.is_ascii_digit() || !end.is_ascii_digit() {
+                caps.only_digits = false;
+            }
+
             quote!(::ct_regex::internal::matcher::ScalarRange<#start, #end>)
         }
     }
@@ -109,6 +129,7 @@ impl IntoMatcherExpr for Literal {
     fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
         write_chunked::<Then<u8, A, A>, I, _>(
             caps,
+            // FIXME: Useless conversion to and from str.
             I::vec_from_str(
                 str::from_utf8(&self.0)
                     .expect("failed to convert bytes to valid unicode")
@@ -188,11 +209,30 @@ impl IntoMatcherExpr for Repetition {
 
 impl IntoMatcherExpr for Capture {
     fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
-        caps.insert(self.index, self.name);
+        caps.insert(self.index, self.name, 0..0);
         let item_type = type_ident::<I>();
-        let sub_matcher = self.sub.into_matcher_expr::<I>(caps);
-        let index = self.index as usize;
 
+        let properties = self.sub.properties().clone();
+        let digits = (
+            properties.minimum_len()
+                .unwrap_or_default()
+        )..(
+            properties.maximum_len()
+                .unwrap_or_default() + 1
+        );
+
+        let prev_only_digits = caps.only_digits;
+        caps.only_digits = true;
+
+        let sub_matcher = self.sub.into_matcher_expr::<I>(caps);
+
+        if caps.only_digits {
+            caps.set_digits(self.index, digits);
+        }
+
+        caps.only_digits &= prev_only_digits;
+
+        let index = self.index as usize;
         quote!(::ct_regex::internal::matcher::CaptureGroup<#item_type, #sub_matcher, #index>)
     }
 }

@@ -38,6 +38,10 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// A macro generated type holding all `N` capture groups in this expression, producing ranges
     /// or slices of the haystack with aliases for named groups. The generated type also understands
     /// which groups will always exist in a match and which are optional.
+    ///
+    /// Note that an `Capture` type represents the contents of all groups from a single match. Each
+    /// group only occurs once, if you're expecting the expression the match multiple times in a
+    /// haystack, you will have many `Capture`s.
     type Capture<'a, S: HaystackSlice<'a>>: CaptureFromRanges<'a, S, N> where I: 'a;
 
     /// Returns `true` if this Regex matches the **entire** haystack provided. This should probably

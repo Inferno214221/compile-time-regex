@@ -32,14 +32,26 @@
 //!    or capturing at runtime boils down to a series of function calls, which the Rust compile can
 //!    optimise as it sees fit.
 //!
+//! # When To Use This Crate
+//!
+//! If you're writing a small piece of software using expressions known at compile time and you
+//! don't want to package a whole regex interpreter into your binary. It's also a good idea if you
+//! only use an expression a few times.
+//!
+//! Parsing strings from an input file or command line arguments using the named captures is
+//! probably one of the major benefits, and the reason I started writing this in the first place.
+//!
 //! # When Not To Use This Crate
 //!
 //! For runtime regular expressions (_gasp_). Seriously though, most of the work done by this crate
 //! occurs when building the binary, so it isn't possible to create expressions on the fly. See one
 //! of the other crates listed above if this is something you want.
 //!
-//! Some complex functionality isn't implement yet, including complex look-arounds etc. An error
-//! will occur at **compile-time** if you try to use an unimplemented feature.
+//! After the other regular expressions are compiled, they can achieve speeds a fair bit faster than
+//! this crate, using parallel operations and such.
+//!
+//! Some complex functionality isn't implement yet, primarily complex look-arounds. An error will
+//! occur at **compile-time** if you try to use an unimplemented feature.
 
 #![feature(doc_cfg)]
 

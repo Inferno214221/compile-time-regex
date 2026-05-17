@@ -16,6 +16,14 @@ impl<'a, B: Backend> HaystackSlice<'a> for HipStr<'a, B> {
     fn slice_with(&self, range: Range<usize>) -> Self {
         self.slice(range)
     }
+
+    fn len(&self) -> usize {
+        HipStr::len(self)
+    }
+
+    fn is_empty(&self) -> bool {
+        HipStr::is_empty(self)
+    }
 }
 
 /// A haystack type for matching against the [`char`]s in a [`HipStr<'a, B>`](hipstr::HipStr).
@@ -128,6 +136,14 @@ impl<'a, B: Backend> HaystackSlice<'a> for HipByt<'a, B> {
 
     fn slice_with(&self, range: Range<usize>) -> Self {
         self.slice(range)
+    }
+
+    fn len(&self) -> usize {
+        HipByt::len(self)
+    }
+
+    fn is_empty(&self) -> bool {
+        HipByt::is_empty(self)
     }
 }
 

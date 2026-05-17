@@ -13,6 +13,14 @@ impl<'a> HaystackSlice<'a> for Substr {
     fn slice_with(&self, range: Range<usize>) -> Self {
         self.substr(range)
     }
+
+    fn len(&self) -> usize {
+        Substr::len(self)
+    }
+
+    fn is_empty(&self) -> bool {
+        Substr::is_empty(self)
+    }
 }
 
 /// A haystack type for matching against the [`char`]s in an [`ArcStr`]. Although [`IntoHaystack`]

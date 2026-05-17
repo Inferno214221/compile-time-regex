@@ -62,6 +62,14 @@ impl<'a> HaystackSlice<'a> for &'a str {
     fn slice_with(&self, range: Range<usize>) -> Self {
         &self[range]
     }
+
+    fn len(&self) -> usize {
+        str::len(self)
+    }
+
+    fn is_empty(&self) -> bool {
+        str::is_empty(self)
+    }
 }
 
 impl<'a> IntoHaystack<'a, StrStack<'a>> for &'a str {

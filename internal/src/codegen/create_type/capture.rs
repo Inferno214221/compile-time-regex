@@ -111,6 +111,12 @@ pub fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> Token
     let cap_name_full = format_ident!("{}_range", cap_name);
     let index_name = Literal::usize_unsuffixed(index);
 
+    let numeric_impl = if cap.digits.end == 0 {
+        quote!()
+    } else {
+        impl_numeric_getters(cap, &cap_name)
+    };
+
     if cap.required {
         quote! {
             pub fn #cap_name(&self) -> S {
@@ -120,6 +126,8 @@ pub fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> Token
             pub fn #cap_name_full(&self) -> #Range {
                 self.#index_name.clone()
             }
+
+            #numeric_impl
         }
     } else {
         quote! {
@@ -130,6 +138,65 @@ pub fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> Token
             pub fn #cap_name_full(&self) -> #Option<#Range> {
                 self.#index_name.clone()
             }
+
+            #numeric_impl
         }
+    }
+}
+
+pub fn impl_numeric_getters(cap: &Group, cap_name: &Ident) -> TokenStream {
+    #![allow(nonstandard_style)]
+    let Option = quote!(::std::option::Option);
+    let FromStr = quote!(::std::str::FromStr);
+
+    let bit_count = (cap.digits.end as f64 * 10.0_f64.log2()).ceil();
+    if bit_count > 128.0 {
+        return quote!();
+    }
+
+    let integer_size = (2 ^ bit_count.log2().ceil() as usize).clamp(8, 128);
+    let integer_name = format_ident!("u{}", integer_size);
+
+    let cap_name_num = format_ident!("{}_{}", cap_name, integer_name);
+
+    match (cap.digits.start == 0, cap.required) {
+        (false, false) => quote! {
+            pub fn #cap_name_num(&self) -> #Option<#integer_name> {
+                <#integer_name as #FromStr>::from_str(
+                    self.#cap_name()?
+                ).unwrap()
+            }
+        },
+        (false, true) => quote! {
+            pub fn #cap_name_num(&self) -> #integer_name {
+                <#integer_name as #FromStr>::from_str(
+                    self.#cap_name()
+                ).unwrap()
+            }
+        },
+        (true, false) => quote! {
+            pub fn #cap_name_num(&self) -> #Option<#Option<#integer_name>> {
+                let Some(cap) = self.#cap_name() else {
+                    return Some(None);
+                };
+                if cap.is_empty() {
+                    return None;
+                }
+                <#integer_name as #FromStr>::from_str(
+                    cap
+                ).unwrap()
+            }
+        },
+        (true, true) => quote! {
+            pub fn #cap_name_num(&self) -> #Option<#integer_name> {
+                let cap = self.#cap_name();
+                if cap.is_empty() {
+                    return None;
+                }
+                <#integer_name as #FromStr>::from_str(
+                    cap
+                ).unwrap()
+            }
+        },
     }
 }

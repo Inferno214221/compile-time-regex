@@ -59,6 +59,14 @@ impl<'a> HaystackSlice<'a> for &'a [u8] {
     fn slice_with(&self, range: Range<usize>) -> Self {
         &self[range]
     }
+
+    fn len(&self) -> usize {
+        <[u8]>::len(self)
+    }
+
+    fn is_empty(&self) -> bool {
+        <[u8]>::is_empty(self)
+    }
 }
 
 impl<'a> IntoHaystack<'a, ByteStack<'a>> for &'a [u8] {

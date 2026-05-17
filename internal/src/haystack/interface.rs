@@ -68,6 +68,10 @@ pub trait HaystackSlice<'a>: Debug + Clone + Sized + ToOwned {
     /// Slices the underlying slice with the provided (half-open) `range`, used for retrieving
     /// values of capture groups.
     fn slice_with(&self, range: Range<usize>) -> Self;
+
+    fn len(&self) -> usize;
+
+    fn is_empty(&self) -> bool;
 }
 
 /// A trait used to interface the haystack types use when matching of capturing against a

@@ -109,10 +109,7 @@ impl IntoMatcherExpr for Literal {
     fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
         write_chunked::<Then<u8, A, A>, I, _>(
             caps,
-            I::vec_from_str(
-                str::from_utf8(&self.0)
-                    .expect("failed to convert bytes to valid unicode")
-            )
+            I::collect_from_bytes(&self.0)
         )
     }
 }

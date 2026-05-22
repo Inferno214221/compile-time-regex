@@ -14,9 +14,19 @@ mod char_item {
     }
 
     #[test]
-    fn vec_from_str() {
-        assert_eq!(char::vec_from_str("abc"), vec!['a', 'b', 'c']);
-        assert_eq!(char::vec_from_str("😀🧑‍🔬"), vec!['😀', '🧑', '\u{200d}', '🔬']);
+    fn from_str_and_bytes() {
+        assert_eq!(char::collect_from_str("abc"), vec!['a', 'b', 'c']);
+        assert_eq!(char::collect_from_str("😀🧑‍🔬"), vec!['😀', '🧑', '\u{200d}', '🔬']);
+        assert_eq!(char::collect_from_bytes(b"abc"), vec!['a', 'b', 'c']);
+        assert_eq!(
+            char::collect_from_bytes(&[
+                0xf0, 0x9f, 0x98, 0x80,
+                0xf0, 0x9f, 0xa7, 0x91,
+                0xe2, 0x80, 0x8d,
+                0xf0, 0x9f, 0x94, 0xac
+            ]),
+            vec!['😀', '🧑', '\u{200d}', '🔬']
+        );
     }
 
     #[test]
@@ -40,10 +50,26 @@ mod u8_item {
     use super::*;
 
     #[test]
-    fn vec_from_str() {
-        assert_eq!(u8::vec_from_str("abc"), vec![b'a', b'b', b'c']);
+    fn from_str_and_bytes() {
+        assert_eq!(u8::collect_from_str("abc"), vec![b'a', b'b', b'c']);
         assert_eq!(
-            u8::vec_from_str("😀🧑‍🔬"),
+            u8::collect_from_str("😀🧑‍🔬"),
+            vec![
+                0xf0, 0x9f, 0x98, 0x80,
+                0xf0, 0x9f, 0xa7, 0x91,
+                0xe2, 0x80, 0x8d,
+                0xf0, 0x9f, 0x94, 0xac
+            ]
+        );
+
+        assert_eq!(u8::collect_from_bytes(b"abc"), vec![b'a', b'b', b'c']);
+        assert_eq!(
+            u8::collect_from_bytes(&[
+                0xf0, 0x9f, 0x98, 0x80,
+                0xf0, 0x9f, 0xa7, 0x91,
+                0xe2, 0x80, 0x8d,
+                0xf0, 0x9f, 0x94, 0xac
+            ]),
             vec![
                 0xf0, 0x9f, 0x98, 0x80,
                 0xf0, 0x9f, 0xa7, 0x91,

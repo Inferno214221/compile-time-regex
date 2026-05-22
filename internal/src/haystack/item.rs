@@ -7,7 +7,7 @@ mod haystack_item {
 use haystack_item::Sealed;
 
 /// A trait that represents an individual item that can be matched against a
-/// [`Regex`](crate::expr::Regex). The primary (and only) two implementors are [`char`] and [`u8`].
+/// [`Regex`](crate::expr::Regex). The primary (and only) two implementers are [`char`] and [`u8`].
 ///
 /// # Sealed
 ///
@@ -19,7 +19,9 @@ pub trait HaystackItem: Debug + Default + Copy + Eq + Ord + Sealed {
     /// Creates a `Vec` of this item from the provided `&str`, used to convert string literals from
     /// parsed regular expressions into individual `HaystackItem`s that can be matched in a
     /// haystack.
-    fn vec_from_str(value: &str) -> Vec<Self>;
+    fn collect_from_str(value: &str) -> Vec<Self>;
+
+    fn collect_from_bytes(value: &[u8]) -> Vec<Self>;
 
     fn is_newline(self) -> bool;
 
@@ -44,8 +46,15 @@ pub fn first_char(value: &str) -> Option<char> {
 impl Sealed for char {}
 
 impl HaystackItem for char {
-    fn vec_from_str(value: &str) -> Vec<Self> {
+    fn collect_from_str(value: &str) -> Vec<Self> {
         value.chars().collect()
+    }
+
+    fn collect_from_bytes(value: &[u8]) -> Vec<Self> {
+        Self::collect_from_str(
+            str::from_utf8(value).expect("failed to convert bytes to valid unicode")
+        )
+
     }
 
     fn is_newline(self) -> bool {
@@ -60,8 +69,13 @@ impl HaystackItem for char {
 impl Sealed for u8 {}
 
 impl HaystackItem for u8 {
-    fn vec_from_str(s: &str) -> Vec<Self> {
-        s.as_bytes().to_vec()
+    fn collect_from_str(value: &str) -> Vec<Self> {
+        Self::collect_from_bytes(value.as_bytes())
+    }
+
+
+    fn collect_from_bytes(s: &[u8]) -> Vec<Self> {
+        s.to_vec()
     }
 
     fn is_newline(self) -> bool {

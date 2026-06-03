@@ -10,7 +10,7 @@ use crate::haystack::HaystackItem;
 /// For unicode-based haystacks like [`&str`](str), the implementing type needs to be able to deal
 /// with the contained variable width code points.
 ///
-/// This trait requires that implementors also implement
+/// This trait requires that implementers also implement
 /// [`Iterator<Item = Self::Slice::Item>`](Iterator). When [`Iterator::next`] is called, on a
 /// `HaystackIter` it should return the same value that previous calls to
 /// [`current_item`](Self::current_item) have, before progressing the index to the next item. When
@@ -26,7 +26,7 @@ pub trait HaystackIter<'a>: Debug + Clone
     + Iterator<Item = <Self::Slice as HaystackSlice<'a>>::Item>
 {
     /// The `HaystackSlice` returned by this type when slicing the underlying haystack. This type is
-    /// usually also contained within the implementor used to create an instance via
+    /// usually also contained within the implementer used to create an instance via
     /// [`IntoHaystack`].
     type Slice: HaystackSlice<'a>;
 
@@ -34,6 +34,7 @@ pub trait HaystackIter<'a>: Debug + Clone
     /// should return the same item, until progressed with [`Iterator::next`].
     fn current_item(&self) -> Option<Self::Item>;
 
+    /// Returns the item last matched in the haystack without making any changes.
     fn prev_item(&self) -> Option<Self::Item>;
 
     /// Returns the index of the current item in the original haystack. The returned value should be
@@ -55,7 +56,7 @@ pub trait HaystackIter<'a>: Debug + Clone
 
 /// A trait representing a slice of the underlying haystack for various [`Haystack`] types.
 ///
-/// The implementor of this trait is usually but not always, the only implementor of
+/// The implementer of this trait is usually but not always, the only implementer of
 /// [`IntoHaystack`] for a haystack type.
 ///
 /// It should be noted that this trait is often implemented of a reference to the type in question,
@@ -73,8 +74,8 @@ pub trait HaystackSlice<'a>: Debug + Clone + Sized + ToOwned {
 /// A trait used to interface the haystack types use when matching of capturing against a
 /// [`Regex`](crate::expr::Regex), including tracking progression and slicing captures.
 ///
-/// It is rare that users will have to interact with this trait, appart from Trait bounds. All
-/// public methods will take an `impl IntoHaystack<'a, H>` as an argument.
+/// It is rare that users will have to interact with this trait, apart from Trait bounds. All public
+/// methods will take an `impl IntoHaystack<'a, H>` as an argument.
 ///
 /// `Haystack` is accompanied by another trait, [`HaystackItem`], representing items that can be
 /// matched against a [`Regex`](crate::expr::Regex).
@@ -172,7 +173,7 @@ where
 /// If creating a new `Haystack` type, this trait should be implemented manually so that all types
 /// can be inferred properly.
 pub trait IntoHaystack<'a, H: Haystack<'a>> {
-    /// Creates a new [`Haystack`] from self.
+    /// Creates a new [`Haystack`] from self. The result should be initialized at index 0.
     fn into_haystack(self) -> H;
 }
 
@@ -194,19 +195,31 @@ impl<'a, H: Haystack<'a>> IntoHaystack<'a, H> for H {
 /// from the original `Haystack`.
 ///
 /// It is also used as the return type of the closures take by a couple of `Regex` replace methods.
-#[allow(clippy::len_without_is_empty)]
 pub trait OwnedHaystackable<I: HaystackItem> {
     type Hay<'a>: HaystackOf<'a, I> where Self: 'a;
 
+    /// Replaces the substring at the position indicated by `range` with the `replacement`
+    /// [`HaystackSlice`].
     fn replace_range<'a>(
         &mut self,
         range: Range<usize>,
-        with: <Self::Hay<'a> as HaystackIter<'a>>::Slice
+        replacement: <Self::Hay<'a> as HaystackIter<'a>>::Slice
     ) where Self: 'a;
 
+    /// Creates a temporary [`Haystack`] out of the underlying slice. This should usually be done by
+    /// borrowing (or cloning if reference counted) and calling [`IntoHaystack::into_haystack`].
     fn as_haystack<'a>(&'a self) -> Self::Hay<'a>;
 
+    /// Borrows the underlying [`HaystackSlice`] without creating a haystack. Used for slicing
+    /// substrings. Note that `HaystackSlice` is inherently borrowed and probably be implemented for
+    /// a reference.
     fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as HaystackIter<'a>>::Slice;
 
+    /// Returns the length of the underlying slice.
     fn len(&self) -> usize;
+
+    /// Returns true if the underlying slice is empty.
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }

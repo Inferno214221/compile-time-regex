@@ -16,7 +16,7 @@ use crate::matcher::Matcher;
 /// user from creating their own `Haystack`. This allows values with types like `&str` and
 /// `&mut String` to be passed to these methods.
 ///
-/// Altough rarely encountered, this trait's generic parameter, `I` refers to the item that can be
+/// Although rarely encountered, this trait's generic parameter, `I` refers to the item that can be
 /// matched individually from the provided `Haystack`. This is used so that the same expression can
 /// be used to match various haystack types, including `&str` (`I = char`) and `&[u8]` (`I = u8`).
 /// Implementations for both of these slice/item pairs will be implemented by the macro.
@@ -48,7 +48,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// be the default _matching_ function to use.
     ///
     /// A similar behavior can be achieved by using start and end anchors in an expression and then
-    /// calling [`contains_match`](Self::contains_match). This function should be prefered however,
+    /// calling [`contains_match`](Self::contains_match). This function should be preferred however,
     /// because it fails fast if the first character doesn't match.
     ///
     /// To check if this Regex matches and perform capturing, use [`do_capture`](Self::do_capture)
@@ -128,7 +128,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     }
 
     /// Returns an iterator over the ranges of all substrings in the provided haystack that match
-    /// this Regex, optionally `overlapping`. For the actual substrins themself, see
+    /// this Regex, optionally `overlapping`. For the actual substrings themselves, see
     /// [`slice_all_matches`](Self::slice_all_matches).
     ///
     /// Note that each match is still made greedily. Even with `overlapping = true`, if two possible
@@ -264,19 +264,19 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
 
     /// Replaces every matching substring in the provided haystack with a copy of the provided
     /// slice. The slice type required is the one associated with the provided haystack. The return
-    /// value is an integer representing the number of matches and replacements that occured.
+    /// value is an integer representing the number of matches and replacements that occurred.
     fn replace_all<'a, M: OwnedHaystackable<I>>(
         hay_mut: &mut M,
         with: <M::Hay<'a> as HaystackIter<'a>>::Slice
     ) -> usize {
-        // Avoids redirecting to replace_all_using to avoid unnessecary clones.
+        // Avoids redirecting to replace_all_using to avoid unnecessary clones.
         let ranges = RangeOfAllMatches::<I, M::Hay<'_>, Self::Pattern>::new(
             hay_mut.as_haystack(),
             false
         ).collect::<Vec<_>>();
 
         let count = ranges.len();
-        let mut delta = Delta::new();
+        let mut delta = Delta::default();
 
         for mut range in ranges {
             delta.apply_to(&mut range);
@@ -292,7 +292,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// Replaces every matching substring in the provided haystack with the return value of the
     /// provided function. The return type of this functions needs to match the provided haystack.
     /// The return value is an integer representing the number of matches and replacements that
-    /// occured.
+    /// occurred.
     ///
     /// Because of the use of [`FnMut`] for the parameter, this can be used to replace all matches
     /// using an iterator by passing in `|| iter.next().unwrap_or_default()`.
@@ -306,7 +306,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         ).collect::<Vec<_>>();
 
         let count = ranges.len();
-        let mut delta = Delta::new();
+        let mut delta = Delta::default();
 
         for mut range in ranges {
             delta.apply_to(&mut range);
@@ -382,7 +382,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         };
 
         let count = replacements.len();
-        let mut delta = Delta::new();
+        let mut delta = Delta::default();
 
         for (mut range, replacement) in replacements {
             delta.apply_to(&mut range);
@@ -411,14 +411,13 @@ fn range_of_match<'a, R: Regex<I, N> + ?Sized, I: HaystackItem, const N: usize>(
     None
 }
 
-#[derive(Debug, Clone)]
+/// A helper type for tracking changes in [`OwnedHaystackable`] size when replacing ranges. The type
+/// understands using signed addition for unsigned results.
+#[derive(Debug, Default, Clone)]
 struct Delta(isize);
 
 impl Delta {
-    fn new() -> Delta {
-        Delta(0)
-    }
-
+    /// Add to this `Delta` the difference between the new length, `from`, and the old length, `to`.
     fn add_diff(&mut self, from: usize, to: usize) {
         self.0 = self.0.strict_add(
             from.checked_signed_diff(to)
@@ -426,6 +425,7 @@ impl Delta {
         )
     }
 
+    /// Apply this `Delta` to both elements of `range`.
     fn apply_to(&self, range: &mut Range<usize>) {
         range.start = range.start.strict_add_signed(self.0);
         range.end = range.end.strict_add_signed(self.0);

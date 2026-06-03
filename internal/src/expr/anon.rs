@@ -9,7 +9,7 @@ use crate::haystack::{HaystackItem, HaystackIter, HaystackOf, IntoHaystack, Owne
 /// removing the need to name the expression itself.
 ///
 /// An `AnonRegex` can be created by invoking `regex!()` without a type identifier or visibility.
-/// The result is an instance of an unnamable type implementing `AnonRegex`.
+/// The result is an instance of an unnameable type implementing `AnonRegex`.
 pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
     /// See [`Regex::is_match`].
     fn is_match<'a, H: HaystackOf<'a, I>>(&self, hay: impl IntoHaystack<'a, H>) -> bool {

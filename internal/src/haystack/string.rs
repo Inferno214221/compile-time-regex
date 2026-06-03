@@ -7,7 +7,7 @@ use crate::haystack::{
 /// A haystack type for matching against the [`char`]s in a [`&str`](str). This type abstracts over
 /// the variable width scalars contained, to allow indexing without panics.
 ///
-/// To accomodate, calls to [`go_to`](Self::go_to) should only be made with an index previously
+/// To accommodate, calls to [`go_to`](Self::go_to) should only be made with an index previously
 /// produced by this type for the specific haystack. Failure to do so, may cause a panic if indexing
 /// on an invalid unicode boundary.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

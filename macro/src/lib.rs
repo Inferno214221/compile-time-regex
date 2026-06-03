@@ -49,7 +49,7 @@ use syn::parse_macro_input;
 /// let _ = regex!(r"pattern" / flags?).is_match("haystack");
 /// ```
 ///
-/// Where the arguments are the same as their equivalents above, but not visiblity or type name is
+/// Where the arguments are the same as their equivalents above, but not visibility or type name is
 /// required.
 ///
 /// # Flags
@@ -83,7 +83,7 @@ use syn::parse_macro_input;
 ///
 /// ## Aside on Global Flag
 ///
-/// I find the global flag to be unintuitive and it would be unessecarily restricting in this
+/// I find the global flag to be intuitive and it would be unnecessarily restricting in this
 /// implementation: you may want to use the same pattern with and without the global functionality,
 /// but you'd need to define the same expression multiple times to do so. (This might make sense in
 /// some cases where the Regex itself tracks state but we don't do that here.) Anyway, there is no

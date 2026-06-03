@@ -21,10 +21,16 @@ pub trait HaystackItem: Debug + Default + Copy + Eq + Ord + Sealed {
     /// haystack.
     fn collect_from_str(value: &str) -> Vec<Self>;
 
+    /// Creates a `Vec` of this item from the provided `&[u8]`, used to convert a series of bytes to
+    /// match from parsed regular expressions into individual `HaystackItem`s.
     fn collect_from_bytes(value: &[u8]) -> Vec<Self>;
 
+    /// Check is this item is a newline character ('\n' or b'\n'). Used for string and line
+    /// anchoring.
     fn is_newline(self) -> bool;
 
+    /// Check is this item is a carriage return character ('\r' or b'\r'). Used for string and line
+    /// anchoring.
     fn is_return(self) -> bool;
 }
 

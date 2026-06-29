@@ -59,7 +59,7 @@ mod string_slice {
 
     #[test]
     #[should_panic]
-    fn panics_on_invalid_rollback() {
+    fn panics_on_char_boundary_rollback() {
         let mut haystack: StrStack = "😀".into_haystack();
         haystack.go_to(1);
         haystack.current_item();
@@ -85,7 +85,7 @@ mod string_owned {
         assert_eq!(hay.as_haystack().whole_slice(), "a🧑‍🔬c");
         assert_eq!(hay.as_slice(), "a🧑‍🔬c");
         assert_eq!(OwnedHaystackable::len(&hay), 13);
-        hay.replace_range(5..8, "b");
+        OwnedHaystackable::replace_range(&mut hay, 5..8, "b");
         assert_eq!(hay.as_slice(), "a🧑b🔬c");
     }
 }

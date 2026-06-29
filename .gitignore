@@ -2,3 +2,5 @@
 /internal/target
 .direnv
 .vscode/
+
+codebook.toml

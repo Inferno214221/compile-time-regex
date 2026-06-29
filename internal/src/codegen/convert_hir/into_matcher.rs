@@ -155,7 +155,7 @@ impl IntoMatcherExpr for Repetition {
         let item_type = type_ident::<I>();
         let sub_matcher = sub.into_matcher_expr::<I>(caps);
         // I need to document this somewhere, might as well be here: usize is used for all generic
-        // parameters, even though Hir types use u32, because it is used for arrasy indexing during
+        // parameters, even though Hir types use u32, because it is used for array indexing during
         // the conversion process.
         let (min, max) = (min as usize, max.map(|m| m as usize));
 

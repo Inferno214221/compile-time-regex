@@ -5,6 +5,7 @@ pub mod item;
 pub mod string;
 
 pub use bytes::*;
+#[allow(unused_imports)]
 pub use ext::*;
 pub use interface::*;
 pub use item::*;

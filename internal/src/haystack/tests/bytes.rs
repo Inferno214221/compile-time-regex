@@ -84,19 +84,19 @@ mod byte_owned {
     fn basic_conversions_and_replace() {
         let mut hay = Vec::<u8>::from(b"abcd");
         assert_eq!(hay.as_haystack().whole_slice(), b"abcd");
-        assert_eq!(hay.as_slice(), b"abcd");
+        assert_eq!(OwnedHaystackable::as_slice(&hay), b"abcd");
         assert_eq!(OwnedHaystackable::len(&hay), 4);
         OwnedHaystackable::replace_range(&mut hay, 1..3, b"ef");
-        assert_eq!(hay.as_slice(), b"aefd");
+        assert_eq!(OwnedHaystackable::as_slice(&hay), b"aefd");
     }
 
     #[test]
     fn unicode_conversions_and_replace() {
         let mut hay = Vec::<u8>::from("a🧑‍🔬c".as_bytes());
         assert_eq!(hay.as_haystack().whole_slice(), "a🧑‍🔬c".as_bytes());
-        assert_eq!(hay.as_slice(), "a🧑‍🔬c".as_bytes());
+        assert_eq!(OwnedHaystackable::as_slice(&hay), "a🧑‍🔬c".as_bytes());
         assert_eq!(OwnedHaystackable::len(&hay), 13);
         OwnedHaystackable::replace_range(&mut hay, 5..8, b"b");
-        assert_eq!(hay.as_slice(), "a🧑b🔬c".as_bytes());
+        assert_eq!(OwnedHaystackable::as_slice(&hay), "a🧑b🔬c".as_bytes());
     }
 }

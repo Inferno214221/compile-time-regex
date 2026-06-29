@@ -73,19 +73,19 @@ mod string_owned {
     fn basic_conversions_and_replace() {
         let mut hay = String::from("abcd");
         assert_eq!(hay.as_haystack().whole_slice(), "abcd");
-        assert_eq!(hay.as_slice(), "abcd");
+        assert_eq!(OwnedHaystackable::as_slice(&hay), "abcd");
         assert_eq!(OwnedHaystackable::len(&hay), 4);
         OwnedHaystackable::replace_range(&mut hay, 1..3, "ef");
-        assert_eq!(hay.as_slice(), "aefd");
+        assert_eq!(OwnedHaystackable::as_slice(&hay), "aefd");
     }
 
     #[test]
     fn unicode_conversions_and_replace() {
         let mut hay = String::from("a🧑‍🔬c");
         assert_eq!(hay.as_haystack().whole_slice(), "a🧑‍🔬c");
-        assert_eq!(hay.as_slice(), "a🧑‍🔬c");
+        assert_eq!(OwnedHaystackable::as_slice(&hay), "a🧑‍🔬c");
         assert_eq!(OwnedHaystackable::len(&hay), 13);
         OwnedHaystackable::replace_range(&mut hay, 5..8, "b");
-        assert_eq!(hay.as_slice(), "a🧑b🔬c");
+        assert_eq!(OwnedHaystackable::as_slice(&hay), "a🧑b🔬c");
     }
 }

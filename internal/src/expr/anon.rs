@@ -116,6 +116,15 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         <Self as Regex<I, N>>::replace_all_using(hay_mut, using)
     }
 
+    /// See [`Regex::replace_using_iter`].
+    fn replace_using_iter<M: OwnedHaystackable<I>>(
+        &self,
+        hay_mut: &mut M,
+        iter: impl IntoIterator<Item = M>,
+    ) -> usize {
+        <Self as Regex<I, N>>::replace_using_iter(hay_mut, iter)
+    }
+
     /// See [`Regex::replace_captured`].
     fn replace_captured<M, F>(&self, hay_mut: &mut M, replacer: F) -> bool
     where

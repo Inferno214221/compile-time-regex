@@ -25,6 +25,9 @@ use crate::matcher::Matcher;
 ///
 #[doc = include_str!("coverage.md")]
 ///
+/// [`Regex::replace_using_iter`] notably doesn't really fit in this table, because it only replaces
+/// while the `Iterator` yields values.
+///
 /// \* Note that these function runs through the Regex first and then the haystack. This means that
 /// substring involved is the one that matches the Regex first, not necessarily the first match in
 /// the haystack. In many cases, this makes no difference.
@@ -290,9 +293,8 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     }
 
     /// Replaces every matching substring in the provided haystack with the return value of the
-    /// provided function. The return type of this functions needs to match the provided haystack.
-    /// The return value is an integer representing the number of matches and replacements that
-    /// occurred.
+    /// provided function. The return type of this function needs to match the provided haystack.
+    /// The returned integer represents the number of matches and replacements that occurred.
     ///
     /// Because of the use of [`FnMut`] for the parameter, this can be used to replace all matches
     /// using an iterator by passing in `|| iter.next().unwrap_or_default()`.
@@ -300,6 +302,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         hay_mut: &mut M,
         mut using: impl FnMut() -> M,
     ) -> usize {
+        // Collect the Iterator to end the borrow of hay_mut.
         let ranges = RangeOfAllMatches::<I, M::Hay<'_>, Self::Pattern>::new(
             hay_mut.as_haystack(),
             false
@@ -319,6 +322,42 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         count
     }
 
+    // TODO: Does this need to be Item = M, or can it be M::Slice?
+
+    /// Replaces matching substrings in the provided haystack with the values produced by the
+    /// iterator, until no matches remain or the iterator returns `None`. The return type of this
+    /// iterator needs to match the provided haystack. The returned integer represents the number of
+    /// matches and replacements that occurred.
+    ///
+    /// To maintain ownership of the iterator in the event that the haystack runs out of matches
+    /// before it is exhausted, use [`Iterator::by_ref`].
+    fn replace_using_iter<M: OwnedHaystackable<I>>(
+        hay_mut: &mut M,
+        iter: impl IntoIterator<Item = M>,
+    ) -> usize {
+        let iter = iter.into_iter();
+
+        // Zip with ranges first, because it is internal and the side effects don't matter.
+        let ranges_with_replacement = RangeOfAllMatches::<I, M::Hay<'_>, Self::Pattern>::new(
+            hay_mut.as_haystack(),
+            false
+        ).zip(iter).collect::<Vec<_>>();
+
+        let mut count = 0;
+        let mut delta = Delta::default();
+
+        for (mut range, replacement) in ranges_with_replacement {
+            delta.apply_to(&mut range);
+
+            let initial_len = hay_mut.len();
+            hay_mut.replace_range(range, replacement.as_slice());
+            delta.add_diff(hay_mut.len(), initial_len);
+            count += 1;
+        }
+
+        count
+    }
+
     // The closure returns M because it can't continue to reference the source, given that we need
     // to overwrite it.
 
@@ -330,7 +369,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// be `F: FnOnce(Self::Capture<'_, <M::Hay>::Slice>) -> M`. Because of limitations with higher
     /// ranked trait bounds surrounding closure, it may be necessary to implement this as function
     /// with lifetime annotations like so:
-    /// ```ignore
+    /// ```
     /// regex!(PhoneNum = r"(0|(?<country_code>\+[0-9]+))(?<number>[0-9]{9})");
     ///
     /// fn remove_country_code<'a>(value: PhoneNumCapture<'a, &'a str>) -> String {
@@ -374,6 +413,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         M: OwnedHaystackable<I>,
         F: for<'a> FnMut(Self::Capture<'a, <M::Hay<'a> as HaystackIter<'a>>::Slice>) -> M,
     {
+        // Collect the Iterator to end the borrow of hay_mut.
         let replacements: Vec<_> = {
             let caps = Self::find_all_captures(hay_mut.as_haystack(), false);
             caps.into_iter()

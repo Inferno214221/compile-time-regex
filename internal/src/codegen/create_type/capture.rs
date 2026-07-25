@@ -28,9 +28,7 @@ pub fn impl_captures(regex_name: &Ident, groups: Vec<Group>) -> (Ident, Literal,
         therefore aliased as [`{name}::whole_match`])."
     );
 
-    if groups.is_empty() {
-        panic!("empty groups")
-    }
+    assert!(!groups.is_empty());
 
     let inner = groups.iter().map(|cap| {
         if cap.required {

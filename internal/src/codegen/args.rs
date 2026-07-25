@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::fmt::{self, Display};
 
-use syn::parse::{Parse, ParseStream};
+use syn::parse::{discouraged::Speculative, Parse, ParseStream};
 use syn::{Ident, LitStr, Token, Visibility};
 
 use crate::codegen::ConfigExt;
@@ -13,8 +13,10 @@ pub enum RegexArgType {
 
 impl Parse for RegexArgType {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        if input.fork().parse::<RegexArgs>().is_ok() {
-            Ok(RegexArgType::Regex(input.parse()?))
+        let fork = input.fork();
+        if let Ok(parsed) = fork.parse() {
+            input.advance_to(&fork);
+            Ok(RegexArgType::Regex(parsed))
         } else {
             Ok(RegexArgType::Anon(input.parse()?))
         }
@@ -83,6 +85,8 @@ impl Flags {
         let mut config = ConfigExt::default();
 
         for c in self.0 {
+            // TODO: Add flag that allows groups to be Vec<&str>s appending captures rather than
+            // replacing them.
             match c {
                 'i' => config.case_insensitive(true),
                 'm' => config.multi_line(true),

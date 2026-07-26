@@ -13,12 +13,6 @@ pub trait Matcher<I: HaystackItem>: Sealed + Debug + Default + Clone + Copy {
     /// hasn't been matched yet. On a fail, the state of hay is undefined.
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool;
 
-    // It would be nice to use a custom Iterator here rather than a Vec, but reversing an arbitrary
-    // match is not easy, so we just progress through linearly and store them all.
-    // This could cause issues with huge haystacks, but: all regexes need to be compiled at compile
-    // time and are hence controlled by the author. If their pattern will be operating on huge
-    // haystacks and need backtracking, that's up to them.
-
     /// Produces a Vec of all valid haystack states produced as the result of a valid match at the
     /// start of `hay`, used to implement backtracking. The Vec is produced in reverse priority
     /// order, so the last match has the highest priority. After calling all_matches, the state of

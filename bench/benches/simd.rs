@@ -29,10 +29,11 @@ const LITERALS: &[&str] = &[
 ];
 
 fn do_simd_match(haystack: &str) -> Vec<Range<usize>> {
+    // Pad the end with 0s so that all meaningful bytes get chunked.
     let haystack = haystack.as_bytes()
         .iter()
         .copied()
-        .chain(iter::repeat_n(0, CHUNK_SIZE - 1)) // Pad the end with 0s
+        .chain(iter::repeat_n(0, CHUNK_SIZE - 1))
         .collect::<Vec<_>>();
     let mut matches = Vec::new();
 
@@ -52,7 +53,7 @@ fn do_simd_match(haystack: &str) -> Vec<Range<usize>> {
             let needle = Simd::load_select(&needle_source, mask, zeros);
             mask = vector.simd_eq(needle);
 
-            let next_byte = haystack.get(chunk_num * 8 + byte_num)
+            let next_byte = haystack.get(chunk_num * CHUNK_SIZE + byte_num)
                 .copied()
                 .unwrap_or_default();
             vector = vector.shift_elements_left::<1>(next_byte);
@@ -60,8 +61,8 @@ fn do_simd_match(haystack: &str) -> Vec<Range<usize>> {
 
         for (index, success) in mask.to_array().into_iter().enumerate() {
             if success {
-                let start = chunk_num * 8 + index;
-                matches.push(start..(start + CHUNK_SIZE));
+                let start = chunk_num * CHUNK_SIZE + index;
+                matches.push(start..(start + NEEDLE.len()));
             }
         }
     }

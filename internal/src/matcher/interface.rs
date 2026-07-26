@@ -2,8 +2,9 @@ use std::fmt::Debug;
 
 use crate::expr::IndexedCaptures;
 use crate::haystack::{HaystackItem, HaystackOf};
+use crate::sealed::Sealed;
 
-pub trait Matcher<I: HaystackItem>: Debug + Default + Clone + Copy {
+pub trait Matcher<I: HaystackItem>: Sealed + Debug + Default + Clone + Copy {
     type AllMatches<'a, H: HaystackOf<'a, I>>: Iterator<Item = usize>;
     type AllCaptures<'a, H: HaystackOf<'a, I>>: Iterator<Item = (usize, IndexedCaptures)>;
 

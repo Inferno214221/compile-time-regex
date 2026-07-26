@@ -6,6 +6,7 @@ use std::marker::PhantomData;
 use crate::expr::IndexedCaptures;
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::Matcher;
+use crate::sealed::Sealed;
 
 #[derive(Debug, Clone, Hash)]
 pub struct AllCapturesGroup<'a, I, H, A, const N: usize>
@@ -45,6 +46,8 @@ pub struct CaptureGroup<I: HaystackItem, A: Matcher<I>, const N: usize>(
     pub PhantomData<I>,
     pub PhantomData<A>,
 );
+
+impl<I: HaystackItem, A: Matcher<I>, const N: usize> Sealed for CaptureGroup<I, A, N> {}
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for CaptureGroup<I, A, N> {
     type AllMatches<'a, H: HaystackOf<'a, I>> = A::AllMatches<'a, H>;

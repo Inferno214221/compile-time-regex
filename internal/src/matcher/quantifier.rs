@@ -5,12 +5,15 @@ use std::{iter, vec};
 use crate::expr::IndexedCaptures;
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::{LazyMatcher, Matcher, impl_all_captures_single, impl_all_matches_single};
+use crate::sealed::Sealed;
 
 #[derive(Default, Clone, Copy)]
 pub struct QuantifierN<I: HaystackItem, A: Matcher<I>, const N: usize>(
     pub PhantomData<I>,
     pub PhantomData<A>,
 );
+
+impl<I: HaystackItem, A: Matcher<I>, const N: usize> Sealed for QuantifierN<I, A, N> {}
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierN<I, A, N> {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
@@ -48,6 +51,8 @@ pub struct QuantifierNOrMore<I: HaystackItem, A: Matcher<I>, const N: usize>(
     pub PhantomData<I>,
     pub PhantomData<A>,
 );
+
+impl<I: HaystackItem, A: Matcher<I>, const N: usize> Sealed for QuantifierNOrMore<I, A, N> {}
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> Matcher<I> for QuantifierNOrMore<I, A, N> {
     type AllMatches<'a, H: HaystackOf<'a, I>> = AllMatchesMultiple;
@@ -99,6 +104,9 @@ pub struct QuantifierNToM<I: HaystackItem, A: Matcher<I>, const N: usize, const 
     pub PhantomData<I>,
     pub PhantomData<A>,
 );
+
+
+impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Sealed for QuantifierNToM<I, A, N, M> {}
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> for QuantifierNToM<I, A, N, M> {
     type AllMatches<'a, H: HaystackOf<'a, I>> = AllMatchesMultiple;

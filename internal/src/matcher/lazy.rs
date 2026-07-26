@@ -7,9 +7,12 @@ use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::{
     AllCapturesSingle, AllMatchesSingle, LazyMatcher, Matcher, QuantifierNOrMore, QuantifierNToM,
 };
+use crate::sealed::Sealed;
 
 #[derive(Default, Clone, Copy)]
 pub struct Lazy<I: HaystackItem, Q: LazyMatcher<I>>(pub PhantomData<I>, pub PhantomData<Q>);
+
+impl<I: HaystackItem, Q: LazyMatcher<I>> Sealed for Lazy<I, Q> {}
 
 impl<I: HaystackItem, Q: LazyMatcher<I>> Matcher<I> for Lazy<I, Q> {
     type AllMatches<'a, H: HaystackOf<'a, I>> = Q::LazyAllMatches<'a, H>;

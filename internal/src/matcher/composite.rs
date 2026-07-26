@@ -6,6 +6,7 @@ use std::marker::PhantomData;
 use crate::expr::IndexedCaptures;
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::Matcher;
+use crate::sealed::Sealed;
 
 #[derive(Default, Clone, Copy)]
 pub struct Or<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
@@ -22,6 +23,8 @@ pub type AllCapturesOr<'a, I, H, A, B> = Chain<
     <A as Matcher<I>>::AllCaptures<'a, H>,
     <B as Matcher<I>>::AllCaptures<'a, H>
 >;
+
+impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Sealed for Or<I, A, B> {}
 
 impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Or<I, A, B> {
     type AllMatches<'a, H: HaystackOf<'a, I>> = AllMatchesOr<'a, I, H, A, B>;
@@ -162,6 +165,8 @@ pub struct Then<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
     pub PhantomData<B>,
 );
 
+impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Sealed for Then<I, A, B> {}
+
 impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Matcher<I> for Then<I, A, B> {
     type AllMatches<'a, H: HaystackOf<'a, I>> = AllMatchesThen<'a, I, H, A, B>;
     type AllCaptures<'a, H: HaystackOf<'a, I>> = AllCapturesThen<'a, I, H, A, B>;
@@ -232,6 +237,11 @@ macro_rules! define_paired_n {
             pub PhantomData<Z>,
             $(pub PhantomData<$a>, pub PhantomData<$b>),+
         );
+
+        impl<
+            Z: HaystackItem,
+            $($a: Matcher<Z>, $b: Matcher<Z>),+
+        > Sealed for $name<Z, $($a, $b),+> {}
 
         impl<
             Z: HaystackItem,

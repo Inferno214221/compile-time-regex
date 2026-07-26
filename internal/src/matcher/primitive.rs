@@ -3,9 +3,12 @@ use std::fmt::{self, Debug};
 use crate::expr::IndexedCaptures;
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::{Matcher, impl_all_captures_single, impl_all_matches_single};
+use crate::sealed::Sealed;
 
 #[derive(Default, Clone, Copy)]
 pub struct Byte<const N: u8>;
+
+impl<const N: u8> Sealed for Byte<N> {}
 
 impl<const N: u8> Matcher<u8> for Byte<N> {
     fn matches<'a, H: HaystackOf<'a, u8>>(hay: &mut H) -> bool {
@@ -29,6 +32,8 @@ impl<const N: u8> Debug for Byte<N> {
 
 #[derive(Default, Clone, Copy)]
 pub struct ByteRange<const A: u8, const B: u8>;
+
+impl<const A: u8, const B: u8> Sealed for ByteRange<A, B> {}
 
 impl<const A: u8, const B: u8> Matcher<u8> for ByteRange<A, B> {
     fn matches<'a, H: HaystackOf<'a, u8>>(hay: &mut H) -> bool {
@@ -56,6 +61,8 @@ impl<const A: u8, const B: u8> Debug for ByteRange<A, B> {
 #[derive(Default, Clone, Copy)]
 pub struct Scalar<const N: char>;
 
+impl<const N: char> Sealed for Scalar<N> {}
+
 impl<const N: char> Matcher<char> for Scalar<N> {
     fn matches<'a, H: HaystackOf<'a, char>>(hay: &mut H) -> bool {
         if hay.item() == Some(N) {
@@ -78,6 +85,8 @@ impl<const N: char> Debug for Scalar<N> {
 
 #[derive(Default, Clone, Copy)]
 pub struct ScalarRange<const A: char, const B: char>;
+
+impl<const A: char, const B: char> Sealed for ScalarRange<A, B> {}
 
 impl<const A: char, const B: char> Matcher<char> for ScalarRange<A, B> {
     fn matches<'a, H: HaystackOf<'a, char>>(hay: &mut H) -> bool {
@@ -105,6 +114,8 @@ impl<const A: char, const B: char> Debug for ScalarRange<A, B> {
 #[derive(Default, Clone, Copy)]
 pub struct Always;
 
+impl Sealed for Always {}
+
 impl<I: HaystackItem> Matcher<I> for Always {
     fn matches<'a, H: HaystackOf<'a, I>>(_hay: &mut H) -> bool {
         true
@@ -122,6 +133,8 @@ impl Debug for Always {
 
 #[derive(Default, Clone, Copy)]
 pub struct Start;
+
+impl Sealed for Start {}
 
 impl<I: HaystackItem> Matcher<I> for Start {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
@@ -141,6 +154,8 @@ impl Debug for Start {
 #[derive(Default, Clone, Copy)]
 pub struct End;
 
+impl Sealed for End {}
+
 impl<I: HaystackItem> Matcher<I> for End {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         hay.is_end()
@@ -158,6 +173,8 @@ impl Debug for End {
 
 #[derive(Default, Clone, Copy)]
 pub struct LineStart;
+
+impl Sealed for LineStart {}
 
 impl<I: HaystackItem> Matcher<I> for LineStart {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
@@ -177,6 +194,8 @@ impl Debug for LineStart {
 #[derive(Default, Clone, Copy)]
 pub struct LineEnd;
 
+impl Sealed for LineEnd {}
+
 impl<I: HaystackItem> Matcher<I> for LineEnd {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         hay.is_line_end()
@@ -195,6 +214,8 @@ impl Debug for LineEnd {
 #[derive(Default, Clone, Copy)]
 pub struct CRLFStart;
 
+impl Sealed for CRLFStart {}
+
 impl<I: HaystackItem> Matcher<I> for CRLFStart {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         hay.is_crlf_start()
@@ -212,6 +233,8 @@ impl Debug for CRLFStart {
 
 #[derive(Default, Clone, Copy)]
 pub struct CRLFEnd;
+
+impl Sealed for CRLFEnd {}
 
 impl<I: HaystackItem> Matcher<I> for CRLFEnd {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {

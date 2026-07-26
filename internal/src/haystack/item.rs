@@ -1,10 +1,6 @@
 use std::fmt::Debug;
 
-mod haystack_item {
-    pub trait Sealed {}
-}
-
-use haystack_item::Sealed;
+use crate::sealed::Sealed;
 
 /// A trait that represents an individual item that can be matched against a
 /// [`Regex`](crate::expr::Regex). The primary (and only) two implementers are [`char`] and [`u8`].
@@ -15,7 +11,7 @@ use haystack_item::Sealed;
 /// `Regex` types that match against any `HaystackItem` other than the default. If you need to match
 /// against another item type and want to use this crate, you may as well fork it so that you don't
 /// have to write manual `Matcher` expressions.
-pub trait HaystackItem: Debug + Default + Copy + Eq + Ord + Sealed {
+pub trait HaystackItem: Sealed + Debug + Default + Copy + Eq + Ord {
     /// Creates a `Vec` of this item from the provided `&str`, used to convert string literals from
     /// parsed regular expressions into individual `HaystackItem`s that can be matched in a
     /// haystack.

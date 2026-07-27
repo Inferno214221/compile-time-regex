@@ -3,14 +3,14 @@ use std::fmt::Debug;
 use crate::sealed::Sealed;
 
 /// A trait that represents an individual item that can be matched against a
-/// [`Regex`](crate::expr::Regex). The primary (and only) two implementers are [`char`] and [`u8`].
+/// [`Regex`](crate::expr::Regex). The two implementers are [`char`] and [`u8`].
 ///
 /// # Sealed
 ///
 /// This trait is sealed, preventing implementations because the `regex!` macro can't produce
 /// `Regex` types that match against any `HaystackItem` other than the default. If you need to match
-/// against another item type and want to use this crate, you may as well fork it so that you don't
-/// have to write manual `Matcher` expressions.
+/// against another item type and want to use this crate, you may as well fork it and update the
+/// proc macro too, so that you don't have to write manual `Matcher` expressions.
 pub trait HaystackItem: Sealed + Debug + Default + Copy + Eq + Ord {
     /// Creates a `Vec` of this item from the provided `&str`, used to convert string literals from
     /// parsed regular expressions into individual `HaystackItem`s that can be matched in a
@@ -74,7 +74,6 @@ impl HaystackItem for u8 {
     fn collect_from_str(value: &str) -> Vec<Self> {
         Self::collect_from_bytes(value.as_bytes())
     }
-
 
     fn collect_from_bytes(s: &[u8]) -> Vec<Self> {
         s.to_vec()

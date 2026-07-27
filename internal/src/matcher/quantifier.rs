@@ -105,7 +105,6 @@ pub struct QuantifierNToM<I: HaystackItem, A: Matcher<I>, const N: usize, const 
     pub PhantomData<A>,
 );
 
-
 impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Sealed for QuantifierNToM<I, A, N, M> {}
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Matcher<I> for QuantifierNToM<I, A, N, M> {

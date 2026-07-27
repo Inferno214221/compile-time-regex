@@ -55,7 +55,7 @@
 
 #![feature(doc_cfg)]
 
-// TODO: Double check time complexity, write some benchmarks.
+// TODO: Double check time complexity, document benchmarks.
 
 // Enable the crate to reference itself by name (needed for macro expansion)
 extern crate self as ct_regex;

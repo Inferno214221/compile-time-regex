@@ -26,7 +26,7 @@ pub fn make_regex(
     let doc = format!(
         "A macro-generated regular expression matching the pattern: `{pat_str}` with flags: \
         {flags}. See the [`Regex`](::ct_regex::internal::expr::Regex) trait for associated \
-        matching and capturing functions." // TODO: Can be used for &str or &[u8]...
+        matching and capturing functions."
     );
 
     let mut config = flags.create_config();

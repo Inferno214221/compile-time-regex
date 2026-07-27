@@ -2,11 +2,11 @@
 //! these type may be needed on occasion for full type names etc.
 //!
 //! Additionally, it is be possible to implement these traits for other types to allow matching
-//! different strings and other types, but not all of the traits will be required.
+//! different strings and haystacks, but not all of the traits will be required.
 //!
 //! The main traits in this crate are chained together with associated items:
 //! ```no_run
-//! trait HaystackItem {}
+//! trait HaystackItem: Sealed {}
 //!
 //! trait HaystackSlice<'a> {
 //!     type Item: HaystackItem;

@@ -26,10 +26,11 @@ fn slice_first_byte<'a>(cap: LiteralExprCapture<'a, &'a str>) -> String {
 fn is_match() {
     assert!(LiteralExpr::is_match("eae"));
 
-    assert!(!LiteralExpr::is_match("ene"));
-    assert!(!LiteralExpr::is_match("ea"));
     assert!(!LiteralExpr::is_match("aeae"));
     assert!(!LiteralExpr::is_match("eaea"));
+    assert!(!LiteralExpr::is_match("eae eae"));
+    assert!(!LiteralExpr::is_match("ene"));
+    assert!(!LiteralExpr::is_match("ea"));
 }
 
 #[test]
@@ -37,6 +38,7 @@ fn contains_match() {
     assert!(LiteralExpr::contains_match("eae"));
     assert!(LiteralExpr::contains_match("aeae"));
     assert!(LiteralExpr::contains_match("eaea"));
+    assert!(LiteralExpr::contains_match("eae eae"));
 
     assert!(!LiteralExpr::contains_match("ene"));
     assert!(!LiteralExpr::contains_match("ea"));
@@ -67,6 +69,7 @@ fn range_of_match() {
     assert_eq!(LiteralExpr::range_of_match("eae"), Some(0..3));
     assert_eq!(LiteralExpr::range_of_match("aeae"), Some(1..4));
     assert_eq!(LiteralExpr::range_of_match("eaea"), Some(0..3));
+    assert_eq!(LiteralExpr::range_of_match("eae eae"), Some(0..3));
 
     assert_eq!(LiteralExpr::range_of_match("ene"), None);
     assert_eq!(LiteralExpr::range_of_match("ea"), None);
@@ -105,11 +108,11 @@ fn slice_match() {
     assert_eq!(LiteralExpr::slice_match("eae"), Some("eae"));
     assert_eq!(LiteralExpr::slice_match("aeae"), Some("eae"));
     assert_eq!(LiteralExpr::slice_match("eaea"), Some("eae"));
+    assert_eq!(LiteralExpr::slice_match("eae eae"), Some("eae"));
 
     assert_eq!(LiteralExpr::slice_match("ene"), None);
     assert_eq!(LiteralExpr::slice_match("ea"), None);
 }
-
 
 #[test]
 fn slice_all_matches_non_overlapping() {
@@ -147,10 +150,11 @@ fn do_capture() {
 
     assert_eq!(do_capture("eae"), Some((0..3, "eae")));
 
-    assert_eq!(do_capture("ene"), None);
-    assert_eq!(do_capture("ea"), None);
+    assert_eq!(do_capture("eae eae"), None);
     assert_eq!(do_capture("aeae"), None);
     assert_eq!(do_capture("eaea"), None);
+    assert_eq!(do_capture("ene"), None);
+    assert_eq!(do_capture("ea"), None);
 }
 
 #[test]
@@ -162,6 +166,7 @@ fn find_capture() {
     assert_eq!(find_capture("eae"), Some((0..3, "eae")));
     assert_eq!(find_capture("aeae"), Some((1..4, "eae")));
     assert_eq!(find_capture("eaea"), Some((0..3, "eae")));
+    assert_eq!(find_capture("eae eae"), Some((0..3, "eae")));
 
     assert_eq!(find_capture("ene"), None);
     assert_eq!(find_capture("ea"), None);
@@ -209,8 +214,6 @@ fn find_all_captures_overlapping() {
     assert_eq!(collect_all_captures("ea"), vec![]);
 }
 
-
-
 #[test]
 fn replace() {
     fn replace(hay: &str, success: bool) -> String {
@@ -222,6 +225,7 @@ fn replace() {
     assert_eq!(replace("eae", true), "new");
     assert_eq!(replace("aeae", true), "anew");
     assert_eq!(replace("eaea", true), "newa");
+    assert_eq!(replace("eae eae", true), "new eae");
 
     assert_eq!(replace("ene", false), "ene");
     assert_eq!(replace("ea", false), "ea");
@@ -281,7 +285,6 @@ fn replace_using_iter() {
 fn replace_captured() {
     fn replace_captured(hay: &str, success: bool) -> String {
         let mut hay = String::from(hay);
-        // This is two hard to express as a parameter
         assert_eq!(LiteralExpr::replace_captured(&mut hay, slice_first_byte), success);
         hay
     }
@@ -289,6 +292,7 @@ fn replace_captured() {
     assert_eq!(replace_captured("eae", true), "ae");
     assert_eq!(replace_captured("aeae", true), "aae");
     assert_eq!(replace_captured("eaea", true), "aea");
+    assert_eq!(replace_captured("eae eae", true), "ae eae");
 
     assert_eq!(replace_captured("ene", false), "ene");
     assert_eq!(replace_captured("ea", false), "ea");

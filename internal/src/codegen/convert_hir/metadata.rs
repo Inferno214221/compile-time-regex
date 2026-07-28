@@ -7,33 +7,35 @@ pub struct Group {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct Groups {
-    pub map: HashMap<u32, Group>,
+pub struct ExprMetadata {
+    // Group ids are provided by regex_syntax as a u32, and not returned in the right order, so we
+    // store them in a map before checking them and creating a Vec later.
+    pub groups: HashMap<u32, Group>,
     pub required: bool,
 }
 
-impl Groups {
-    pub fn new() -> Groups {
-        let mut map = HashMap::new();
-        map.insert(0, Group {
+impl ExprMetadata {
+    pub fn new() -> ExprMetadata {
+        let mut groups = HashMap::new();
+        groups.insert(0, Group {
             name: Some("whole_match".into()),
             required: true,
         });
-        Groups {
-            map,
+        ExprMetadata {
+            groups,
             required: true,
         }
     }
 
-    pub fn insert(&mut self, index: u32, name: Option<Box<str>>) {
-        self.map.insert(index, Group {
+    pub fn insert_group(&mut self, index: u32, name: Option<Box<str>>) {
+        self.groups.insert(index, Group {
             name,
             required: self.required,
         });
     }
 
-    pub fn into_vec(self) -> Vec<Group> {
-        let mut items: Vec<_> = self.map.into_iter().collect();
+    pub fn take_groups(self) -> Vec<Group> {
+        let mut items: Vec<_> = self.groups.into_iter().collect();
         items.sort_by_key(|(i, _)| *i);
 
         if items

@@ -6,7 +6,7 @@ use regex_syntax::hir::{
     Capture, Class, ClassBytesRange, ClassUnicodeRange, Hir, HirKind, Literal, Look, Repetition,
 };
 
-use crate::codegen::{CodegenItem, Group, Groups};
+use crate::codegen::{CodegenItem, Group, ExprMetadata};
 use crate::matcher::{Always as A, Or, Then};
 
 pub fn type_name<T>() -> &'static str {
@@ -25,27 +25,27 @@ pub trait HirExtension {
 
 impl HirExtension for Hir {
     fn into_matcher<I: CodegenItem>(self) -> (TokenStream, Vec<Group>) {
-        let mut caps = Groups::new();
-        let tokens = self.into_matcher_expr::<I>(&mut caps);
-        (tokens, caps.into_vec())
+        let mut meta = ExprMetadata::new();
+        let tokens = self.into_matcher_expr::<I>(&mut meta);
+        (tokens, meta.take_groups())
     }
 }
 
 pub trait IntoMatcherExpr {
-    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream;
+    fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata) -> TokenStream;
 }
 
 impl IntoMatcherExpr for Hir {
-    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
+    fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata) -> TokenStream {
         match self.into_kind() {
-            HirKind::Empty              => Empty.into_matcher_expr::<I>(caps),
-            HirKind::Literal(lit)       => lit.into_matcher_expr::<I>(caps),
-            HirKind::Class(class)       => class.into_matcher_expr::<I>(caps),
-            HirKind::Look(look)         => look.into_matcher_expr::<I>(caps),
-            HirKind::Repetition(rep)    => rep.into_matcher_expr::<I>(caps),
-            HirKind::Capture(cap)       => cap.into_matcher_expr::<I>(caps),
-            HirKind::Concat(hirs)       => Concat(hirs).into_matcher_expr::<I>(caps),
-            HirKind::Alternation(hirs)  => Alternation(hirs).into_matcher_expr::<I>(caps),
+            HirKind::Empty              => Empty.into_matcher_expr::<I>(meta),
+            HirKind::Literal(lit)       => lit.into_matcher_expr::<I>(meta),
+            HirKind::Class(class)       => class.into_matcher_expr::<I>(meta),
+            HirKind::Look(look)         => look.into_matcher_expr::<I>(meta),
+            HirKind::Repetition(rep)    => rep.into_matcher_expr::<I>(meta),
+            HirKind::Capture(cap)       => cap.into_matcher_expr::<I>(meta),
+            HirKind::Concat(hirs)       => Concat(hirs).into_matcher_expr::<I>(meta),
+            HirKind::Alternation(hirs)  => Alternation(hirs).into_matcher_expr::<I>(meta),
         }
     }
 }
@@ -60,17 +60,17 @@ struct Concat(pub Vec<Hir>);
 struct Alternation(pub Vec<Hir>);
 
 impl IntoMatcherExpr for u8 {
-    fn into_matcher_expr<I: CodegenItem>(self, _caps: &mut Groups) -> TokenStream {
+    fn into_matcher_expr<I: CodegenItem>(self, _meta: &mut ExprMetadata) -> TokenStream {
         assert_eq!(type_name::<I>(), type_name::<u8>());
         quote!(::ct_regex::internal::matcher::Byte<#self>)
     }
 }
 
 impl IntoMatcherExpr for &ClassBytesRange {
-    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
+    fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata) -> TokenStream {
         assert_eq!(type_name::<I>(), type_name::<u8>());
         if self.start() == self.end() {
-            self.start().into_matcher_expr::<I>(caps)
+            self.start().into_matcher_expr::<I>(meta)
         } else {
             let start = self.start();
             let end = self.end();
@@ -80,17 +80,17 @@ impl IntoMatcherExpr for &ClassBytesRange {
 }
 
 impl IntoMatcherExpr for char {
-    fn into_matcher_expr<I: CodegenItem>(self, _caps: &mut Groups) -> TokenStream {
+    fn into_matcher_expr<I: CodegenItem>(self, _meta: &mut ExprMetadata) -> TokenStream {
         assert_eq!(type_name::<I>(), type_name::<char>());
         quote!(::ct_regex::internal::matcher::Scalar<#self>)
     }
 }
 
 impl IntoMatcherExpr for &ClassUnicodeRange {
-    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
+    fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata) -> TokenStream {
         assert_eq!(type_name::<I>(), type_name::<char>(), "{:?}", self);
         if self.start() == self.end() {
-            self.start().into_matcher_expr::<I>(caps)
+            self.start().into_matcher_expr::<I>(meta)
         } else {
             let start = self.start();
             let end = self.end();
@@ -100,29 +100,29 @@ impl IntoMatcherExpr for &ClassUnicodeRange {
 }
 
 impl IntoMatcherExpr for Empty {
-    fn into_matcher_expr<I: CodegenItem>(self, _caps: &mut Groups) -> TokenStream {
+    fn into_matcher_expr<I: CodegenItem>(self, _meta: &mut ExprMetadata) -> TokenStream {
         quote!(::ct_regex::internal::matcher::Always)
     }
 }
 
 impl IntoMatcherExpr for Literal {
-    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
+    fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata) -> TokenStream {
         write_chunked::<Then<u8, A, A>, I, _>(
-            caps,
+            meta,
             I::collect_from_bytes(&self.0)
         )
     }
 }
 
 impl IntoMatcherExpr for Class {
-    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
+    fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata) -> TokenStream {
         match I::normalize_class(self) {
             Class::Unicode(unicode) => write_chunked::<Or<u8, A, A>, I, _>(
-                caps,
+                meta,
                 unicode.ranges().iter().collect()
             ),
             Class::Bytes(bytes) => write_chunked::<Or<u8, A, A>, I, _>(
-                caps,
+                meta,
                 bytes.ranges().iter().collect()
             ),
         }
@@ -130,7 +130,7 @@ impl IntoMatcherExpr for Class {
 }
 
 impl IntoMatcherExpr for Look {
-    fn into_matcher_expr<I: CodegenItem>(self, _caps: &mut Groups) -> TokenStream {
+    fn into_matcher_expr<I: CodegenItem>(self, _meta: &mut ExprMetadata) -> TokenStream {
         match self {
             Look::Start => quote!(::ct_regex::internal::matcher::Start),
             Look::End => quote!(::ct_regex::internal::matcher::End),
@@ -144,23 +144,23 @@ impl IntoMatcherExpr for Look {
 }
 
 impl IntoMatcherExpr for Repetition {
-    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
+    fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata) -> TokenStream {
         let Repetition { min, max, greedy, sub } = self;
 
-        let required = caps.required;
+        let required = meta.required;
         if min == 0 {
-            caps.required = false;
+            meta.required = false;
         }
 
         let item_type = type_ident::<I>();
-        let sub_matcher = sub.into_matcher_expr::<I>(caps);
+        let sub_matcher = sub.into_matcher_expr::<I>(meta);
         // I need to document this somewhere, might as well be here: usize is used for all generic
         // parameters, even though Hir types use u32, because it is used for array indexing during
         // the conversion process.
         let (min, max) = (min as usize, max.map(|m| m as usize));
 
         if min == 0 {
-            caps.required = required;
+            meta.required = required;
         }
 
         let tokens = match max {
@@ -184,10 +184,10 @@ impl IntoMatcherExpr for Repetition {
 }
 
 impl IntoMatcherExpr for Capture {
-    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
-        caps.insert(self.index, self.name);
+    fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata) -> TokenStream {
+        meta.insert_group(self.index, self.name);
         let item_type = type_ident::<I>();
-        let sub_matcher = self.sub.into_matcher_expr::<I>(caps);
+        let sub_matcher = self.sub.into_matcher_expr::<I>(meta);
         let index = self.index as usize;
 
         quote!(::ct_regex::internal::matcher::CaptureGroup<#item_type, #sub_matcher, #index>)
@@ -195,7 +195,7 @@ impl IntoMatcherExpr for Capture {
 }
 
 impl IntoMatcherExpr for Alternation {
-    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
+    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut ExprMetadata) -> TokenStream {
         let required = caps.required;
         caps.required = false;
         let tokens = write_chunked::<Or<u8, A, A>, I, _>(caps, self.0);
@@ -205,13 +205,13 @@ impl IntoMatcherExpr for Alternation {
 }
 
 impl IntoMatcherExpr for Concat {
-    fn into_matcher_expr<I: CodegenItem>(self, caps: &mut Groups) -> TokenStream {
-        write_chunked::<Then<u8, A, A>, I, _>(caps, self.0)
+    fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata) -> TokenStream {
+        write_chunked::<Then<u8, A, A>, I, _>(meta, self.0)
     }
 }
 
 fn write_chunked<T, I: CodegenItem, W: IntoMatcherExpr>(
-    caps: &mut Groups,
+    meta: &mut ExprMetadata,
     mut items: Vec<W>,
 ) -> TokenStream {
     let n = items.len();
@@ -220,22 +220,22 @@ fn write_chunked<T, I: CodegenItem, W: IntoMatcherExpr>(
 
     match n {
         0 => panic!("literal contains no items"),
-        1 => items.pop().unwrap().into_matcher_expr::<I>(caps),
+        1 => items.pop().unwrap().into_matcher_expr::<I>(meta),
         2 => {
             let mut iter = items.into_iter();
-            let first = iter.next().unwrap().into_matcher_expr::<I>(caps);
-            let second = iter.next().unwrap().into_matcher_expr::<I>(caps);
+            let first = iter.next().unwrap().into_matcher_expr::<I>(meta);
+            let second = iter.next().unwrap().into_matcher_expr::<I>(meta);
 
             quote!(::ct_regex::internal::matcher::#base<#item_type, #first, #second>)
         },
         3 => {
             let mut iter = items.into_iter();
-            let first = iter.next().unwrap().into_matcher_expr::<I>(caps);
-            let chunked = write_chunked::<T, I, W>(caps, iter.collect());
+            let first = iter.next().unwrap().into_matcher_expr::<I>(meta);
+            let chunked = write_chunked::<T, I, W>(meta, iter.collect());
 
             quote!(::ct_regex::internal::matcher::#base<#item_type, #first, #chunked>)
         },
-        4 | 8 | 16 => write_n_items::<T, I, W>(caps, items, n),
+        4 | 8 | 16 => write_n_items::<T, I, W>(meta, items, n),
         _ => {
             // Take largest chunk that fits, combine with remainder
             let chunk_size = if n > 16 {
@@ -246,8 +246,8 @@ fn write_chunked<T, I: CodegenItem, W: IntoMatcherExpr>(
                 4
             };
             let remainder = items.split_off(chunk_size);
-            let n_matcher = write_n_items::<T, I, W>(caps, items, chunk_size);
-            let chunked = write_chunked::<T, I, W>(caps, remainder);
+            let n_matcher = write_n_items::<T, I, W>(meta, items, chunk_size);
+            let chunked = write_chunked::<T, I, W>(meta, remainder);
 
             quote!(::ct_regex::internal::matcher::#base<#item_type, #n_matcher, #chunked>)
         },
@@ -255,7 +255,7 @@ fn write_chunked<T, I: CodegenItem, W: IntoMatcherExpr>(
 }
 
 fn write_n_items<T, I: CodegenItem, W: IntoMatcherExpr>(
-    caps: &mut Groups,
+    meta: &mut ExprMetadata,
     items: Vec<W>,
     n: usize,
 ) -> TokenStream {
@@ -266,7 +266,7 @@ fn write_n_items<T, I: CodegenItem, W: IntoMatcherExpr>(
 
     for item in items {
         tokens.extend(quote!(,));
-        tokens.extend(item.into_matcher_expr::<I>(caps));
+        tokens.extend(item.into_matcher_expr::<I>(meta));
     }
 
     tokens.extend(quote!(>));

@@ -36,11 +36,11 @@ pub fn make_regex(
 
     config.unicode(true).utf8(true);
 
-    let (type_expr_scalar, char_groups) = parse::parse_regex::<char>(&pat_str, &config);
+    let (type_expr_scalar, scalar_groups) = parse::parse_regex::<char>(&pat_str, &config);
 
-    assert_eq!(byte_groups, char_groups);
+    assert_eq!(byte_groups, scalar_groups);
 
-    let (captures_name, captures_len, captures_impl) = capture::impl_captures(&name, char_groups);
+    let (captures_name, captures_len, captures_impl) = capture::impl_captures(&name, scalar_groups);
 
     let anon_impl = if impl_anon {
         quote! {
@@ -61,7 +61,6 @@ pub fn make_regex(
 
             impl #Regex<u8, #captures_len> for #name {
                 type Pattern = #type_expr_byte;
-
                 type Capture<'a, S: #HaystackSlice<'a>> = #captures_name<'a, S>;
             }
 

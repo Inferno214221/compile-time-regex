@@ -9,8 +9,9 @@ pub struct Group {
     pub required: bool,
 }
 
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExprMetadata {
+    pub name: Ident,
     // Group ids are provided by regex_syntax as a u32, and not returned in the right order, so we
     // store them in a map before checking them and creating a Vec later.
     pub groups: HashMap<u32, Group>,
@@ -19,13 +20,14 @@ pub struct ExprMetadata {
 }
 
 impl ExprMetadata {
-    pub fn new() -> ExprMetadata {
+    pub fn new(name: Ident) -> ExprMetadata {
         let mut groups = HashMap::new();
         groups.insert(0, Group {
             name: Some("whole_match".into()),
             required: true,
         });
         ExprMetadata {
+            name,
             groups,
             required: true,
             literals: Vec::new(),
@@ -57,10 +59,10 @@ impl ExprMetadata {
     pub fn insert_literal(&mut self, literal: Box<[u8]>) -> Ident {
         let index = self.literals.len();
         self.literals.push(literal);
-        create_literal_id(index)
+        create_literal_id(&self.name, index)
     }
 }
 
-pub fn create_literal_id(num: usize) -> Ident {
-    format_ident!("__regex_Literal{}", num)
+pub fn create_literal_id(name: &Ident, num: usize) -> Ident {
+    format_ident!("{}Literal{}", name, num)
 }

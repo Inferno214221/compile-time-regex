@@ -5,10 +5,11 @@ use regex_syntax::ast::{
     ClassSetBinaryOp, ClassSetItem,
 };
 use regex_syntax::hir::translate::TranslatorBuilder;
+use syn::Ident;
 
 use crate::codegen::{CodegenItem, ExprMetadata, HirExtension};
 
-pub fn parse_regex<I: CodegenItem>(pat: &str, config: &ConfigExt) -> (TokenStream, ExprMetadata) {
+pub fn parse_regex<I: CodegenItem>(name: &Ident, pat: &str, config: &ConfigExt) -> (TokenStream, ExprMetadata) {
     let mut ast = config.ast.build()
         .parse(pat)
         .expect("failed to parse regex");
@@ -20,7 +21,7 @@ pub fn parse_regex<I: CodegenItem>(pat: &str, config: &ConfigExt) -> (TokenStrea
     config.hir.build()
         .translate(pat, &ast)
         .expect("failed to parse regex")
-        .into_matcher::<I>()
+        .into_matcher::<I>(name)
 }
 
 pub fn simplify_classes(ast: &mut Ast) {

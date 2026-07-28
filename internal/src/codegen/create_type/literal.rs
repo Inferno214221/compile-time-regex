@@ -1,20 +1,21 @@
 use proc_macro2::{Literal, TokenStream};
 use quote::quote;
+use syn::Ident;
 
-use crate::codegen;
+use crate::codegen::{self, ExprMetadata};
 
-pub fn impl_literals(literals: Vec<Box<[u8]>>) -> TokenStream {
-    literals.into_iter()
+pub fn impl_literals(metadata: ExprMetadata) -> TokenStream {
+    metadata.literals.into_iter()
         .enumerate()
-        .map(impl_literal)
+        .map(|(index, literal)| impl_literal(&metadata.name, index, literal))
         .collect()
 }
 
-pub fn impl_literal((index, literal): (usize, Box<[u8]>)) -> TokenStream {
+pub fn impl_literal(name: &Ident, index: usize, literal: Box<[u8]>) -> TokenStream {
     #![allow(nonstandard_style)]
     let LiteralTrait = quote!(::ct_regex::internal::matcher::Literal);
 
-    let name = codegen::create_literal_id(index);
+    let name = codegen::create_literal_id(name, index);
     let literal = Literal::byte_string(&literal);
 
     quote! {

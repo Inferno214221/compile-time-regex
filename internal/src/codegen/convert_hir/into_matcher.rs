@@ -20,12 +20,12 @@ pub fn type_ident<T>() -> Ident {
 }
 
 pub trait HirExtension {
-    fn into_matcher<I: CodegenItem>(self) -> (TokenStream, ExprMetadata);
+    fn into_matcher<I: CodegenItem>(self, name: &Ident) -> (TokenStream, ExprMetadata);
 }
 
 impl HirExtension for Hir {
-    fn into_matcher<I: CodegenItem>(self) -> (TokenStream, ExprMetadata) {
-        let mut meta = ExprMetadata::new();
+    fn into_matcher<I: CodegenItem>(self, name: &Ident) -> (TokenStream, ExprMetadata) {
+        let mut meta = ExprMetadata::new(name.clone());
         let tokens = self.into_matcher_expr::<I>(&mut meta);
         (tokens, meta)
     }

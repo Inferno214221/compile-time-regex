@@ -31,10 +31,10 @@ pub fn make_regex(
 
     let mut config = flags.create_config();
     config.unicode(false).utf8(false);
-    let (type_expr_byte, byte_meta) = parse::parse_regex::<u8>(&pat_str, &config);
+    let (type_expr_byte, byte_meta) = parse::parse_regex::<u8>(&name, &pat_str, &config);
 
     config.unicode(true).utf8(true);
-    let (type_expr_scalar, mut scalar_meta) = parse::parse_regex::<char>(&pat_str, &config);
+    let (type_expr_scalar, mut scalar_meta) = parse::parse_regex::<char>(&name, &pat_str, &config);
 
     assert_eq!(byte_meta, scalar_meta);
     let (captures_name, captures_len, captures_impl) = capture::impl_captures(
@@ -42,7 +42,7 @@ pub fn make_regex(
         scalar_meta.take_groups()
     );
 
-    let literal_impl = literal::impl_literals(scalar_meta.literals);
+    let literal_impl = literal::impl_literals(scalar_meta);
 
     let anon_impl = if impl_anon {
         quote! {

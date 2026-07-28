@@ -86,7 +86,7 @@ fn range_of_all_matches_non_overlapping() {
     assert_eq!(collect_all_ranges("abc def a abcd"), vec![0..3, 8..9, 10..14]);
     assert_eq!(collect_all_ranges("12abc34"), vec![2..5]);
     assert_eq!(collect_all_ranges("abcadef"), vec![0..7]);
-    assert_eq!(collect_all_ranges(" "), vec![]);
+    assert_eq!(collect_all_ranges(" "), vec![0..1; 0]);
 }
 
 #[test]
@@ -100,7 +100,7 @@ fn range_of_all_matches_overlapping() {
     assert_eq!(collect_all_ranges("abc def a abcd"), vec![0..3, 8..9, 10..14]);
     assert_eq!(collect_all_ranges("12abc34"), vec![2..5]);
     assert_eq!(collect_all_ranges("abcadef"), vec![0..7, 3..7]);
-    assert_eq!(collect_all_ranges(" "), vec![]);
+    assert_eq!(collect_all_ranges(" "), vec![0..1; 0]);
 }
 
 #[test]

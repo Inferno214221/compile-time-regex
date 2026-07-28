@@ -87,7 +87,7 @@ fn range_of_all_matches_non_overlapping() {
     assert_eq!(collect_all_ranges("eae eae eae eae"), vec![0..3, 4..7, 8..11, 12..15]);
     assert_eq!(collect_all_ranges("eaeae"), vec![0..3]);
     assert_eq!(collect_all_ranges("eaeaeaeaeae"), vec![0..3, 4..7, 8..11]);
-    assert_eq!(collect_all_ranges("ea"), vec![]);
+    assert_eq!(collect_all_ranges("ea"), vec![0..1; 0]);
 }
 
 #[test]
@@ -101,7 +101,7 @@ fn range_of_all_matches_overlapping() {
     assert_eq!(collect_all_ranges("eae eae eae eae"), vec![0..3, 4..7, 8..11, 12..15]);
     assert_eq!(collect_all_ranges("eaeae"), vec![0..3, 2..5]);
     assert_eq!(collect_all_ranges("eaeaeaeaeae"), vec![0..3, 2..5, 4..7, 6..9, 8..11]);
-    assert_eq!(collect_all_ranges("ea"), vec![]);
+    assert_eq!(collect_all_ranges("ea"), vec![0..1; 0]);
 }
 
 #[test]

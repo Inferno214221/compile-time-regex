@@ -61,6 +61,7 @@ pub fn make_regex(
             #literal_impl
 
             #[doc = #doc]
+            #[derive(Clone, Copy)]
             pub struct #name;
 
             impl #Regex<u8, #captures_len> for #name {

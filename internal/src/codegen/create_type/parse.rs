@@ -6,9 +6,9 @@ use regex_syntax::ast::{
 };
 use regex_syntax::hir::translate::TranslatorBuilder;
 
-use crate::codegen::{CodegenItem, Group, HirExtension};
+use crate::codegen::{CodegenItem, ExprMetadata, HirExtension};
 
-pub fn parse_regex<I: CodegenItem>(pat: &str, config: &ConfigExt) -> (TokenStream, Vec<Group>) {
+pub fn parse_regex<I: CodegenItem>(pat: &str, config: &ConfigExt) -> (TokenStream, ExprMetadata) {
     let mut ast = config.ast.build()
         .parse(pat)
         .expect("failed to parse regex");

@@ -2,7 +2,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::{Ident, Visibility};
 
-use crate::codegen::{AnonRegexArgs, RegexArgs, capture, parse};
+use crate::codegen::{AnonRegexArgs, RegexArgs, capture, literal, parse};
 
 pub fn make_regex(
     RegexArgs {
@@ -31,16 +31,18 @@ pub fn make_regex(
 
     let mut config = flags.create_config();
     config.unicode(false).utf8(false);
-
-    let (type_expr_byte, byte_groups) = parse::parse_regex::<u8>(&pat_str, &config);
+    let (type_expr_byte, byte_meta) = parse::parse_regex::<u8>(&pat_str, &config);
 
     config.unicode(true).utf8(true);
+    let (type_expr_scalar, mut scalar_meta) = parse::parse_regex::<char>(&pat_str, &config);
 
-    let (type_expr_scalar, scalar_groups) = parse::parse_regex::<char>(&pat_str, &config);
+    assert_eq!(byte_meta, scalar_meta);
+    let (captures_name, captures_len, captures_impl) = capture::impl_captures(
+        &name,
+        scalar_meta.take_groups()
+    );
 
-    assert_eq!(byte_groups, scalar_groups);
-
-    let (captures_name, captures_len, captures_impl) = capture::impl_captures(&name, scalar_groups);
+    let literal_impl = literal::impl_literals(scalar_meta.literals);
 
     let anon_impl = if impl_anon {
         quote! {
@@ -56,6 +58,8 @@ pub fn make_regex(
         #[doc(hidden)]
         #[allow(non_snake_case)]
         mod #mod_name {
+            #literal_impl
+
             #[doc = #doc]
             pub struct #name;
 
@@ -81,7 +85,7 @@ pub fn make_regex(
         }
 
         #[doc(inline)]
-        #vis use #mod_name::*;
+        #vis use #mod_name::{#name, #captures_name};
     }
 }
 

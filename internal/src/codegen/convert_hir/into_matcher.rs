@@ -6,7 +6,7 @@ use regex_syntax::hir::{
     Capture, Class, ClassBytesRange, ClassUnicodeRange, Hir, HirKind, Literal, Look, Repetition,
 };
 
-use crate::codegen::{CodegenItem, Group, ExprMetadata};
+use crate::codegen::{CodegenItem, ExprMetadata};
 use crate::matcher::{Always as A, Or, Then};
 
 pub fn type_name<T>() -> &'static str {
@@ -20,14 +20,14 @@ pub fn type_ident<T>() -> Ident {
 }
 
 pub trait HirExtension {
-    fn into_matcher<I: CodegenItem>(self) -> (TokenStream, Vec<Group>);
+    fn into_matcher<I: CodegenItem>(self) -> (TokenStream, ExprMetadata);
 }
 
 impl HirExtension for Hir {
-    fn into_matcher<I: CodegenItem>(self) -> (TokenStream, Vec<Group>) {
+    fn into_matcher<I: CodegenItem>(self) -> (TokenStream, ExprMetadata) {
         let mut meta = ExprMetadata::new();
         let tokens = self.into_matcher_expr::<I>(&mut meta);
-        (tokens, meta.take_groups())
+        (tokens, meta)
     }
 }
 
@@ -107,10 +107,9 @@ impl IntoMatcherExpr for Empty {
 
 impl IntoMatcherExpr for Literal {
     fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata) -> TokenStream {
-        write_chunked::<Then<u8, A, A>, I, _>(
-            meta,
-            I::collect_from_bytes(&self.0)
-        )
+        #![allow(nonstandard_style)]
+        let LiteralTy = meta.insert_literal(self.0);
+        quote!(::ct_regex::internal::matcher::LiteralMatcher<#LiteralTy>)
     }
 }
 

@@ -1,4 +1,7 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, mem};
+
+use quote::format_ident;
+use syn::Ident;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Group {
@@ -6,12 +9,13 @@ pub struct Group {
     pub required: bool,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct ExprMetadata {
     // Group ids are provided by regex_syntax as a u32, and not returned in the right order, so we
     // store them in a map before checking them and creating a Vec later.
     pub groups: HashMap<u32, Group>,
     pub required: bool,
+    pub literals: Vec<Box<[u8]>>,
 }
 
 impl ExprMetadata {
@@ -24,6 +28,7 @@ impl ExprMetadata {
         ExprMetadata {
             groups,
             required: true,
+            literals: Vec::new(),
         }
     }
 
@@ -34,8 +39,8 @@ impl ExprMetadata {
         });
     }
 
-    pub fn take_groups(self) -> Vec<Group> {
-        let mut items: Vec<_> = self.groups.into_iter().collect();
+    pub fn take_groups(&mut self) -> Vec<Group> {
+        let mut items: Vec<_> = mem::take(&mut self.groups).into_iter().collect();
         items.sort_by_key(|(i, _)| *i);
 
         if items
@@ -48,4 +53,14 @@ impl ExprMetadata {
 
         items.into_iter().map(|(_, item)| item).collect()
     }
+
+    pub fn insert_literal(&mut self, literal: Box<[u8]>) -> Ident {
+        let index = self.literals.len();
+        self.literals.push(literal);
+        create_literal_id(index)
+    }
+}
+
+pub fn create_literal_id(num: usize) -> Ident {
+    format_ident!("__regex_Literal{}", num)
 }

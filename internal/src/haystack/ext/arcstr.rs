@@ -13,6 +13,10 @@ impl<'a> HaystackSlice<'a> for Substr {
     fn slice_with(&self, range: Range<usize>) -> Self {
         self.substr(range)
     }
+
+    fn as_bytes(&self) -> &[u8] {
+        Substr::as_str(self).as_bytes()
+    }
 }
 
 /// A haystack type for matching against the [`char`]s in an [`ArcStr`]. Although [`IntoHaystack`]

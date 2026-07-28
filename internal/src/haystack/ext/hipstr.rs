@@ -16,6 +16,10 @@ impl<'a, B: Backend> HaystackSlice<'a> for HipStr<'a, B> {
     fn slice_with(&self, range: Range<usize>) -> Self {
         self.slice(range)
     }
+
+    fn as_bytes(&self) -> &[u8] {
+        HipStr::as_str(self).as_bytes()
+    }
 }
 
 /// A haystack type for matching against the [`char`]s in a [`HipStr<'a, B>`](hipstr::HipStr).
@@ -128,6 +132,10 @@ impl<'a, B: Backend> HaystackSlice<'a> for HipByt<'a, B> {
 
     fn slice_with(&self, range: Range<usize>) -> Self {
         self.slice(range)
+    }
+
+    fn as_bytes(&self) -> &[u8] {
+        HipByt::as_slice(self)
     }
 }
 

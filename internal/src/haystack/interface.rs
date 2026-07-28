@@ -3,6 +3,8 @@ use std::ops::Range;
 
 use crate::haystack::HaystackItem;
 
+// TODO: Tidy up the distinction between Haystack and HaystackIter.
+
 /// The main underlying trait for [`Haystack`] types, `HaystackIter` should be implemented on new
 /// types that understand slicing and iterating over a haystack that can be sliced into instances of
 /// `Self::Slice`.
@@ -69,6 +71,8 @@ pub trait HaystackSlice<'a>: Debug + Clone + Sized + ToOwned {
     /// Slices the underlying slice with the provided (half-open) `range`, used for retrieving
     /// values of capture groups.
     fn slice_with(&self, range: Range<usize>) -> Self;
+
+    fn as_bytes(&self) -> &[u8];
 }
 
 /// A trait used to interface the haystack types use when matching of capturing against a
@@ -114,6 +118,10 @@ pub trait Haystack<'a>: HaystackIter<'a> {
     fn rollback(&mut self, state: usize) -> &mut Self {
         self.go_to(state);
         self
+    }
+
+    fn skip(&mut self, count: usize) {
+        self.go_to(self.index() + count);
     }
 
     fn is_start(&self) -> bool {

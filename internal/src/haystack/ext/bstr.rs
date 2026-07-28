@@ -10,6 +10,10 @@ impl<'a> HaystackSlice<'a> for &'a BStr {
     fn slice_with(&self, range: Range<usize>) -> Self {
         &self[range]
     }
+
+    fn as_bytes(&self) -> &[u8] {
+        self
+    }
 }
 
 /// A haystack type for matching against the [`u8`]s in a [`&'a BStr`](bstr::BStr). This type is a

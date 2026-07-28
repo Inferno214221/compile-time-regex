@@ -62,6 +62,10 @@ impl<'a> HaystackSlice<'a> for &'a str {
     fn slice_with(&self, range: Range<usize>) -> Self {
         &self[range]
     }
+
+    fn as_bytes(&self) -> &[u8] {
+        str::as_bytes(self)
+    }
 }
 
 impl<'a> IntoHaystack<'a, StrStack<'a>> for &'a str {

@@ -32,13 +32,15 @@ pub fn make_regex(
     let mut config = flags.create_config();
     config.unicode(false).utf8(false);
 
-    let (type_expr_byte, groups) = parse::parse_regex::<u8>(&pat_str, &config);
+    let (type_expr_byte, byte_groups) = parse::parse_regex::<u8>(&pat_str, &config);
 
     config.unicode(true).utf8(true);
 
-    let (type_expr_scalar, _) = parse::parse_regex::<char>(&pat_str, &config);
+    let (type_expr_scalar, char_groups) = parse::parse_regex::<char>(&pat_str, &config);
 
-    let (captures_name, captures_len, captures_impl) = capture::impl_captures(&name, groups);
+    assert_eq!(byte_groups, char_groups);
+
+    let (captures_name, captures_len, captures_impl) = capture::impl_captures(&name, char_groups);
 
     let anon_impl = if impl_anon {
         quote! {

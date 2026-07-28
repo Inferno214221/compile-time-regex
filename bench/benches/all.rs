@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 
-use std::{hint::black_box, sync::LazyLock, time::Duration};
+use std::hint::black_box;
+use std::sync::LazyLock;
+use std::time::Duration;
 
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use ct_regex::{Regex as _, regex};

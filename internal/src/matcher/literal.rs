@@ -3,8 +3,7 @@ use std::marker::PhantomData;
 
 use crate::expr::IndexedCaptures;
 use crate::haystack::{HaystackItem, HaystackOf, HaystackSlice};
-use crate::{impl_all_captures_single, impl_all_matches_single};
-use crate::matcher::Matcher;
+use crate::matcher::{Matcher, impl_all_captures_single, impl_all_matches_single};
 use crate::sealed::Sealed;
 
 pub trait Literal: Default + Clone + Copy {

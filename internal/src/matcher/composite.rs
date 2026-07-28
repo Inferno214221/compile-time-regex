@@ -1,5 +1,5 @@
 use std::fmt::{self, Debug};
-use std::hash::{Hash};
+use std::hash::Hash;
 use std::iter::{Chain, FusedIterator};
 use std::marker::PhantomData;
 

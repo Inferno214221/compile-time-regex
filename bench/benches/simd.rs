@@ -3,12 +3,12 @@
 #![feature(substr_range)]
 
 use std::hint::black_box;
-use std::{iter, range};
 use std::ops::Range;
-use std::simd::{Mask, Simd};
 use std::simd::cmp::SimdPartialEq;
+use std::simd::{Mask, Simd};
 use std::sync::LazyLock;
 use std::time::Duration;
+use std::{iter, range};
 
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use ct_regex::{Regex as _, regex};

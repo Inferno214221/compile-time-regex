@@ -1,7 +1,6 @@
 use std::sync::LazyLock;
 
 use ct_regex_bench::parse_args_many;
-
 use regex::Regex;
 
 static PHONE_NUM: LazyLock<Regex> = LazyLock::new(

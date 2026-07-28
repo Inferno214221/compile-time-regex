@@ -1,4 +1,5 @@
-use std::{collections::HashMap, mem};
+use std::collections::HashMap;
+use std::mem;
 
 use quote::format_ident;
 use syn::Ident;

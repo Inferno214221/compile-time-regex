@@ -1,6 +1,5 @@
-use ct_regex_bench::parse_args_many;
-
 use ct_regex::{Regex, regex};
+use ct_regex_bench::parse_args_many;
 
 regex!(PhoneNum = r"(0|(?<country_code>\+[0-9]+))(?<number>[0-9]{9})");
 regex!(Email = r"([[:word:]]+)@(?<domain>([[:word:]]+)(\.[[:word:]]+))");

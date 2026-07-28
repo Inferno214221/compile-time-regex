@@ -1,6 +1,5 @@
-use ct_regex_bench::parse_args_many;
-
 use ct_regex::{Regex, regex};
+use ct_regex_bench::parse_args_many;
 
 regex!(Needle = r"needle");
 regex!(Alpha = r"[a-zA-Z]+");

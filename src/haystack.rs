@@ -6,6 +6,7 @@
 //!
 //! The main traits in this crate are chained together with associated items:
 //! ```no_run
+//! # trait Sealed {}
 //! trait HaystackItem: Sealed {}
 //!
 //! trait HaystackSlice<'a> {

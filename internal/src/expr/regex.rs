@@ -369,7 +369,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// be `F: FnOnce(Self::Capture<'_, <M::Hay>::Slice>) -> M`. Because of limitations with higher
     /// ranked trait bounds surrounding closure, it may be necessary to implement this as function
     /// with lifetime annotations like so:
-    /// ```
+    /// ```ignore
     /// regex!(PhoneNum = r"(0|(?<country_code>\+[0-9]+))(?<number>[0-9]{9})");
     ///
     /// fn remove_country_code<'a>(value: PhoneNumCapture<'a, &'a str>) -> String {

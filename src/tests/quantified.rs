@@ -22,10 +22,6 @@ fn slice_first_byte<'a>(cap: QuantifiedExprCapture<'a, &'a str>) -> String {
     cap.whole_match()[1..].into()
 }
 
-regex! {
-    pub QuantifiedRollbackExpr = r"[a-z]+a"
-}
-
 #[test]
 fn is_match() {
     assert!(QuantifiedExpr::is_match("aaa"));

@@ -13,7 +13,7 @@
 //!     type Item: HaystackItem;
 //! }
 //!
-//! trait HaystackIter<'a> {
+//! trait Haystack<'a> {
 //!     type Slice: HaystackSlice<'a>;
 //! }
 //! ```
@@ -22,20 +22,20 @@
 //!
 //! - `Item`: [`char`]
 //! - `Slice<'a>`: [`&'a str`](str)
-//! - `HaystackIter<'a>`: [`StrStack<'a>`]
+//! - `Haystack<'a>`: [`StrStack<'a>`]
 //!
 //! but byte-based types may also be used:
 //!
 //! - `Item`: [`u8`]
 //! - `Slice<'a>`: [`&'a [u8]`](slice)
-//! - `HaystackIter<'a>`: [`ByteStack<'a>`]
+//! - `Haystack<'a>`: [`ByteStack<'a>`]
 //!
 //! It needs to be noted that regardless of the haystack type being matched, the regular expression
 //! provided to the `regex!` macro needs to be valid UTF-8.
 
 #[allow(unused_imports)]
 pub use ct_regex_internal::haystack::ext::*;
-pub use ct_regex_internal::haystack::{ByteStack, Haystack, HaystackItem, HaystackIter, OwnedHaystackable, HaystackOf, HaystackSlice, IntoHaystack, StrStack};
+pub use ct_regex_internal::haystack::{ByteStack, Haystack, HaystackItem, OwnedHaystackable, HaystackOf, HaystackSlice, IntoHaystack, StrStack};
 
 #[cfg(feature = "arcstr")]
 #[doc(cfg(feature = "arcstr"))]

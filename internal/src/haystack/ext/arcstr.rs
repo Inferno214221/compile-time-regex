@@ -4,7 +4,7 @@ use std::ops::Range;
 use arcstr::{ArcStr, Substr};
 
 use crate::haystack::{
-    HaystackIter, HaystackSlice, IntoHaystack, first_char, first_char_and_width,
+    Haystack, HaystackSlice, IntoHaystack, first_char, first_char_and_width,
 };
 
 impl<'a> HaystackSlice<'a> for Substr {
@@ -49,10 +49,10 @@ impl<'a> Iterator for ArcStrStack<'a> {
     }
 }
 
-impl<'a> HaystackIter<'a> for ArcStrStack<'a> {
+impl<'a> Haystack<'a> for ArcStrStack<'a> {
     type Slice = Substr;
 
-    fn current_item(&self) -> Option<Self::Item> {
+    fn item(&self) -> Option<Self::Item> {
         first_char(&self.inner[self.index..])
     }
 
@@ -61,11 +61,11 @@ impl<'a> HaystackIter<'a> for ArcStrStack<'a> {
         first_char(&self.inner[prev_index..])
     }
 
-    fn current_index(&self) -> usize {
+    fn index(&self) -> usize {
         self.index
     }
 
-    fn whole_slice(&self) -> Self::Slice {
+    fn inner_slice(&self) -> Self::Slice {
         Substr::full(self.inner.clone())
     }
 

@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack, OwnedHaystackable};
+use crate::haystack::{Haystack, HaystackSlice, IntoHaystack, OwnedHaystackable};
 
 /// A haystack type for matching against the [`u8`]s in a [`&[u8]`](slice). This type provides very
 /// straightforward indexing and iteration over the contained slice.
@@ -24,10 +24,10 @@ impl<'a> Iterator for ByteStack<'a> {
     }
 }
 
-impl<'a> HaystackIter<'a> for ByteStack<'a> {
+impl<'a> Haystack<'a> for ByteStack<'a> {
     type Slice = &'a [u8];
 
-    fn current_item(&self) -> Option<Self::Item> {
+    fn item(&self) -> Option<Self::Item> {
         self.inner.get(self.index).copied()
     }
 
@@ -35,11 +35,11 @@ impl<'a> HaystackIter<'a> for ByteStack<'a> {
         self.inner.get(self.index.checked_sub(1)?).copied()
     }
 
-    fn current_index(&self) -> usize {
+    fn index(&self) -> usize {
         self.index
     }
 
-    fn whole_slice(&self) -> Self::Slice {
+    fn inner_slice(&self) -> Self::Slice {
         self.inner
     }
 
@@ -89,7 +89,7 @@ impl OwnedHaystackable<u8> for Vec<u8> {
     fn replace_range<'a>(
         &mut self,
         range: Range<usize>,
-        with: <Self::Hay<'a> as HaystackIter<'a>>::Slice
+        with: <Self::Hay<'a> as Haystack<'a>>::Slice
     ) where Self: 'a {
         self.splice(range, with.iter().cloned());
     }
@@ -98,7 +98,7 @@ impl OwnedHaystackable<u8> for Vec<u8> {
         self.into_haystack()
     }
 
-    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as HaystackIter<'a>>::Slice {
+    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as Haystack<'a>>::Slice {
         self
     }
 

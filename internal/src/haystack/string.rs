@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use crate::haystack::{
-    HaystackIter, HaystackSlice, IntoHaystack, OwnedHaystackable, first_char, first_char_and_width
+    Haystack, HaystackSlice, IntoHaystack, OwnedHaystackable, first_char, first_char_and_width
 };
 
 /// A haystack type for matching against the [`char`]s in a [`&str`](str). This type abstracts over
@@ -27,10 +27,10 @@ impl<'a> Iterator for StrStack<'a> {
     }
 }
 
-impl<'a> HaystackIter<'a> for StrStack<'a> {
+impl<'a> Haystack<'a> for StrStack<'a> {
     type Slice = &'a str;
 
-    fn current_item(&self) -> Option<Self::Item> {
+    fn item(&self) -> Option<Self::Item> {
         first_char(self.remainder_as_slice())
     }
 
@@ -39,11 +39,11 @@ impl<'a> HaystackIter<'a> for StrStack<'a> {
         first_char(&self.inner[prev_index..])
     }
 
-    fn current_index(&self) -> usize {
+    fn index(&self) -> usize {
         self.index
     }
 
-    fn whole_slice(&self) -> Self::Slice {
+    fn inner_slice(&self) -> Self::Slice {
         self.inner
     }
 
@@ -92,7 +92,7 @@ impl OwnedHaystackable<char> for String {
     fn replace_range<'a>(
         &mut self,
         range: Range<usize>,
-        with: <Self::Hay<'a> as HaystackIter<'a>>::Slice
+        with: <Self::Hay<'a> as Haystack<'a>>::Slice
     ) where Self: 'a {
         self.replace_range(range, with);
     }
@@ -101,7 +101,7 @@ impl OwnedHaystackable<char> for String {
         self.into_haystack()
     }
 
-    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as HaystackIter<'a>>::Slice {
+    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as Haystack<'a>>::Slice {
         self
     }
 

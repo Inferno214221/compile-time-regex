@@ -7,7 +7,7 @@ use hipstr::bytes::HipByt;
 use hipstr::string::HipStr;
 
 use crate::haystack::{
-    HaystackIter, HaystackSlice, IntoHaystack, OwnedHaystackable, first_char, first_char_and_width
+    Haystack, HaystackSlice, IntoHaystack, OwnedHaystackable, first_char, first_char_and_width
 };
 
 impl<'a, B: Backend> HaystackSlice<'a> for HipStr<'a, B> {
@@ -48,10 +48,10 @@ impl<'a, B: Backend> Iterator for HipStrStack<'a, B> {
     }
 }
 
-impl<'a, B: Backend> HaystackIter<'a> for HipStrStack<'a, B> {
+impl<'a, B: Backend> Haystack<'a> for HipStrStack<'a, B> {
     type Slice = HipStr<'a, B>;
 
-    fn current_item(&self) -> Option<Self::Item> {
+    fn item(&self) -> Option<Self::Item> {
         first_char(&self.remainder_as_slice())
     }
 
@@ -60,11 +60,11 @@ impl<'a, B: Backend> HaystackIter<'a> for HipStrStack<'a, B> {
         first_char(&self.inner[prev_index..])
     }
 
-    fn current_index(&self) -> usize {
+    fn index(&self) -> usize {
         self.index
     }
 
-    fn whole_slice(&self) -> Self::Slice {
+    fn inner_slice(&self) -> Self::Slice {
         self.inner.clone()
     }
 
@@ -83,7 +83,7 @@ impl<'s, B: Backend> OwnedHaystackable<char> for HipStr<'s, B> {
     fn replace_range<'a>(
         &mut self,
         range: Range<usize>,
-        with: <Self::Hay<'a> as HaystackIter<'a>>::Slice
+        with: <Self::Hay<'a> as Haystack<'a>>::Slice
     ) where Self: 'a {
         self.mutate().replace_range(range, &with);
     }
@@ -92,7 +92,7 @@ impl<'s, B: Backend> OwnedHaystackable<char> for HipStr<'s, B> {
         self.clone().into_haystack()
     }
 
-    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as HaystackIter<'a>>::Slice {
+    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as Haystack<'a>>::Slice {
         self.clone()
     }
 
@@ -168,10 +168,10 @@ impl<'a, B: Backend> Iterator for HipBytStack<'a, B> {
     }
 }
 
-impl<'a, B: Backend> HaystackIter<'a> for HipBytStack<'a, B> {
+impl<'a, B: Backend> Haystack<'a> for HipBytStack<'a, B> {
     type Slice = HipByt<'a, B>;
 
-    fn current_item(&self) -> Option<Self::Item> {
+    fn item(&self) -> Option<Self::Item> {
         self.inner.get(self.index).copied()
     }
 
@@ -179,11 +179,11 @@ impl<'a, B: Backend> HaystackIter<'a> for HipBytStack<'a, B> {
         self.inner.get(self.index.checked_sub(1)?).copied()
     }
 
-    fn current_index(&self) -> usize {
+    fn index(&self) -> usize {
         self.index
     }
 
-    fn whole_slice(&self) -> Self::Slice {
+    fn inner_slice(&self) -> Self::Slice {
         self.inner.clone()
     }
 
@@ -227,7 +227,7 @@ impl<'s, B: Backend> OwnedHaystackable<u8> for HipByt<'s, B> {
     fn replace_range<'a>(
         &mut self,
         range: Range<usize>,
-        with: <Self::Hay<'a> as HaystackIter<'a>>::Slice
+        with: <Self::Hay<'a> as Haystack<'a>>::Slice
     ) where Self: 'a {
         self.mutate().splice(range, with.iter().copied());
     }
@@ -236,7 +236,7 @@ impl<'s, B: Backend> OwnedHaystackable<u8> for HipByt<'s, B> {
         self.clone().into_haystack()
     }
 
-    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as HaystackIter<'a>>::Slice {
+    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as Haystack<'a>>::Slice {
         self.clone()
     }
 

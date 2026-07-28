@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use bstr::{BStr, BString};
 
-use crate::haystack::{HaystackIter, HaystackSlice, IntoHaystack, OwnedHaystackable};
+use crate::haystack::{Haystack, HaystackSlice, IntoHaystack, OwnedHaystackable};
 
 impl<'a> HaystackSlice<'a> for &'a BStr {
     type Item = u8;
@@ -60,10 +60,10 @@ impl<'a> Iterator for BStrStack<'a> {
     }
 }
 
-impl<'a> HaystackIter<'a> for BStrStack<'a> {
+impl<'a> Haystack<'a> for BStrStack<'a> {
     type Slice = &'a BStr;
 
-    fn current_item(&self) -> Option<Self::Item> {
+    fn item(&self) -> Option<Self::Item> {
         self.inner.get(self.index).copied()
     }
 
@@ -71,11 +71,11 @@ impl<'a> HaystackIter<'a> for BStrStack<'a> {
         self.inner.get(self.index.checked_sub(1)?).copied()
     }
 
-    fn current_index(&self) -> usize {
+    fn index(&self) -> usize {
         self.index
     }
 
-    fn whole_slice(&self) -> Self::Slice {
+    fn inner_slice(&self) -> Self::Slice {
         self.inner
     }
 
@@ -94,7 +94,7 @@ impl OwnedHaystackable<u8> for BString {
     fn replace_range<'a>(
         &mut self,
         range: Range<usize>,
-        with: <Self::Hay<'a> as HaystackIter<'a>>::Slice
+        with: <Self::Hay<'a> as Haystack<'a>>::Slice
     ) where Self: 'a {
         self.splice(range, with.iter().copied());
     }
@@ -103,7 +103,7 @@ impl OwnedHaystackable<u8> for BString {
         self.into_haystack()
     }
 
-    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as HaystackIter<'a>>::Slice {
+    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as Haystack<'a>>::Slice {
         BStr::new(self)
     }
 

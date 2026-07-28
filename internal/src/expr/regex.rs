@@ -4,7 +4,7 @@ use std::ops::Range;
 use super::{CaptureFromRanges, IndexedCaptures};
 use crate::expr::{FindAllCaptures, RangeOfAllMatches, SliceAllMatches};
 use crate::haystack::{
-    HaystackItem, HaystackIter, HaystackOf, HaystackSlice, IntoHaystack, OwnedHaystackable,
+    Haystack, HaystackItem, HaystackOf, HaystackSlice, IntoHaystack, OwnedHaystackable
 };
 use crate::matcher::Matcher;
 
@@ -194,7 +194,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
                 caps_fork.push(0, start..state_fork);
 
                 return Some(
-                    Self::Capture::from_ranges(caps_fork.into_array(), hay.whole_slice())
+                    Self::Capture::from_ranges(caps_fork.into_array(), hay.inner_slice())
                         .expect("failed to convert captures despite matching correctly")
                 );
             }
@@ -253,7 +253,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// boolean indicating whether a match was found and replaced.
     fn replace<'a, M: OwnedHaystackable<I>>(
         hay_mut: &mut M,
-        with: <M::Hay<'a> as HaystackIter<'a>>::Slice
+        with: <M::Hay<'a> as Haystack<'a>>::Slice
     ) -> bool {
         let Some(range) = ({
             let mut hay = hay_mut.as_haystack();
@@ -270,7 +270,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// value is an integer representing the number of matches and replacements that occurred.
     fn replace_all<'a, M: OwnedHaystackable<I>>(
         hay_mut: &mut M,
-        with: <M::Hay<'a> as HaystackIter<'a>>::Slice
+        with: <M::Hay<'a> as Haystack<'a>>::Slice
     ) -> usize {
         // Avoids redirecting to replace_all_using to avoid unnecessary clones.
         let ranges = RangeOfAllMatches::<I, M::Hay<'_>, Self::Pattern>::new(
@@ -385,7 +385,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     fn replace_captured<M, F>(hay_mut: &mut M, replacer: F) -> bool
     where
         M: OwnedHaystackable<I>,
-        F: for<'a> FnOnce(Self::Capture<'a, <M::Hay<'a> as HaystackIter<'a>>::Slice>) -> M,
+        F: for<'a> FnOnce(Self::Capture<'a, <M::Hay<'a> as Haystack<'a>>::Slice>) -> M,
     {
         let (range, replacement) = {
             let Some(caps) = Self::find_capture(hay_mut.as_haystack()) else {
@@ -411,7 +411,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     fn replace_all_captured<M, F>(hay_mut: &mut M, mut replacer: F) -> usize
     where
         M: OwnedHaystackable<I>,
-        F: for<'a> FnMut(Self::Capture<'a, <M::Hay<'a> as HaystackIter<'a>>::Slice>) -> M,
+        F: for<'a> FnMut(Self::Capture<'a, <M::Hay<'a> as Haystack<'a>>::Slice>) -> M,
     {
         // Collect the Iterator to end the borrow of hay_mut.
         let replacements: Vec<_> = {

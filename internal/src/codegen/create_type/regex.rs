@@ -86,6 +86,7 @@ pub fn make_regex(
         }
 
         #[doc(inline)]
+        #[allow(unused)]
         #vis use #mod_name::{#name, #captures_name};
     }
 }

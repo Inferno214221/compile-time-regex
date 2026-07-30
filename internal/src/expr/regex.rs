@@ -7,6 +7,7 @@ use crate::haystack::{
     Haystack, HaystackItem, HaystackOf, HaystackSlice, IntoHaystack, OwnedHaystackable
 };
 use crate::matcher::Matcher;
+use crate::matcher::anchor::Anchor;
 
 /// A trait that is automatically implemented for types produced by the `regex!` macro. Various
 /// function are included that test this pattern against a provided
@@ -37,6 +38,11 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// expressions, this type will be very long an unpleasant to type, hence implementing it as an
     /// associated type.
     type Pattern: Matcher<I>;
+
+    /// This type is another macro generated combination of ZSTs representing the assertions that
+    /// the expression can make before attempting to match against a `Haystack`. This should be much
+    /// more minimal than [`Self::Pattern`] in most cases.
+    type Anchors: Anchor;
 
     /// A macro generated type holding all `N` capture groups in this expression, producing ranges
     /// or slices of the haystack with aliases for named groups. The generated type also understands

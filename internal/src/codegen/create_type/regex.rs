@@ -2,7 +2,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::{Ident, Visibility};
 
-use crate::codegen::{AnonRegexArgs, RegexArgs, TypeExpressions, capture, literal, parse};
+use crate::codegen::{AnonRegexArgs, RegexArgs, TypeExpressions, capture, literal};
 
 pub fn make_regex(
     RegexArgs {
@@ -74,11 +74,13 @@ pub fn make_regex(
 
             impl #Regex<u8, #captures_len> for #name {
                 type Pattern = #byte_matcher;
+                type Anchors = #byte_anchors;
                 type Capture<'a, S: #HaystackSlice<'a>> = #captures_name<'a, S>;
             }
 
             impl #Regex<char, #captures_len> for #name {
                 type Pattern = #scalar_matcher;
+                type Anchors = #scalar_anchors;
                 type Capture<'a, S: #HaystackSlice<'a>> = #captures_name<'a, S>;
             }
 

@@ -1,5 +1,5 @@
 use ct_regex::*;
-use internal::codegen::parse::{self, ConfigExt};
+use internal::codegen::create_type::{classes, config::ConfigExt};
 
 regex!(pub MyPattern = r"^(([a-z]+)|([0-9]+))$" / "i");
 regex!(MyOtherPattern = r"^word$");
@@ -17,7 +17,7 @@ fn main() {
         .expect("failed to parse regex");
 
     if !config.complex_classes {
-        parse::simplify_classes(&mut ast);
+        classes::simplify_classes(&mut ast);
     }
 
     let hir = config.hir.build()

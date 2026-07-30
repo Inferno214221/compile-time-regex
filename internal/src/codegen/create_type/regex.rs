@@ -2,7 +2,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::{Ident, Visibility};
 
-use crate::codegen::{AnonRegexArgs, RegexArgs, capture, literal, parse};
+use crate::codegen::{AnonRegexArgs, RegexArgs, TypeExpressions, capture, literal, parse};
 
 pub fn make_regex(
     RegexArgs {
@@ -31,10 +31,18 @@ pub fn make_regex(
 
     let mut config = flags.create_config();
     config.unicode(false).utf8(false);
-    let (type_expr_byte, byte_meta) = parse::parse_regex::<u8>(&name, &pat_str, &config);
+    let TypeExpressions {
+        matcher: byte_matcher,
+        anchors: byte_anchors,
+        meta: byte_meta
+    } = TypeExpressions::parse_regex::<u8>(&name, &pat_str, &config);
 
     config.unicode(true).utf8(true);
-    let (type_expr_scalar, mut scalar_meta) = parse::parse_regex::<char>(&name, &pat_str, &config);
+    let TypeExpressions {
+        matcher: scalar_matcher,
+        anchors: scalar_anchors,
+        meta: mut scalar_meta
+    } = TypeExpressions::parse_regex::<char>(&name, &pat_str, &config);
 
     assert_eq!(byte_meta, scalar_meta);
     let (captures_name, captures_len, captures_impl) = capture::impl_captures(
@@ -65,12 +73,12 @@ pub fn make_regex(
             pub struct #name;
 
             impl #Regex<u8, #captures_len> for #name {
-                type Pattern = #type_expr_byte;
+                type Pattern = #byte_matcher;
                 type Capture<'a, S: #HaystackSlice<'a>> = #captures_name<'a, S>;
             }
 
             impl #Regex<char, #captures_len> for #name {
-                type Pattern = #type_expr_scalar;
+                type Pattern = #scalar_matcher;
                 type Capture<'a, S: #HaystackSlice<'a>> = #captures_name<'a, S>;
             }
 

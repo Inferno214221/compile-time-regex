@@ -1,4 +1,5 @@
 use ct_regex::*;
+use internal::codegen::parse::{self, ConfigExt};
 
 regex!(pub MyPattern = r"^(([a-z]+)|([0-9]+))$" / "i");
 regex!(MyOtherPattern = r"^word$");
@@ -7,6 +8,25 @@ regex!(PhoneNum = r"(0|(?<country_code>\+[0-9]+))(?<number>[0-9]{9})");
 regex!(Re = r"bc*");
 
 fn main() {
+    let mut config = ConfigExt::default();
+    let pat = "^word($|e)";
+    config.unicode(true).utf8(true);
+
+    let mut ast = config.ast.build()
+        .parse(pat)
+        .expect("failed to parse regex");
+
+    if !config.complex_classes {
+        parse::simplify_classes(&mut ast);
+    }
+
+    let hir = config.hir.build()
+        .translate(pat, &ast)
+        .expect("failed to parse regex");
+
+    dbg!(hir.properties());
+    dbg!(hir);
+
     dbg!(MyPattern::is_match("word"));
     dbg!(MyPattern::is_match("word123"));
     dbg!(MyPattern::is_match("123"));

@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use regex_syntax::hir::{Hir, Look, Properties};
+use regex_syntax::hir::{Capture, Hir, HirKind, Look, Properties};
 use syn::Ident;
 
 use crate::codegen::{CodegenItem, ConfigExt, ExprMetadata, IntoMatcherExpr, classes};
@@ -34,7 +34,7 @@ impl TypeExpressions {
         let anchors = TypeExpressions::create_anchor_expression(hir.properties());
 
         TypeExpressions {
-            matcher: hir.into_matcher_expr::<I>(&mut meta),
+            matcher: Self::remove_redundant_lookarounds(hir).into_matcher_expr::<I>(&mut meta),
             anchors,
             meta
         }
@@ -63,6 +63,27 @@ impl TypeExpressions {
             [a, b] => quote!(::ct_regex::internal::anchor::AnchorPair<#a, #b>),
             [a, b, c] => quote!(::ct_regex::internal::anchor::AnchorSet<#a, #b, #c>),
             _ => panic!("an excessive number for anchor assertions were found"),
+        }
+    }
+
+    pub fn remove_redundant_lookarounds(hir: Hir) -> Hir {
+        match hir.kind() {
+            HirKind::Look(Look::Start) => Hir::empty(),
+            HirKind::Concat(sub) => match &sub[..] {
+                [first, other] if first.kind() == &HirKind::Look(Look::Start) => {
+                    other.clone()
+                },
+                [first, remainder @ ..] if first.kind() == &HirKind::Look(Look::Start) => {
+                    Hir::concat(remainder.to_vec())
+                },
+                _ => hir,
+            },
+            HirKind::Capture(cap) => Hir::capture(Capture {
+                index: cap.index,
+                name: cap.name.clone(),
+                sub: Box::new(Self::remove_redundant_lookarounds((*cap.sub).clone())),
+            }),
+            _ => hir,
         }
     }
 }

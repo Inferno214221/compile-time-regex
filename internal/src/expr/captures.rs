@@ -41,4 +41,5 @@ impl IndexedCaptures {
 pub trait CaptureFromRanges<'a, S: HaystackSlice<'a>, const N: usize>: Sized + Debug {
     fn from_ranges(ranges: [Option<Range<usize>>; N], slice: S) -> Option<Self>;
     fn whole_match_range(&self) -> Range<usize>;
+    fn whole_match(&self) -> S;
 }

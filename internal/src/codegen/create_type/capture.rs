@@ -94,6 +94,10 @@ pub fn impl_captures(regex_name: &Ident, groups: Vec<Group>) -> (Ident, Literal,
             fn whole_match_range(&self) -> #Range {
                 self.1.clone()
             }
+
+            fn whole_match(&self) -> S {
+                self.0.slice_with(self.whole_match_range())
+            }
         }
     };
 
@@ -112,7 +116,7 @@ pub fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> Token
     if cap.required {
         quote! {
             pub fn #cap_name(&self) -> S {
-                self.0.slice_with(self.#index_name.clone())
+                self.0.slice_with(self.#cap_name_full())
             }
 
             pub fn #cap_name_full(&self) -> #Range {
@@ -122,7 +126,7 @@ pub fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> Token
     } else {
         quote! {
             pub fn #cap_name(&self) -> #Option<S> {
-                self.#index_name.clone().map(|r| self.0.slice_with(r))
+                self.#cap_name_full().map(|r| self.0.slice_with(r))
             }
 
             pub fn #cap_name_full(&self) -> #Option<#Range> {

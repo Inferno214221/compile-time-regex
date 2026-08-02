@@ -3,7 +3,7 @@ use regex_syntax::ast::{
     ClassSetBinaryOp, ClassSetItem,
 };
 
-pub fn simplify_classes(ast: &mut Ast) {
+pub(crate) fn simplify_classes(ast: &mut Ast) {
     let replacement = match ast {
         Ast::ClassPerl(class) =>      replace_perl_class(class),
         Ast::ClassBracketed(class) => return replace_in_class(&mut class.kind),
@@ -20,7 +20,7 @@ pub fn simplify_classes(ast: &mut Ast) {
     }));
 }
 
-pub fn replace_in_class(class: &mut ClassSet) {
+pub(crate) fn replace_in_class(class: &mut ClassSet) {
     match class {
         ClassSet::BinaryOp(ClassSetBinaryOp { lhs, rhs, .. }) => {
             replace_in_class(lhs);
@@ -30,7 +30,7 @@ pub fn replace_in_class(class: &mut ClassSet) {
     }
 }
 
-pub fn replace_in_class_set_item(item: &mut ClassSetItem) {
+pub(crate) fn replace_in_class_set_item(item: &mut ClassSetItem) {
     let replacement = match item {
         ClassSetItem::Perl(class) =>      replace_perl_class(class),
         ClassSetItem::Bracketed(class) => return replace_in_class(&mut class.kind),
@@ -42,7 +42,7 @@ pub fn replace_in_class_set_item(item: &mut ClassSetItem) {
     *item = ClassSetItem::Ascii(replacement);
 }
 
-pub fn replace_perl_class(class: &mut ClassPerl) -> ClassAscii {
+pub(crate) fn replace_perl_class(class: &mut ClassPerl) -> ClassAscii {
     ClassAscii {
         span: class.span,
         negated: class.negated,

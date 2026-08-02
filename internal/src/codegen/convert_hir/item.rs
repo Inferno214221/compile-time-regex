@@ -3,12 +3,12 @@ use regex_syntax::hir::Class;
 use crate::codegen::IntoMatcherExpr;
 use crate::haystack::HaystackItem;
 
-pub trait CodegenItem: HaystackItem + IntoMatcherExpr + NormalizeClass {}
+pub(crate) trait CodegenItem: HaystackItem + IntoMatcherExpr + NormalizeClass {}
 
 impl CodegenItem for u8 {}
 impl CodegenItem for char {}
 
-pub trait NormalizeClass {
+pub(crate) trait NormalizeClass {
     fn normalize_class(value: Class) -> Class;
 }
 

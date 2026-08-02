@@ -4,7 +4,7 @@ use syn::Ident;
 
 use crate::codegen::Group;
 
-pub fn impl_captures(regex_name: &Ident, groups: Vec<Group>) -> (Ident, Literal, TokenStream) {
+pub(crate) fn impl_captures(regex_name: &Ident, groups: Vec<Group>) -> (Ident, Literal, TokenStream) {
     #![allow(nonstandard_style)]
     let Capture = quote!(::ct_regex::internal::expr::Capture);
     let FromRanges = quote!(::ct_regex::internal::expr::FromRanges);
@@ -107,7 +107,7 @@ pub fn impl_captures(regex_name: &Ident, groups: Vec<Group>) -> (Ident, Literal,
     (name, len, captures_impl)
 }
 
-pub fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStream {
+pub(crate) fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStream {
     #![allow(nonstandard_style)]
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);

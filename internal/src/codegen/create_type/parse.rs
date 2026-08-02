@@ -6,7 +6,7 @@ use syn::Ident;
 use crate::codegen::{CodegenItem, ConfigExt, ExprMetadata, IntoMatcherExpr, classes};
 
 #[derive(Debug, Clone)]
-pub struct TypeExpressions {
+pub(crate) struct TypeExpressions {
     pub matcher: TokenStream,
     pub anchors: TokenStream,
     pub meta: ExprMetadata,

@@ -9,17 +9,17 @@ use regex_syntax::hir::{
 use crate::codegen::{CodegenItem, ExprMetadata};
 use crate::matcher::{Always as A, Or, Then};
 
-pub fn type_name<T>() -> &'static str {
+pub(crate) fn type_name<T>() -> &'static str {
     any::type_name::<T>()
         .split('<').next().unwrap()
         .rsplit("::").next().unwrap()
 }
 
-pub fn type_ident<T>() -> Ident {
+pub(crate) fn type_ident<T>() -> Ident {
     format_ident!("{}", type_name::<T>())
 }
 
-pub trait IntoMatcherExpr {
+pub(crate) trait IntoMatcherExpr {
     fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata) -> TokenStream;
 }
 

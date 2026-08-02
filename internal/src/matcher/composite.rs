@@ -10,9 +10,9 @@ use crate::sealed::Sealed;
 
 #[derive(Default, Clone, Copy)]
 pub struct Or<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
-    pub PhantomData<I>,
-    pub PhantomData<A>,
-    pub PhantomData<B>,
+    pub(crate) PhantomData<I>,
+    pub(crate) PhantomData<A>,
+    pub(crate) PhantomData<B>,
 );
 
 pub type AllMatchesOr<'a, I, H, A, B> = Chain<
@@ -160,9 +160,9 @@ where
 
 #[derive(Default, Clone, Copy)]
 pub struct Then<I: HaystackItem, A: Matcher<I>, B: Matcher<I>>(
-    pub PhantomData<I>,
-    pub PhantomData<A>,
-    pub PhantomData<B>,
+    pub(crate) PhantomData<I>,
+    pub(crate) PhantomData<A>,
+    pub(crate) PhantomData<B>,
 );
 
 impl<I: HaystackItem, A: Matcher<I>, B: Matcher<I>> Sealed for Then<I, A, B> {}

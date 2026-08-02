@@ -43,8 +43,8 @@ where
 
 #[derive(Default, Clone, Copy)]
 pub struct CaptureGroup<I: HaystackItem, A: Matcher<I>, const N: usize>(
-    pub PhantomData<I>,
-    pub PhantomData<A>,
+    pub(crate) PhantomData<I>,
+    pub(crate) PhantomData<A>,
 );
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> Sealed for CaptureGroup<I, A, N> {}

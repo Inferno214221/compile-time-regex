@@ -9,8 +9,8 @@ use crate::sealed::Sealed;
 
 #[derive(Default, Clone, Copy)]
 pub struct QuantifierN<I: HaystackItem, A: Matcher<I>, const N: usize>(
-    pub PhantomData<I>,
-    pub PhantomData<A>,
+    pub(crate) PhantomData<I>,
+    pub(crate) PhantomData<A>,
 );
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> Sealed for QuantifierN<I, A, N> {}
@@ -48,8 +48,8 @@ pub type AllCapturesMultiple = iter::Rev<vec::IntoIter<(usize, IndexedCaptures)>
 
 #[derive(Default, Clone, Copy)]
 pub struct QuantifierNOrMore<I: HaystackItem, A: Matcher<I>, const N: usize>(
-    pub PhantomData<I>,
-    pub PhantomData<A>,
+    pub(crate) PhantomData<I>,
+    pub(crate) PhantomData<A>,
 );
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize> Sealed for QuantifierNOrMore<I, A, N> {}
@@ -101,8 +101,8 @@ impl<I: HaystackItem, A: Matcher<I>, const N: usize> Debug for QuantifierNOrMore
 
 #[derive(Default, Clone, Copy)]
 pub struct QuantifierNToM<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize>(
-    pub PhantomData<I>,
-    pub PhantomData<A>,
+    pub(crate) PhantomData<I>,
+    pub(crate) PhantomData<A>,
 );
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> Sealed for QuantifierNToM<I, A, N, M> {}

@@ -5,13 +5,13 @@ use quote::format_ident;
 use syn::Ident;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Group {
+pub(crate) struct Group {
     pub name: Option<Box<str>>,
     pub required: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExprMetadata {
+pub(crate) struct ExprMetadata {
     pub name: Ident,
     // Group ids are provided by regex_syntax as a u32, and not returned in the right order, so we
     // store them in a map before checking them and creating a Vec later.

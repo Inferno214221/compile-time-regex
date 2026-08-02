@@ -6,7 +6,7 @@ use crate::matcher::Matcher;
 
 pub type AllMatchesSingle = option::IntoIter<usize>;
 
-pub fn all_matches_single<'a, I: HaystackItem, H: HaystackOf<'a, I>, M: Matcher<I>>(
+pub(crate) fn all_matches_single<'a, I: HaystackItem, H: HaystackOf<'a, I>, M: Matcher<I>>(
     hay: &mut H,
 ) -> AllMatchesSingle {
     if M::matches(hay) {
@@ -34,7 +34,7 @@ pub use impl_all_matches_single;
 
 pub type AllCapturesSingle = option::IntoIter<(usize, IndexedCaptures)>;
 
-pub fn all_captures_single<'a, I: HaystackItem, H: HaystackOf<'a, I>, M: Matcher<I>>(
+pub(crate) fn all_captures_single<'a, I: HaystackItem, H: HaystackOf<'a, I>, M: Matcher<I>>(
     hay: &mut H,
     caps: &mut IndexedCaptures,
 ) -> AllCapturesSingle {

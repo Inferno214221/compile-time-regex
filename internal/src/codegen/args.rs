@@ -81,7 +81,7 @@ impl Parse for Flags {
 }
 
 impl Flags {
-    pub fn create_config(self) -> ConfigExt {
+    pub(crate) fn create_config(self) -> ConfigExt {
         let mut config = ConfigExt::default();
 
         for c in self.0 {

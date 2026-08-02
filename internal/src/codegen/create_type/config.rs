@@ -2,7 +2,7 @@ use regex_syntax::ast::parse::ParserBuilder;
 use regex_syntax::hir::translate::TranslatorBuilder;
 
 #[derive(Debug, Default, Clone)]
-pub struct ConfigExt {
+pub(crate) struct ConfigExt {
     pub ast: ParserBuilder,
     pub hir: TranslatorBuilder,
     pub complex_classes: bool,

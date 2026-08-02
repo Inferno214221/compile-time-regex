@@ -4,14 +4,14 @@ use syn::Ident;
 
 use crate::codegen::{self, ExprMetadata};
 
-pub fn impl_literals(metadata: ExprMetadata) -> TokenStream {
+pub(crate) fn impl_literals(metadata: ExprMetadata) -> TokenStream {
     metadata.literals.into_iter()
         .enumerate()
         .map(|(index, literal)| impl_literal(&metadata.name, index, literal))
         .collect()
 }
 
-pub fn impl_literal(name: &Ident, index: usize, literal: Box<[u8]>) -> TokenStream {
+pub(crate) fn impl_literal(name: &Ident, index: usize, literal: Box<[u8]>) -> TokenStream {
     #![allow(nonstandard_style)]
     let LiteralTrait = quote!(::ct_regex::internal::matcher::Literal);
 

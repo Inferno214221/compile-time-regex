@@ -43,7 +43,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         &self,
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool,
-    ) -> RangeOfAllMatches<'a, I, H, Self::Pattern> {
+    ) -> RangeOfAllMatches<'a, Self, I, H, N> {
         <Self as Regex<I, N>>::range_of_all_matches(hay, overlapping)
     }
 
@@ -60,7 +60,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         &self,
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool,
-    ) -> SliceAllMatches<'a, I, H, Self::Pattern> {
+    ) -> SliceAllMatches<'a, Self, I, H, N> {
         <Self as Regex<I, N>>::slice_all_matches(hay, overlapping)
     }
 

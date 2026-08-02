@@ -158,7 +158,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     fn range_of_all_matches<'a, H: HaystackOf<'a, I>>(
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool,
-    ) -> RangeOfAllMatches<'a, I, H, Self::Pattern> {
+    ) -> RangeOfAllMatches<'a, Self, I, H, N> {
         RangeOfAllMatches::new(hay.into_haystack(), overlapping)
     }
 
@@ -185,7 +185,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     fn slice_all_matches<'a, H: HaystackOf<'a, I>>(
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool,
-    ) -> SliceAllMatches<'a, I, H, Self::Pattern> {
+    ) -> SliceAllMatches<'a, Self, I, H, N> {
         SliceAllMatches {
             inner: RangeOfAllMatches::new(hay.into_haystack(), overlapping),
         }
@@ -297,7 +297,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         with: <M::Hay<'a> as Haystack<'a>>::Slice
     ) -> usize {
         // Avoids redirecting to replace_all_using to avoid unnecessary clones.
-        let ranges = RangeOfAllMatches::<I, M::Hay<'_>, Self::Pattern>::new(
+        let ranges = RangeOfAllMatches::<Self, I, M::Hay<'_>, N>::new(
             hay_mut.as_haystack(),
             false
         ).collect::<Vec<_>>();
@@ -327,7 +327,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         mut using: impl FnMut() -> M,
     ) -> usize {
         // Collect the Iterator to end the borrow of hay_mut.
-        let ranges = RangeOfAllMatches::<I, M::Hay<'_>, Self::Pattern>::new(
+        let ranges = RangeOfAllMatches::<Self, I, M::Hay<'_>, N>::new(
             hay_mut.as_haystack(),
             false
         ).collect::<Vec<_>>();
@@ -362,7 +362,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         let iter = iter.into_iter();
 
         // Zip with ranges first, because it is internal and the side effects don't matter.
-        let ranges_with_replacement = RangeOfAllMatches::<I, M::Hay<'_>, Self::Pattern>::new(
+        let ranges_with_replacement = RangeOfAllMatches::<Self, I, M::Hay<'_>, N>::new(
             hay_mut.as_haystack(),
             false
         ).zip(iter).collect::<Vec<_>>();

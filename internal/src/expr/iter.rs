@@ -9,14 +9,24 @@ use crate::matcher::Matcher;
 /// An `Iterator` over each match in the haystack, as a [`Range<usize>`](Range). See
 /// [`Regex::range_of_all_matches`].
 #[derive(Debug, Clone, Hash)]
-pub struct RangeOfAllMatches<'a, I: HaystackItem, H: HaystackOf<'a, I>, M: Matcher<I>> {
+pub struct RangeOfAllMatches<'a, R, I, H, const N: usize>
+where
+    R: Regex<I, N> + ?Sized,
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+{
     pub(crate) hay: H,
     pub(crate) overlapping: bool,
     pub(crate) last_check: bool,
-    pub(crate) _phantom: PhantomData<(&'a (), I, M)>,
+    pub(crate) _phantom: PhantomData<(&'a (), I, R)>,
 }
 
-impl<'a, I: HaystackItem, H: HaystackOf<'a, I>, M: Matcher<I>> RangeOfAllMatches<'a, I, H, M> {
+impl<'a, R, I, H, const N: usize> RangeOfAllMatches<'a, R, I, H, N>
+where
+    R: Regex<I, N> + ?Sized,
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+{
     pub fn new(hay: H, overlapping: bool) -> Self {
         RangeOfAllMatches {
             hay,
@@ -27,11 +37,11 @@ impl<'a, I: HaystackItem, H: HaystackOf<'a, I>, M: Matcher<I>> RangeOfAllMatches
     }
 }
 
-impl<'a, I, H, M> Iterator for RangeOfAllMatches<'a, I, H, M>
+impl<'a, R, I, H, const N: usize> Iterator for RangeOfAllMatches<'a, R, I, H, N>
 where
+    R: Regex<I, N> + ?Sized,
     I: HaystackItem,
     H: HaystackOf<'a, I>,
-    M: Matcher<I>,
 {
     type Item = Range<usize>;
 
@@ -44,7 +54,7 @@ where
         let start = self.hay.index();
         let mut ret = None;
 
-        if let Some(state_fork) = M::all_matches(&mut self.hay).next() {
+        if let Some(state_fork) = R::Pattern::all_matches(&mut self.hay).next() {
             ret = Some(start..state_fork);
 
             // If start == state_fork, we have a zero-width pattern and have already matched
@@ -61,25 +71,30 @@ where
     }
 }
 
-impl<'a, I, H, M> FusedIterator for RangeOfAllMatches<'a, I, H, M>
+impl<'a, R, I, H, const N: usize> FusedIterator for RangeOfAllMatches<'a, R, I, H, N>
 where
+    R: Regex<I, N> + ?Sized,
     I: HaystackItem,
     H: HaystackOf<'a, I>,
-    M: Matcher<I>,
 {}
 
 /// An `Iterator` over each match in the haystack, as an `H::Slice`. See
 /// [`Regex::slice_all_matches`].
 #[derive(Debug, Clone, Hash)]
-pub struct SliceAllMatches<'a, I: HaystackItem, H: HaystackOf<'a, I>, M: Matcher<I>> {
-    pub(crate) inner: RangeOfAllMatches<'a, I, H, M>,
-}
-
-impl<'a, I, H, M> Iterator for SliceAllMatches<'a, I, H, M>
+pub struct SliceAllMatches<'a, R, I, H, const N: usize>
 where
+    R: Regex<I, N> + ?Sized,
     I: HaystackItem,
     H: HaystackOf<'a, I>,
-    M: Matcher<I>,
+{
+    pub(crate) inner: RangeOfAllMatches<'a, R, I, H, N>,
+}
+
+impl<'a, R, I, H, const N: usize> Iterator for SliceAllMatches<'a, R, I, H, N>
+where
+    R: Regex<I, N> + ?Sized,
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
 {
     type Item = H::Slice;
 
@@ -89,11 +104,11 @@ where
     }
 }
 
-impl<'a, I, H, M> FusedIterator for SliceAllMatches<'a, I, H, M>
+impl<'a, R, I, H, const N: usize> FusedIterator for SliceAllMatches<'a, R, I, H, N>
 where
+    R: Regex<I, N> + ?Sized,
     I: HaystackItem,
     H: HaystackOf<'a, I>,
-    M: Matcher<I>,
 {}
 
 /// An `Iterator` over each capture in the haystack, as an `R::Capture`. See

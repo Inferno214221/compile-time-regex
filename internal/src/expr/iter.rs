@@ -12,6 +12,7 @@ use crate::matcher::Matcher;
 pub struct RangeOfAllMatches<'a, I: HaystackItem, H: HaystackOf<'a, I>, M: Matcher<I>> {
     pub(crate) hay: H,
     pub(crate) overlapping: bool,
+    pub(crate) last_check: bool,
     pub(crate) _phantom: PhantomData<(&'a (), I, M)>,
 }
 
@@ -20,6 +21,7 @@ impl<'a, I: HaystackItem, H: HaystackOf<'a, I>, M: Matcher<I>> RangeOfAllMatches
         RangeOfAllMatches {
             hay,
             overlapping,
+            last_check: false,
             _phantom: PhantomData,
         }
     }
@@ -34,29 +36,28 @@ where
     type Item = Range<usize>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let _ = self.hay.item()?;
+        if self.last_check {
+            return None;
+        }
 
+        self.last_check = self.hay.item().is_none();
         let start = self.hay.index();
+        let mut ret = None;
 
         if let Some(state_fork) = M::all_matches(&mut self.hay).next() {
-            if self.overlapping {
-                self.hay.rollback(start).progress();
-            } else {
+            ret = Some(start..state_fork);
+
+            // If start == state_fork, we have a zero-width pattern and have already matched
+            // this index. We need to progress normally.
+
+            if !self.overlapping && start != state_fork {
                 self.hay.rollback(state_fork);
-
-                // This doesn't seem to make a difference...
-                debug_assert_ne!(start, state_fork)
-                // if start == state_fork {
-                //     // We've already matched at this index.
-                //     hay.progress();
-                // }
+                return ret.or_else(|| self.next());
             }
-
-            Some(start..state_fork)
-        } else {
-            self.hay.rollback(start).progress();
-            self.next()
         }
+
+        self.hay.rollback(start).progress();
+        ret.or_else(|| self.next())
     }
 }
 
@@ -106,6 +107,7 @@ where
 {
     pub(crate) hay: H,
     pub(crate) overlapping: bool,
+    pub(crate) last_check: bool,
     pub(crate) _phantom: PhantomData<(&'a (), I, R)>,
 }
 
@@ -119,6 +121,7 @@ where
         Self {
             hay,
             overlapping,
+            last_check: false,
             _phantom: PhantomData,
         }
     }
@@ -133,32 +136,36 @@ where
     type Item = R::Capture<'a, H::Slice>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let _ = self.hay.item()?;
+        if self.last_check {
+            return None;
+        }
 
+        self.last_check = self.hay.item().is_none();
         let start = self.hay.index();
-
         let mut caps = IndexedCaptures::default();
+        let mut ret = None;
 
-        let first = R::Pattern::all_captures(&mut self.hay, &mut caps).next();
-
-        if let Some((state_fork, mut caps_fork)) = first {
+        if let Some((
+            state_fork,
+            mut caps_fork
+        )) = R::Pattern::all_captures(&mut self.hay, &mut caps).next() {
             caps_fork.push(0, start..state_fork);
-
-            if self.overlapping {
-                self.hay.rollback(start).progress();
-            } else {
-                self.hay.rollback(state_fork);
-                debug_assert_ne!(start, state_fork);
-            }
-
-            Some(
+            ret = Some(
                 R::Capture::from_ranges(caps_fork.into_array(), self.hay.inner_slice())
                     .expect("failed to convert captures despite matching correctly")
-            )
-        } else {
-            self.hay.rollback(start).progress();
-            self.next()
+            );
+
+            // If start == state_fork, we have a zero-width pattern and have already matched
+            // this index. We need to progress normally.
+
+            if !self.overlapping && start != state_fork {
+                self.hay.rollback(state_fork);
+                return ret.or_else(|| self.next());
+            }
         }
+
+        self.hay.rollback(start).progress();
+        ret.or_else(|| self.next())
     }
 }
 

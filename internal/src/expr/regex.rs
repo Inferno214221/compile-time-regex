@@ -81,16 +81,19 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     fn contains_match<'a, H: HaystackOf<'a, I>>(hay: impl IntoHaystack<'a, H>) -> bool {
         let mut hay = hay.into_haystack();
 
-        while hay.item().is_some() {
+        loop {
+            let last_check = hay.item().is_none();
             let start = hay.index();
 
             if Self::Pattern::all_matches(&mut hay).next().is_some() {
                 return true;
             }
 
+            if last_check {
+                return false;
+            }
             hay.rollback(start).progress();
         }
-        false
     }
 
     /// Returns the number of matches present in the haystack provided, optionally including
@@ -105,25 +108,31 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         let mut hay = hay.into_haystack();
         let mut count = 0;
 
-        while hay.item().is_some() {
+        loop {
+            let last_check = hay.item().is_none();
             let start = hay.index();
 
             if let Some(state_fork) = Self::Pattern::all_matches(&mut hay).next() {
                 count += 1;
 
-                if overlapping {
-                    hay.rollback(start).progress();
-                } else {
+                // If start == state_fork, we have a zero-width pattern and have already matched
+                // this index. We need to progress normally.
+
+                if !overlapping && start != state_fork {
                     hay.rollback(state_fork);
 
-                    debug_assert_ne!(start, state_fork)
+                    if last_check {
+                        return count;
+                    }
+                    continue;
                 }
-            } else {
-                hay.rollback(start).progress();
             }
-        }
 
-        count
+            if last_check {
+                return count;
+            }
+            hay.rollback(start).progress();
+        }
     }
 
     /// Returns the range that matches this Regex first. This is the range variant of
@@ -225,14 +234,12 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     ) -> Option<Self::Capture<'a, H::Slice>> {
         let mut hay = hay.into_haystack();
 
-        while hay.item().is_some() {
+        loop {
+            let last_check = hay.item().is_none();
             let start = hay.index();
-
             let mut caps = IndexedCaptures::default();
 
             let first = Self::Pattern::all_captures(&mut hay, &mut caps).next();
-
-            hay.rollback(start);
 
             if let Some((state_fork, mut caps_fork)) = first {
                 caps_fork.push(0, start..state_fork);
@@ -242,9 +249,13 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
                         .expect("failed to convert captures despite matching correctly")
                 );
             }
-            hay.progress()
+
+            if last_check {
+                return None;
+            }
+
+            hay.rollback(start).progress()
         }
-        None
     }
 
     /// Returns an iterator over [`Self::Capture`]s representing every full match of this Regex in
@@ -452,16 +463,19 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
 fn range_of_match<'a, R: Regex<I, N> + ?Sized, I: HaystackItem, const N: usize>(
     hay: &mut impl HaystackOf<'a, I>,
 ) -> Option<Range<usize>> {
-    while hay.item().is_some() {
+    loop {
+        let last_check = hay.item().is_none();
         let start = hay.index();
 
         if let Some(state_fork) = R::Pattern::all_matches(hay).next() {
             return Some(start..state_fork);
         }
 
+        if last_check {
+            return None;
+        }
         hay.rollback(start).progress()
     }
-    None
 }
 
 /// A helper type for tracking changes in [`OwnedHaystackable`] size when replacing ranges. The type

@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::ops::{ControlFlow, Range};
 
-use super::{CaptureFromRanges, IndexedCaptures};
+use super::{Capture, IndexedCaptures, FromRanges};
 use crate::expr::{FindAllCaptures, RangeOfAllMatches, SliceAllMatches};
 use crate::haystack::{
     Haystack, HaystackItem, HaystackOf, HaystackSlice, IntoHaystack, OwnedHaystackable
@@ -51,7 +51,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// Note that an `Capture` type represents the contents of all groups from a single match. Each
     /// group only occurs once, if you're expecting the expression the match multiple times in a
     /// haystack, you will have many `Capture`s.
-    type Capture<'a, S: HaystackSlice<'a>>: CaptureFromRanges<'a, S, N> where I: 'a;
+    type Capture<'a, S: HaystackSlice<'a>>: Capture<'a, S> + FromRanges<'a, S, N> where I: 'a;
 
     /// Returns `true` if this Regex matches the **entire** haystack provided. This should probably
     /// be the default _matching_ function to use.

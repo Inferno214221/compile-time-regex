@@ -1,7 +1,7 @@
 use std::iter;
 use std::ops::Range;
 
-use ct_regex_internal::expr::CaptureFromRanges;
+use ct_regex_internal::expr::Capture;
 
 use super::*;
 

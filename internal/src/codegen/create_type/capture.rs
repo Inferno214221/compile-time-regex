@@ -6,7 +6,8 @@ use crate::codegen::Group;
 
 pub fn impl_captures(regex_name: &Ident, groups: Vec<Group>) -> (Ident, Literal, TokenStream) {
     #![allow(nonstandard_style)]
-    let CaptureFromRanges = quote!(::ct_regex::internal::expr::CaptureFromRanges);
+    let Capture = quote!(::ct_regex::internal::expr::Capture);
+    let FromRanges = quote!(::ct_regex::internal::expr::FromRanges);
     let HaystackSlice = quote!(::ct_regex::internal::haystack::HaystackSlice);
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
@@ -78,7 +79,17 @@ pub fn impl_captures(regex_name: &Ident, groups: Vec<Group>) -> (Ident, Literal,
             #(#named_groups)*
         }
 
-        impl<'a, S: #HaystackSlice<'a>> #CaptureFromRanges<'a, S, #len> for #name<'a, S> {
+        impl<'a, S: #HaystackSlice<'a>> #Capture<'a, S> for #name<'a, S> {
+            fn whole_match_range(&self) -> #Range {
+                self.1.clone()
+            }
+
+            fn whole_match(&self) -> S {
+                self.0.slice_with(self.whole_match_range())
+            }
+        }
+
+        impl<'a, S: #HaystackSlice<'a>> #FromRanges<'a, S, #len> for #name<'a, S> {
             fn from_ranges(
                 ranges: [#Option<#Range>; #len],
                 hay: S,
@@ -89,14 +100,6 @@ pub fn impl_captures(regex_name: &Ident, groups: Vec<Group>) -> (Ident, Literal,
                     #(#capture_constructor),*,
                     #PhantomData,
                 ))
-            }
-
-            fn whole_match_range(&self) -> #Range {
-                self.1.clone()
-            }
-
-            fn whole_match(&self) -> S {
-                self.0.slice_with(self.whole_match_range())
             }
         }
     };

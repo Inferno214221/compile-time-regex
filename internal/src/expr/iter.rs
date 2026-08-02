@@ -2,7 +2,7 @@ use std::iter::FusedIterator;
 use std::marker::PhantomData;
 use std::ops::Range;
 
-use crate::expr::{CaptureFromRanges, IndexedCaptures, Regex};
+use crate::expr::{IndexedCaptures, FromRanges, Regex};
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::Matcher;
 use crate::matcher::anchor::Anchor;

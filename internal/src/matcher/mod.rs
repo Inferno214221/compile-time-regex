@@ -1,4 +1,3 @@
-pub mod anchor;
 pub mod capture;
 pub mod composite;
 pub mod helper;

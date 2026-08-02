@@ -2,10 +2,10 @@ use std::iter::FusedIterator;
 use std::marker::PhantomData;
 use std::ops::Range;
 
+use crate::anchor::Anchor;
 use crate::expr::{IndexedCaptures, FromRanges, Regex};
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::Matcher;
-use crate::matcher::anchor::Anchor;
 
 /// An `Iterator` over each match in the haystack, as a [`Range<usize>`](Range). See
 /// [`Regex::range_of_all_matches`].

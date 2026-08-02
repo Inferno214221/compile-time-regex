@@ -44,24 +44,24 @@ impl TypeExpressions {
         let mut anchors = Vec::new();
 
         if props.look_set_prefix().contains(Look::Start) {
-            anchors.push(quote!(::ct_regex::internal::matcher::anchor::Start));
+            anchors.push(quote!(::ct_regex::internal::anchor::Start));
         }
         if let Some(min) = props.minimum_len() {
-            anchors.push(quote!(::ct_regex::internal::matcher::anchor::MinLen<#min>));
+            anchors.push(quote!(::ct_regex::internal::anchor::MinLen<#min>));
         }
         if let Some(max) = props.maximum_len() {
             if props.look_set_suffix().contains(Look::End) {
-                anchors.push(quote!(::ct_regex::internal::matcher::anchor::EndAndMaxLen<#max>));
+                anchors.push(quote!(::ct_regex::internal::anchor::EndAndMaxLen<#max>));
             } else {
-                anchors.push(quote!(::ct_regex::internal::matcher::anchor::MaxLen<#max>));
+                anchors.push(quote!(::ct_regex::internal::anchor::MaxLen<#max>));
             }
         }
 
         match &anchors[..] {
-            [] => quote!(::ct_regex::internal::matcher::anchor::AnchorNone),
+            [] => quote!(::ct_regex::internal::anchor::AnchorNone),
             [a] => quote!(#a),
-            [a, b] => quote!(::ct_regex::internal::matcher::anchor::AnchorPair<#a, #b>),
-            [a, b, c] => quote!(::ct_regex::internal::matcher::anchor::AnchorSet<#a, #b, #c>),
+            [a, b] => quote!(::ct_regex::internal::anchor::AnchorPair<#a, #b>),
+            [a, b, c] => quote!(::ct_regex::internal::anchor::AnchorSet<#a, #b, #c>),
             _ => panic!("an excessive number for anchor assertions were found"),
         }
     }

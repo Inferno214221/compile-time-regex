@@ -176,7 +176,7 @@ fn slice_all_matches_non_overlapping() {
     assert_eq!(collect_all_ranges::<EndExpr, _>("abc def"), vec![""]);
 
     assert_eq!(collect_all_ranges::<EmptyExpr, _>(""), vec![""]);
-    assert_eq!(collect_all_ranges::<EmptyExpr, _>("a"), vec![""]);
+    assert_eq!(collect_all_ranges::<EmptyExpr, _>("a"), vec![""; 2]);
     assert_eq!(collect_all_ranges::<EmptyExpr, _>("abc def"), vec![""; 8]);
 }
 
@@ -196,7 +196,7 @@ fn slice_all_matches_overlapping() {
     assert_eq!(collect_all_slices::<EndExpr, _>("abc def"), vec![""]);
 
     assert_eq!(collect_all_slices::<EmptyExpr, _>(""), vec![""]);
-    assert_eq!(collect_all_slices::<EmptyExpr, _>("a"), vec![""]);
+    assert_eq!(collect_all_slices::<EmptyExpr, _>("a"), vec![""; 2]);
     assert_eq!(collect_all_slices::<EmptyExpr, _>("abc def"), vec![""; 8]);
 }
 

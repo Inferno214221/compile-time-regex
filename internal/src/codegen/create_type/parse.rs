@@ -58,7 +58,7 @@ impl TypeExpressions {
         }
 
         match &anchors[..] {
-            [] => quote!(()),
+            [] => quote!(::ct_regex::internal::matcher::anchor::AnchorNone),
             [a] => quote!(#a),
             [a, b] => quote!(::ct_regex::internal::matcher::anchor::AnchorPair<#a, #b>),
             [a, b, c] => quote!(::ct_regex::internal::matcher::anchor::AnchorSet<#a, #b, #c>),

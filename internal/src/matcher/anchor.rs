@@ -100,9 +100,12 @@ impl<const N: usize> Anchor for EndAndMaxLen<N> {
     }
 }
 
-impl Sealed for () {}
+#[derive(Debug, Default, Clone, Copy)]
+pub struct AnchorNone;
 
-impl Anchor for () {
+impl Sealed for AnchorNone {}
+
+impl Anchor for AnchorNone {
     fn assert<'a, H: Haystack<'a>>(_hay: &H) -> ControlFlow<(), bool> {
         ControlFlow::Continue(true)
     }

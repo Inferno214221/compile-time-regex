@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use regex_syntax::hir::{Hir, Properties};
+use regex_syntax::hir::{Hir, Look, Properties};
 use syn::Ident;
 
 use crate::codegen::{CodegenItem, ConfigExt, ExprMetadata, IntoMatcherExpr, classes};
@@ -43,14 +43,14 @@ impl TypeExpressions {
     pub fn create_anchor_expression(props: &Properties) -> TokenStream {
         let mut anchors = Vec::new();
 
-        if props.look_set_prefix().contains_anchor_haystack() {
+        if props.look_set_prefix().contains(Look::Start) {
             anchors.push(quote!(::ct_regex::internal::matcher::anchor::Start));
         }
         if let Some(min) = props.minimum_len() {
             anchors.push(quote!(::ct_regex::internal::matcher::anchor::MinLen<#min>));
         }
         if let Some(max) = props.maximum_len() {
-            if props.look_set_suffix().contains_anchor_haystack() {
+            if props.look_set_suffix().contains(Look::End) {
                 anchors.push(quote!(::ct_regex::internal::matcher::anchor::EndAndMaxLen<#max>));
             } else {
                 anchors.push(quote!(::ct_regex::internal::matcher::anchor::MaxLen<#max>));

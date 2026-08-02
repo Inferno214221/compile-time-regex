@@ -1,5 +1,5 @@
 use std::fmt::Debug;
-use std::ops::Range;
+use std::ops::{ControlFlow, Range};
 
 use super::{CaptureFromRanges, IndexedCaptures};
 use crate::expr::{FindAllCaptures, RangeOfAllMatches, SliceAllMatches};
@@ -83,16 +83,25 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
 
         loop {
             let last_check = hay.item().is_none();
-            let start = hay.index();
+            match Self::Anchors::assert(&hay) {
+                ControlFlow::Break(()) => {
+                    return false;
+                },
+                ControlFlow::Continue(true) => {
+                    let start = hay.index();
 
-            if Self::Pattern::all_matches(&mut hay).next().is_some() {
-                return true;
+                    if Self::Pattern::all_matches(&mut hay).next().is_some() {
+                        return true;
+                    }
+                    hay.rollback(start);
+                },
+                ControlFlow::Continue(false) => {}
             }
 
             if last_check {
                 return false;
             }
-            hay.rollback(start).progress();
+            hay.progress();
         }
     }
 
@@ -110,28 +119,37 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
 
         loop {
             let last_check = hay.item().is_none();
-            let start = hay.index();
+            match Self::Anchors::assert(&hay) {
+                ControlFlow::Break(()) => {
+                    return count;
+                },
+                ControlFlow::Continue(true) => {
+                    let start = hay.index();
 
-            if let Some(state_fork) = Self::Pattern::all_matches(&mut hay).next() {
-                count += 1;
+                    if let Some(state_fork) = Self::Pattern::all_matches(&mut hay).next() {
+                        count += 1;
 
-                // If start == state_fork, we have a zero-width pattern and have already matched
-                // this index. We need to progress normally.
+                        // If start == state_fork, we have a zero-width pattern and have already
+                        // matched this index. We need to progress normally.
 
-                if !overlapping && start != state_fork {
-                    hay.rollback(state_fork);
+                        if !overlapping && start != state_fork {
+                            hay.rollback(state_fork);
 
-                    if last_check {
-                        return count;
+                            if last_check {
+                                return count;
+                            }
+                            continue;
+                        }
                     }
-                    continue;
-                }
+                    hay.rollback(start);
+                },
+                ControlFlow::Continue(false) => {}
             }
 
             if last_check {
                 return count;
             }
-            hay.rollback(start).progress();
+            hay.progress();
         }
     }
 
@@ -236,25 +254,27 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
 
         loop {
             let last_check = hay.item().is_none();
-            let start = hay.index();
-            let mut caps = IndexedCaptures::default();
+            if Self::Anchors::assert(&hay).continue_value()? {
+                let start = hay.index();
+                let mut caps = IndexedCaptures::default();
 
-            let first = Self::Pattern::all_captures(&mut hay, &mut caps).next();
+                let first = Self::Pattern::all_captures(&mut hay, &mut caps).next();
 
-            if let Some((state_fork, mut caps_fork)) = first {
-                caps_fork.push(0, start..state_fork);
+                if let Some((state_fork, mut caps_fork)) = first {
+                    caps_fork.push(0, start..state_fork);
 
-                return Some(
-                    Self::Capture::from_ranges(caps_fork.into_array(), hay.inner_slice())
-                        .expect("failed to convert captures despite matching correctly")
-                );
+                    return Some(
+                        Self::Capture::from_ranges(caps_fork.into_array(), hay.inner_slice())
+                            .expect("failed to convert captures despite matching correctly")
+                    );
+                }
+                hay.rollback(start);
             }
 
             if last_check {
                 return None;
             }
-
-            hay.rollback(start).progress()
+            hay.progress()
         }
     }
 
@@ -465,16 +485,18 @@ fn range_of_match<'a, R: Regex<I, N> + ?Sized, I: HaystackItem, const N: usize>(
 ) -> Option<Range<usize>> {
     loop {
         let last_check = hay.item().is_none();
-        let start = hay.index();
+        if R::Anchors::assert(&*hay).continue_value()? {
+            let start = hay.index();
 
-        if let Some(state_fork) = R::Pattern::all_matches(hay).next() {
-            return Some(start..state_fork);
+            if let Some(state_fork) = R::Pattern::all_matches(hay).next() {
+                return Some(start..state_fork);
+            }
+            hay.rollback(start);
         }
-
         if last_check {
             return None;
         }
-        hay.rollback(start).progress()
+        hay.progress()
     }
 }
 

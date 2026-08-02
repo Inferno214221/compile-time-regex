@@ -5,6 +5,7 @@ use std::ops::Range;
 use crate::expr::{CaptureFromRanges, IndexedCaptures, Regex};
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::Matcher;
+use crate::matcher::anchor::Anchor;
 
 /// An `Iterator` over each match in the haystack, as a [`Range<usize>`](Range). See
 /// [`Regex::range_of_all_matches`].
@@ -51,22 +52,27 @@ where
         }
 
         self.last_check = self.hay.item().is_none();
-        let start = self.hay.index();
         let mut ret = None;
 
-        if let Some(state_fork) = R::Pattern::all_matches(&mut self.hay).next() {
-            ret = Some(start..state_fork);
+        if R::Anchors::assert(&self.hay).continue_value()? {
+            let start = self.hay.index();
 
-            // If start == state_fork, we have a zero-width pattern and have already matched
-            // this index. We need to progress normally.
+            if let Some(state_fork) = R::Pattern::all_matches(&mut self.hay).next() {
+                ret = Some(start..state_fork);
 
-            if !self.overlapping && start != state_fork {
-                self.hay.rollback(state_fork);
-                return ret.or_else(|| self.next());
+                // If start == state_fork, we have a zero-width pattern and have already matched
+                // this index. We need to progress normally.
+
+                if !self.overlapping && start != state_fork {
+                    self.hay.rollback(state_fork);
+                    return ret.or_else(|| self.next());
+                }
             }
+
+            self.hay.rollback(start);
         }
 
-        self.hay.rollback(start).progress();
+        self.hay.progress();
         ret.or_else(|| self.next())
     }
 }
@@ -156,30 +162,35 @@ where
         }
 
         self.last_check = self.hay.item().is_none();
-        let start = self.hay.index();
-        let mut caps = IndexedCaptures::default();
         let mut ret = None;
 
-        if let Some((
-            state_fork,
-            mut caps_fork
-        )) = R::Pattern::all_captures(&mut self.hay, &mut caps).next() {
-            caps_fork.push(0, start..state_fork);
-            ret = Some(
-                R::Capture::from_ranges(caps_fork.into_array(), self.hay.inner_slice())
-                    .expect("failed to convert captures despite matching correctly")
-            );
+        if R::Anchors::assert(&self.hay).continue_value()? {
+            let start = self.hay.index();
+            let mut caps = IndexedCaptures::default();
 
-            // If start == state_fork, we have a zero-width pattern and have already matched
-            // this index. We need to progress normally.
+            if let Some((
+                state_fork,
+                mut caps_fork
+            )) = R::Pattern::all_captures(&mut self.hay, &mut caps).next() {
+                caps_fork.push(0, start..state_fork);
+                ret = Some(
+                    R::Capture::from_ranges(caps_fork.into_array(), self.hay.inner_slice())
+                        .expect("failed to convert captures despite matching correctly")
+                );
 
-            if !self.overlapping && start != state_fork {
-                self.hay.rollback(state_fork);
-                return ret.or_else(|| self.next());
+                // If start == state_fork, we have a zero-width pattern and have already matched
+                // this index. We need to progress normally.
+
+                if !self.overlapping && start != state_fork {
+                    self.hay.rollback(state_fork);
+                    return ret.or_else(|| self.next());
+                }
             }
+
+            self.hay.rollback(start);
         }
 
-        self.hay.rollback(start).progress();
+        self.hay.progress();
         ret.or_else(|| self.next())
     }
 }

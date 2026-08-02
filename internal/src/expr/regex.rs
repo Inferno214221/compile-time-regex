@@ -64,6 +64,9 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// instead.
     fn is_match<'a, H: HaystackOf<'a, I>>(hay: impl IntoHaystack<'a, H>) -> bool {
         let mut hay = hay.into_haystack();
+        if !Self::Anchors::assert_fixed(&hay) {
+            return false;
+        }
 
         Self::Pattern::all_matches(&mut hay)
             .any(|state| hay.rollback(state).is_end())
@@ -190,6 +193,10 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         hay: impl IntoHaystack<'a, H>,
     ) -> Option<Self::Capture<'a, H::Slice>> {
         let mut hay = hay.into_haystack();
+        if !Self::Anchors::assert_fixed(&hay) {
+            return None;
+        }
+
         let mut caps = IndexedCaptures::default();
         let start = hay.index();
 

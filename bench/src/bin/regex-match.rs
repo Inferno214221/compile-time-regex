@@ -17,6 +17,9 @@ static EMAIL: LazyLock<Regex> = LazyLock::new(
     // last group optional. ct_regex doesn't care though.              V
     || Regex::new(r"([[:word:]]+)@(?<domain>([[:word:]]+)(\.[[:word:]]+))").unwrap()
 );
+static END_WORD: LazyLock<Regex> = LazyLock::new(
+    || Regex::new(r"[[:word:]]+$").unwrap()
+);
 
 fn main() {
     let (expression, haystacks) = parse_args_many();
@@ -27,6 +30,7 @@ fn main() {
             "alpha"    => ALPHA.is_match(&haystack),
             "phonenum" => PHONE_NUM.is_match(&haystack),
             "email"    => EMAIL.is_match(&haystack),
+            "endword"  => END_WORD.is_match(&haystack),
             _ => panic!("unknown expression"),
         };
 

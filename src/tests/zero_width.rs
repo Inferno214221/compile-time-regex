@@ -175,21 +175,21 @@ fn slice_match() {
 
 #[test]
 fn slice_all_matches_non_overlapping() {
-    fn collect_all_ranges<R: Regex<char, N>, const N: usize>(hay: &str) -> Vec<&str> {
+    fn collect_all_slices<R: Regex<char, N>, const N: usize>(hay: &str) -> Vec<&str> {
         R::slice_all_matches(hay, false).collect::<Vec<_>>()
     }
 
-    assert_eq!(collect_all_ranges::<StartExpr, _>(""), vec![""]);
-    assert_eq!(collect_all_ranges::<StartExpr, _>("a"), vec![""]);
-    assert_eq!(collect_all_ranges::<StartExpr, _>("abc def"), vec![""]);
+    assert_eq!(collect_all_slices::<StartExpr, _>(""), vec![""]);
+    assert_eq!(collect_all_slices::<StartExpr, _>("a"), vec![""]);
+    assert_eq!(collect_all_slices::<StartExpr, _>("abc def"), vec![""]);
 
-    assert_eq!(collect_all_ranges::<EndExpr, _>(""), vec![""]);
-    assert_eq!(collect_all_ranges::<EndExpr, _>("a"), vec![""]);
-    assert_eq!(collect_all_ranges::<EndExpr, _>("abc def"), vec![""]);
+    assert_eq!(collect_all_slices::<EndExpr, _>(""), vec![""]);
+    assert_eq!(collect_all_slices::<EndExpr, _>("a"), vec![""]);
+    assert_eq!(collect_all_slices::<EndExpr, _>("abc def"), vec![""]);
 
-    assert_eq!(collect_all_ranges::<EmptyExpr, _>(""), vec![""]);
-    assert_eq!(collect_all_ranges::<EmptyExpr, _>("a"), vec![""; 2]);
-    assert_eq!(collect_all_ranges::<EmptyExpr, _>("abc def"), vec![""; 8]);
+    assert_eq!(collect_all_slices::<EmptyExpr, _>(""), vec![""]);
+    assert_eq!(collect_all_slices::<EmptyExpr, _>("a"), vec![""; 2]);
+    assert_eq!(collect_all_slices::<EmptyExpr, _>("abc def"), vec![""; 8]);
 }
 
 

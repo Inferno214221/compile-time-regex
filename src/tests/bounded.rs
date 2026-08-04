@@ -1,5 +1,3 @@
-use std::ops::Range;
-
 use super::*;
 
 regex! {
@@ -112,44 +110,36 @@ fn range_of_match() {
 
 #[test]
 fn range_of_all_matches_non_overlapping() {
-    fn collect_all_ranges<R: Regex<char, N>, const N: usize>(hay: &str) -> Vec<Range<usize>> {
-        R::range_of_all_matches(hay, false).collect::<Vec<_>>()
-    }
+    assert_eq!(BoundedExpr::all_ranges("aa"), vec![0..2]);
+    assert_eq!(BoundedExpr::all_ranges("dcba"), vec![0..4]);
+    assert_eq!(BoundedExpr::all_ranges("cba abc"), vec![0..3]);
+    assert_eq!(BoundedExpr::all_ranges("aa ba ca"), vec![0..2, 3..5, 6..8]);
+    assert_eq!(BoundedExpr::all_ranges("abaca"), vec![0..5]);
+    assert_eq!(BoundedExpr::all_ranges(" "), vec![0..0; 0]);
 
-    assert_eq!(collect_all_ranges::<BoundedExpr, _>("aa"), vec![0..2]);
-    assert_eq!(collect_all_ranges::<BoundedExpr, _>("dcba"), vec![0..4]);
-    assert_eq!(collect_all_ranges::<BoundedExpr, _>("cba abc"), vec![0..3]);
-    assert_eq!(collect_all_ranges::<BoundedExpr, _>("aa ba ca"), vec![0..2, 3..5, 6..8]);
-    assert_eq!(collect_all_ranges::<BoundedExpr, _>("abaca"), vec![0..5]);
-    assert_eq!(collect_all_ranges::<BoundedExpr, _>(" "), vec![0..0; 0]);
-
-    assert_eq!(collect_all_ranges::<LazyBoundedExpr, _>("aa"), vec![0..2]);
-    assert_eq!(collect_all_ranges::<LazyBoundedExpr, _>("dcba"), vec![0..4]);
-    assert_eq!(collect_all_ranges::<LazyBoundedExpr, _>("cba abc"), vec![0..3]);
-    assert_eq!(collect_all_ranges::<LazyBoundedExpr, _>("aa ba ca"), vec![0..2, 3..5, 6..8]);
-    assert_eq!(collect_all_ranges::<LazyBoundedExpr, _>("abaca"), vec![0..3, 3..5]);
-    assert_eq!(collect_all_ranges::<LazyBoundedExpr, _>(" "), vec![0..0; 0]);
+    assert_eq!(LazyBoundedExpr::all_ranges("aa"), vec![0..2]);
+    assert_eq!(LazyBoundedExpr::all_ranges("dcba"), vec![0..4]);
+    assert_eq!(LazyBoundedExpr::all_ranges("cba abc"), vec![0..3]);
+    assert_eq!(LazyBoundedExpr::all_ranges("aa ba ca"), vec![0..2, 3..5, 6..8]);
+    assert_eq!(LazyBoundedExpr::all_ranges("abaca"), vec![0..3, 3..5]);
+    assert_eq!(LazyBoundedExpr::all_ranges(" "), vec![0..0; 0]);
 }
 
 #[test]
 fn range_of_all_matches_overlapping() {
-    fn collect_all_ranges<R: Regex<char, N>, const N: usize>(hay: &str) -> Vec<Range<usize>> {
-        R::range_of_all_matches(hay, true).collect::<Vec<_>>()
-    }
+    assert_eq!(BoundedExpr::all_ranges_overlap("aa"), vec![0..2]);
+    assert_eq!(BoundedExpr::all_ranges_overlap("dcba"), vec![0..4, 1..4, 2..4]);
+    assert_eq!(BoundedExpr::all_ranges_overlap("cba abc"), vec![0..3, 1..3]);
+    assert_eq!(BoundedExpr::all_ranges_overlap("aa ba ca"), vec![0..2, 3..5, 6..8]);
+    assert_eq!(BoundedExpr::all_ranges_overlap("abaca"), vec![0..5, 1..5, 2..5, 3..5]);
+    assert_eq!(BoundedExpr::all_ranges_overlap(" "), vec![0..0; 0]);
 
-    assert_eq!(collect_all_ranges::<BoundedExpr, _>("aa"), vec![0..2]);
-    assert_eq!(collect_all_ranges::<BoundedExpr, _>("dcba"), vec![0..4, 1..4, 2..4]);
-    assert_eq!(collect_all_ranges::<BoundedExpr, _>("cba abc"), vec![0..3, 1..3]);
-    assert_eq!(collect_all_ranges::<BoundedExpr, _>("aa ba ca"), vec![0..2, 3..5, 6..8]);
-    assert_eq!(collect_all_ranges::<BoundedExpr, _>("abaca"), vec![0..5, 1..5, 2..5, 3..5]);
-    assert_eq!(collect_all_ranges::<BoundedExpr, _>(" "), vec![0..0; 0]);
-
-    assert_eq!(collect_all_ranges::<LazyBoundedExpr, _>("aa"), vec![0..2]);
-    assert_eq!(collect_all_ranges::<LazyBoundedExpr, _>("dcba"), vec![0..4, 1..4, 2..4]);
-    assert_eq!(collect_all_ranges::<LazyBoundedExpr, _>("cba abc"), vec![0..3, 1..3]);
-    assert_eq!(collect_all_ranges::<LazyBoundedExpr, _>("aa ba ca"), vec![0..2, 3..5, 6..8]);
-    assert_eq!(collect_all_ranges::<LazyBoundedExpr, _>("abaca"), vec![0..3, 1..3, 2..5, 3..5]);
-    assert_eq!(collect_all_ranges::<LazyBoundedExpr, _>(" "), vec![0..0; 0]);
+    assert_eq!(LazyBoundedExpr::all_ranges_overlap("aa"), vec![0..2]);
+    assert_eq!(LazyBoundedExpr::all_ranges_overlap("dcba"), vec![0..4, 1..4, 2..4]);
+    assert_eq!(LazyBoundedExpr::all_ranges_overlap("cba abc"), vec![0..3, 1..3]);
+    assert_eq!(LazyBoundedExpr::all_ranges_overlap("aa ba ca"), vec![0..2, 3..5, 6..8]);
+    assert_eq!(LazyBoundedExpr::all_ranges_overlap("abaca"), vec![0..3, 1..3, 2..5, 3..5]);
+    assert_eq!(LazyBoundedExpr::all_ranges_overlap(" "), vec![0..0; 0]);
 }
 
 #[test]
@@ -175,42 +165,34 @@ fn slice_match() {
 
 #[test]
 fn slice_all_matches_non_overlapping() {
-    fn collect_all_slices<R: Regex<char, N>, const N: usize>(hay: &str) -> Vec<&str> {
-        R::slice_all_matches(hay, false).collect::<Vec<_>>()
-    }
+    assert_eq!(BoundedExpr::all_slices("aa"), vec!["aa"]);
+    assert_eq!(BoundedExpr::all_slices("dcba"), vec!["dcba"]);
+    assert_eq!(BoundedExpr::all_slices("cba abc"), vec!["cba"]);
+    assert_eq!(BoundedExpr::all_slices("aa ba ca"), vec!["aa", "ba", "ca"]);
+    assert_eq!(BoundedExpr::all_slices("abaca"), vec!["abaca"]);
+    assert_eq!(BoundedExpr::all_slices(" "), vec![""; 0]);
 
-    assert_eq!(collect_all_slices::<BoundedExpr, _>("aa"), vec!["aa"]);
-    assert_eq!(collect_all_slices::<BoundedExpr, _>("dcba"), vec!["dcba"]);
-    assert_eq!(collect_all_slices::<BoundedExpr, _>("cba abc"), vec!["cba"]);
-    assert_eq!(collect_all_slices::<BoundedExpr, _>("aa ba ca"), vec!["aa", "ba", "ca"]);
-    assert_eq!(collect_all_slices::<BoundedExpr, _>("abaca"), vec!["abaca"]);
-    assert_eq!(collect_all_slices::<BoundedExpr, _>(" "), vec![""; 0]);
-
-    assert_eq!(collect_all_slices::<LazyBoundedExpr, _>("aa"), vec!["aa"]);
-    assert_eq!(collect_all_slices::<LazyBoundedExpr, _>("dcba"), vec!["dcba"]);
-    assert_eq!(collect_all_slices::<LazyBoundedExpr, _>("cba abc"), vec!["cba"]);
-    assert_eq!(collect_all_slices::<LazyBoundedExpr, _>("aa ba ca"), vec!["aa", "ba", "ca"]);
-    assert_eq!(collect_all_slices::<LazyBoundedExpr, _>("abaca"), vec!["aba", "ca"]);
-    assert_eq!(collect_all_slices::<LazyBoundedExpr, _>(" "), vec![""; 0]);
+    assert_eq!(LazyBoundedExpr::all_slices("aa"), vec!["aa"]);
+    assert_eq!(LazyBoundedExpr::all_slices("dcba"), vec!["dcba"]);
+    assert_eq!(LazyBoundedExpr::all_slices("cba abc"), vec!["cba"]);
+    assert_eq!(LazyBoundedExpr::all_slices("aa ba ca"), vec!["aa", "ba", "ca"]);
+    assert_eq!(LazyBoundedExpr::all_slices("abaca"), vec!["aba", "ca"]);
+    assert_eq!(LazyBoundedExpr::all_slices(" "), vec![""; 0]);
 }
 
 #[test]
 fn slice_all_matches_overlapping() {
-    fn collect_all_slices<R: Regex<char, N>, const N: usize>(hay: &str) -> Vec<&str> {
-        R::slice_all_matches(hay, true).collect::<Vec<_>>()
-    }
+    assert_eq!(BoundedExpr::all_slices_overlap("aa"), vec!["aa"]);
+    assert_eq!(BoundedExpr::all_slices_overlap("dcba"), vec!["dcba", "cba", "ba"]);
+    assert_eq!(BoundedExpr::all_slices_overlap("cba abc"), vec!["cba", "ba"]);
+    assert_eq!(BoundedExpr::all_slices_overlap("aa ba ca"), vec!["aa", "ba", "ca"]);
+    assert_eq!(BoundedExpr::all_slices_overlap("abaca"), vec!["abaca", "baca", "aca", "ca"]);
+    assert_eq!(BoundedExpr::all_slices_overlap(" "), vec![""; 0]);
 
-    assert_eq!(collect_all_slices::<BoundedExpr, _>("aa"), vec!["aa"]);
-    assert_eq!(collect_all_slices::<BoundedExpr, _>("dcba"), vec!["dcba", "cba", "ba"]);
-    assert_eq!(collect_all_slices::<BoundedExpr, _>("cba abc"), vec!["cba", "ba"]);
-    assert_eq!(collect_all_slices::<BoundedExpr, _>("aa ba ca"), vec!["aa", "ba", "ca"]);
-    assert_eq!(collect_all_slices::<BoundedExpr, _>("abaca"), vec!["abaca", "baca", "aca", "ca"]);
-    assert_eq!(collect_all_slices::<BoundedExpr, _>(" "), vec![""; 0]);
-
-    assert_eq!(collect_all_slices::<LazyBoundedExpr, _>("aa"), vec!["aa"]);
-    assert_eq!(collect_all_slices::<LazyBoundedExpr, _>("dcba"), vec!["dcba", "cba", "ba"]);
-    assert_eq!(collect_all_slices::<LazyBoundedExpr, _>("cba abc"), vec!["cba", "ba"]);
-    assert_eq!(collect_all_slices::<LazyBoundedExpr, _>("aa ba ca"), vec!["aa", "ba", "ca"]);
-    assert_eq!(collect_all_slices::<LazyBoundedExpr, _>("abaca"), vec!["aba", "ba", "aca", "ca"]);
-    assert_eq!(collect_all_slices::<LazyBoundedExpr, _>(" "), vec![""; 0]);
+    assert_eq!(LazyBoundedExpr::all_slices_overlap("aa"), vec!["aa"]);
+    assert_eq!(LazyBoundedExpr::all_slices_overlap("dcba"), vec!["dcba", "cba", "ba"]);
+    assert_eq!(LazyBoundedExpr::all_slices_overlap("cba abc"), vec!["cba", "ba"]);
+    assert_eq!(LazyBoundedExpr::all_slices_overlap("aa ba ca"), vec!["aa", "ba", "ca"]);
+    assert_eq!(LazyBoundedExpr::all_slices_overlap("abaca"), vec!["aba", "ba", "aca", "ca"]);
+    assert_eq!(LazyBoundedExpr::all_slices_overlap(" "), vec![""; 0]);
 }

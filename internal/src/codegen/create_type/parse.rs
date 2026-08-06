@@ -46,7 +46,7 @@ impl TypeExpressions {
         if props.look_set_prefix().contains(Look::Start) {
             anchors.push(quote!(::ct_regex::internal::anchor::Start));
         }
-        if let Some(min) = props.minimum_len() {
+        if let Some(min) = props.minimum_len() && min != 0 {
             anchors.push(quote!(::ct_regex::internal::anchor::MinLen<#min>));
         }
         if let Some(max) = props.maximum_len() {

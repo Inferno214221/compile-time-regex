@@ -44,7 +44,6 @@ impl<'a> Haystack<'a> for ByteStack<'a> {
     }
 
     fn remainder_as_slice(&self) -> Self::Slice {
-        // FIXME: Check for possible panics when slicing.
         &self.inner[self.index..]
     }
 

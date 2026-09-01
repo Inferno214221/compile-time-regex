@@ -11,7 +11,7 @@ use crate::sealed::Sealed;
 /// `Regex` types that match against any `HaystackItem` other than the default. If you need to match
 /// against another item type and want to use this crate, you may as well fork it and update the
 /// proc macro too, so that you don't have to write manual `Matcher` expressions.
-pub trait HaystackItem: Sealed + Debug + Default + Copy + Eq + Ord {
+pub trait HaystackItem: Sealed + Debug + Default + Copy + Eq + Ord + 'static {
     /// Creates a `Vec` of this item from the provided `&str`, used to convert string literals from
     /// parsed regular expressions into individual `HaystackItem`s that can be matched in a
     /// haystack.

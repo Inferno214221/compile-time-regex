@@ -1,6 +1,7 @@
+use std::ops::ControlFlow::*;
+
 use super::*;
 use crate::haystack::{Haystack, IntoHaystack};
-use std::ops::ControlFlow::*;
 
 mod start {
     use super::*;
@@ -94,7 +95,6 @@ mod max_len {
 
 mod end_and_max_len {
     use super::*;
-
 
     #[test]
     fn assert() {
@@ -211,7 +211,6 @@ mod set {
         assert!(!StartMin2Max3::assert_fixed(&hay));
         assert!(!StartMin2EndMax3::assert_fixed(&hay));
         assert!(StartMin1EndMax2::assert_fixed(&hay));
-
 
         let mut hay = "ha".into_haystack();
         assert!(StartMin2Max3::assert_fixed(&hay));

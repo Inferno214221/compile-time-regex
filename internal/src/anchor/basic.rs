@@ -1,7 +1,9 @@
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
+use std::marker::PhantomData;
 use std::ops::ControlFlow;
 
-use crate::{haystack::{Haystack, HaystackSlice}, sealed::Sealed};
+use crate::haystack::{Haystack, HaystackSlice};
+use crate::sealed::Sealed;
 
 pub trait Anchor: Sealed + Debug + Default + Clone + Copy {
     /// Asserts that each anchor in this set could possibly succeed with the given haystack state.

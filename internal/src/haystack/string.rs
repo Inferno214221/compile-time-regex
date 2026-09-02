@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use crate::haystack::{
-    Haystack, HaystackSlice, IntoHaystack, OwnedHaystackable, first_char, first_char_and_width
+    Haystack, HaystackSlice, IntoHaystack, OwnedHaystackable, first_char, first_char_and_width,
 };
 
 /// A haystack type for matching against the [`char`]s in a [`&str`](str). This type abstracts over

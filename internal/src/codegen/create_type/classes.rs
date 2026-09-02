@@ -5,12 +5,12 @@ use regex_syntax::ast::{
 
 pub(crate) fn simplify_classes(ast: &mut Ast) {
     let replacement = match ast {
-        Ast::ClassPerl(class) =>      replace_perl_class(class),
+        Ast::ClassPerl(class)      => replace_perl_class(class),
         Ast::ClassBracketed(class) => return replace_in_class(&mut class.kind),
-        Ast::Repetition(rep) =>       return simplify_classes(&mut rep.ast),
-        Ast::Group(group) =>          return simplify_classes(&mut group.ast),
-        Ast::Alternation(alt) =>      return alt.asts.iter_mut().for_each(simplify_classes),
-        Ast::Concat(cat) =>           return cat.asts.iter_mut().for_each(simplify_classes),
+        Ast::Repetition(rep)       => return simplify_classes(&mut rep.ast),
+        Ast::Group(group)          => return simplify_classes(&mut group.ast),
+        Ast::Alternation(alt)      => return alt.asts.iter_mut().for_each(simplify_classes),
+        Ast::Concat(cat)           => return cat.asts.iter_mut().for_each(simplify_classes),
         _ => return,
     };
     *ast = Ast::ClassBracketed(Box::new(ClassBracketed {
@@ -32,7 +32,7 @@ pub(crate) fn replace_in_class(class: &mut ClassSet) {
 
 pub(crate) fn replace_in_class_set_item(item: &mut ClassSetItem) {
     let replacement = match item {
-        ClassSetItem::Perl(class) =>      replace_perl_class(class),
+        ClassSetItem::Perl(class) => replace_perl_class(class),
         ClassSetItem::Bracketed(class) => return replace_in_class(&mut class.kind),
         ClassSetItem::Union(class) => {
             return class.items.iter_mut().for_each(replace_in_class_set_item);

@@ -7,7 +7,7 @@ use hipstr::bytes::HipByt;
 use hipstr::string::HipStr;
 
 use crate::haystack::{
-    Haystack, HaystackSlice, IntoHaystack, OwnedHaystackable, first_char, first_char_and_width
+    Haystack, HaystackSlice, IntoHaystack, OwnedHaystackable, first_char, first_char_and_width,
 };
 
 impl<'a, B: Backend> HaystackSlice<'a> for HipStr<'a, B> {

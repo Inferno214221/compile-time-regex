@@ -4,7 +4,10 @@ use syn::Ident;
 
 use crate::codegen::Group;
 
-pub(crate) fn impl_captures(regex_name: &Ident, groups: Vec<Group>) -> (Ident, Literal, TokenStream) {
+pub(crate) fn impl_captures(
+    regex_name: &Ident,
+    groups: Vec<Group>,
+) -> (Ident, Literal, TokenStream) {
     #![allow(nonstandard_style)]
     let Capture = quote!(::ct_regex::internal::expr::Capture);
     let FromRanges = quote!(::ct_regex::internal::expr::FromRanges);
@@ -43,13 +46,11 @@ pub(crate) fn impl_captures(regex_name: &Ident, groups: Vec<Group>) -> (Ident, L
         .enumerate()
         .map(|(index, cap)| impl_capture_getters(index, cap, format_ident!("cap_{}", index)));
 
-    let named_groups = groups.iter()
-        .enumerate()
-        .filter_map(|(index, cap)| {
-            cap.name.as_ref().map(|cap_name| {
-                impl_capture_getters(index, cap, Ident::new(cap_name, Span::call_site()))
-            })
-        });
+    let named_groups = groups.iter().enumerate().filter_map(|(index, cap)| {
+        cap.name.as_ref().map(|cap_name| {
+            impl_capture_getters(index, cap, Ident::new(cap_name, Span::call_site()))
+        })
+    });
 
     let capture_destructure = (0..groups.len()).map(|i| format_ident!("c{}", i));
 

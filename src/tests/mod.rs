@@ -1,10 +1,10 @@
 use ct_regex::*;
 
 mod anchored;
+mod bounded;
 mod capturing;
 mod literal;
 mod quantified;
-mod bounded;
 mod util;
 mod zero_width;
 

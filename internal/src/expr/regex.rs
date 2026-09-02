@@ -2,9 +2,11 @@ use std::fmt::Debug;
 use std::ops::{ControlFlow, Range};
 
 use crate::anchor::Anchor;
-use crate::expr::{Capture, FindAllCaptures, FromRanges, IndexedCaptures, RangeOfAllMatches, SliceAllMatches};
+use crate::expr::{
+    Capture, FindAllCaptures, FromRanges, IndexedCaptures, RangeOfAllMatches, SliceAllMatches,
+};
 use crate::haystack::{
-    Haystack, HaystackItem, HaystackOf, HaystackSlice, IntoHaystack, OwnedHaystackable
+    Haystack, HaystackItem, HaystackOf, HaystackSlice, IntoHaystack, OwnedHaystackable,
 };
 use crate::matcher::Matcher;
 
@@ -94,7 +96,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
                     }
                     hay.rollback(start);
                 },
-                ControlFlow::Continue(false) => {}
+                ControlFlow::Continue(false) => {},
             }
 
             if last_check {
@@ -142,7 +144,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
                     }
                     hay.rollback(start);
                 },
-                ControlFlow::Continue(false) => {}
+                ControlFlow::Continue(false) => {},
             }
 
             if last_check {
@@ -296,7 +298,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// boolean indicating whether a match was found and replaced.
     fn replace<'a, M: OwnedHaystackable<I>>(
         hay_mut: &mut M,
-        with: <M::Hay<'a> as Haystack<'a>>::Slice
+        with: <M::Hay<'a> as Haystack<'a>>::Slice,
     ) -> bool {
         let Some(range) = ({
             let mut hay = hay_mut.as_haystack();
@@ -313,7 +315,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// value is an integer representing the number of matches and replacements that occurred.
     fn replace_all<'a, M: OwnedHaystackable<I>>(
         hay_mut: &mut M,
-        with: <M::Hay<'a> as Haystack<'a>>::Slice
+        with: <M::Hay<'a> as Haystack<'a>>::Slice,
     ) -> usize {
         // Avoids redirecting to replace_all_using to avoid unnecessary clones.
         let ranges = RangeOfAllMatches::<Self, I, M::Hay<'_>, N>::new(

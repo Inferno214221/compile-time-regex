@@ -34,14 +34,14 @@ pub fn make_regex(
     let TypeExpressions {
         matcher: byte_matcher,
         anchors: byte_anchors,
-        meta: byte_meta
+        meta: byte_meta,
     } = TypeExpressions::parse_regex::<u8>(&name, &pat_str, &config);
 
     config.unicode(true).utf8(true);
     let TypeExpressions {
         matcher: scalar_matcher,
         anchors: scalar_anchors,
-        meta: mut scalar_meta
+        meta: mut scalar_meta,
     } = TypeExpressions::parse_regex::<char>(&name, &pat_str, &config);
 
     assert_eq!(byte_meta, scalar_meta);

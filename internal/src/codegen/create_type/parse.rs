@@ -13,8 +13,14 @@ pub(crate) struct TypeExpressions {
 }
 
 impl TypeExpressions {
-    pub fn parse_regex<I: CodegenItem>(name: &Ident, pat: &str, config: &ConfigExt) -> TypeExpressions {
-        let mut ast = config.ast.build()
+    pub fn parse_regex<I: CodegenItem>(
+        name: &Ident,
+        pat: &str,
+        config: &ConfigExt,
+    ) -> TypeExpressions {
+        let mut ast = config
+            .ast
+            .build()
             .parse(pat)
             .expect("failed to parse regex");
 
@@ -36,7 +42,7 @@ impl TypeExpressions {
         TypeExpressions {
             matcher: Self::remove_redundant_lookarounds(hir).into_matcher_expr::<I>(&mut meta),
             anchors,
-            meta
+            meta,
         }
     }
 

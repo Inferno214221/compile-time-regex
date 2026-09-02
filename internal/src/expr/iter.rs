@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use std::ops::Range;
 
 use crate::anchor::Anchor;
-use crate::expr::{IndexedCaptures, FromRanges, Regex};
+use crate::expr::{FromRanges, IndexedCaptures, Regex};
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::Matcher;
 

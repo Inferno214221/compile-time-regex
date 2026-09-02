@@ -1,7 +1,8 @@
 use std::collections::HashSet;
 use std::fmt::{self, Display};
 
-use syn::parse::{discouraged::Speculative, Parse, ParseStream};
+use syn::parse::discouraged::Speculative;
+use syn::parse::{Parse, ParseStream};
 use syn::{Ident, LitStr, Token, Visibility};
 
 use crate::codegen::ConfigExt;

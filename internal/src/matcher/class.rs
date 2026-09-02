@@ -3,9 +3,9 @@ use std::fmt::{self, Debug};
 use std::marker::PhantomData;
 
 use crate::expr::IndexedCaptures;
-use crate::sealed::Sealed;
-use crate::matcher::{Matcher, impl_all_captures_single, impl_all_matches_single};
 use crate::haystack::{HaystackItem, HaystackOf};
+use crate::matcher::{Matcher, impl_all_captures_single, impl_all_matches_single};
+use crate::sealed::Sealed;
 
 #[derive(Clone)]
 pub struct ClassEntry<I: HaystackItem> {

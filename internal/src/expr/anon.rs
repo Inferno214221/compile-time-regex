@@ -93,7 +93,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
     fn replace<'a, M: OwnedHaystackable<I>>(
         &self,
         hay_mut: &mut M,
-        with: <M::Hay<'a> as Haystack<'a>>::Slice
+        with: <M::Hay<'a> as Haystack<'a>>::Slice,
     ) -> bool {
         <Self as Regex<I, N>>::replace(hay_mut, with)
     }
@@ -102,7 +102,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
     fn replace_all<'a, M: OwnedHaystackable<I>>(
         &self,
         hay_mut: &mut M,
-        with: <M::Hay<'a> as Haystack<'a>>::Slice
+        with: <M::Hay<'a> as Haystack<'a>>::Slice,
     ) -> usize {
         <Self as Regex<I, N>>::replace_all(hay_mut, with)
     }

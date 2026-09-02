@@ -104,14 +104,12 @@ impl IntoMatcherExpr for Literal {
 impl IntoMatcherExpr for Class {
     fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata) -> TokenStream {
         match I::normalize_class(self) {
-            Class::Unicode(unicode) => write_chunked::<Or<u8, A, A>, I, _>(
-                meta,
-                unicode.ranges().iter().collect()
-            ),
-            Class::Bytes(bytes) => write_chunked::<Or<u8, A, A>, I, _>(
-                meta,
-                bytes.ranges().iter().collect()
-            ),
+            Class::Unicode(unicode) => {
+                write_chunked::<Or<u8, A, A>, I, _>(meta, unicode.ranges().iter().collect())
+            },
+            Class::Bytes(bytes) => {
+                write_chunked::<Or<u8, A, A>, I, _>(meta, bytes.ranges().iter().collect())
+            },
         }
     }
 }

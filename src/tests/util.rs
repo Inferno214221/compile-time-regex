@@ -1,4 +1,5 @@
-use std::{iter, ops::Range};
+use std::iter;
+use std::ops::Range;
 
 use ct_regex_internal::expr::{Capture, Regex};
 
@@ -10,10 +11,11 @@ fn create_counter() -> impl FnMut() -> String {
     }
 }
 
-pub(crate) fn zip_literal(vec: Vec<Range<usize>>, lit: &'static str) -> Vec<(Range<usize>, &'static str)> {
-    vec.into_iter().zip(
-        iter::repeat(lit)
-    ).collect::<Vec<_>>()
+pub(crate) fn zip_literal(
+    vec: Vec<Range<usize>>,
+    lit: &'static str,
+) -> Vec<(Range<usize>, &'static str)> {
+    vec.into_iter().zip(iter::repeat(lit)).collect::<Vec<_>>()
 }
 
 pub(crate) trait RegexTestExt<const N: usize>: Regex<char, N> {
@@ -54,11 +56,15 @@ pub(crate) trait RegexTestExt<const N: usize>: Regex<char, N> {
     }
 
     fn all_captures(hay: &str) -> Vec<(Range<usize>, &str)> {
-        Self::find_all_captures(hay, false).map(Self::cap_to_parts).collect::<Vec<_>>()
+        Self::find_all_captures(hay, false)
+            .map(Self::cap_to_parts)
+            .collect::<Vec<_>>()
     }
 
     fn all_captures_overlap(hay: &str) -> Vec<(Range<usize>, &str)> {
-        Self::find_all_captures(hay, true).map(Self::cap_to_parts).collect::<Vec<_>>()
+        Self::find_all_captures(hay, true)
+            .map(Self::cap_to_parts)
+            .collect::<Vec<_>>()
     }
 
     fn first_replaced(hay: &str, with: &str) -> (bool, String) {

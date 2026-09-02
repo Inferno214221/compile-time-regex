@@ -1,7 +1,7 @@
 use super::*;
 use crate::expr::IndexedCaptures;
 use crate::haystack::{Haystack, IntoHaystack};
-use crate::{implements_debug, test_matches_with_index, test_doesnt_match_no_index};
+use crate::{implements_debug, test_doesnt_match_no_index, test_matches_with_index};
 
 #[derive(Debug, Default, Clone, Copy)]
 struct HayLiteral;

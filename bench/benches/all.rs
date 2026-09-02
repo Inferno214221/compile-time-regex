@@ -34,7 +34,7 @@ const EMAILS: &[&str] = &[
     "example@gmail.com",
     "dotless@email",
     "@example.com",
-    "example.com"
+    "example.com",
 ];
 
 const PHONE_NUMS: &[&str] = &[
@@ -43,7 +43,7 @@ const PHONE_NUMS: &[&str] = &[
     "+9876543210",
     "0123321789",
     "567890",
-    "+234E2"
+    "+234E2",
 ];
 
 fn compile_time_email(haystack: &str) -> bool {

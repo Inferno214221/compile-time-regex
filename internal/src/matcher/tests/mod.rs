@@ -2,6 +2,7 @@
 use super::*;
 
 mod capture;
+mod class;
 mod composite;
 mod lazy;
 mod literal;

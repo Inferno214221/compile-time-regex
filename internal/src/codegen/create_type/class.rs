@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use proc_macro2::TokenStream;
 use quote::{ToTokens, quote};
 use syn::Ident;
@@ -6,7 +8,6 @@ use crate::{codegen::{self, CodegenItem, ExprMetadata}, matcher::ClassEntry};
 
 impl<I: CodegenItem> ToTokens for ClassEntry<I> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        #![allow(nonstandard_style)]
         let ClassEntry = quote!(::ct_regex::internal::matcher::ClassEntry);
 
         let ClassEntry { value, is_upper_bound } = self;
@@ -27,11 +28,10 @@ pub(crate) fn impl_classes<I: CodegenItem>(metadata: &ExprMetadata<I>) -> TokenS
 }
 
 pub(crate) fn impl_class<I: CodegenItem>(name: &Ident, index: usize, entries: &[ClassEntry<I>]) -> TokenStream {
-    #![allow(nonstandard_style)]
     let ClassTrait = quote!(::ct_regex::internal::matcher::Class);
     let ClassEntry = quote!(::ct_regex::internal::matcher::ClassEntry);
 
-    let item_type = codegen::type_ident::<I>();
+    let ItemTy = codegen::type_ident::<I>();
 
     let name = codegen::create_class_id::<I>(name, index);
     let entries = entries.iter().map(|entry| quote!(#entry));
@@ -40,8 +40,8 @@ pub(crate) fn impl_class<I: CodegenItem>(name: &Ident, index: usize, entries: &[
         #[derive(Default, Clone, Copy)]
         pub struct #name;
 
-        impl #ClassTrait<#item_type> for #name {
-            const ENTRIES: &[#ClassEntry<#item_type>] = &[#(#entries),*];
+        impl #ClassTrait<#ItemTy> for #name {
+            const ENTRIES: &[#ClassEntry<#ItemTy>] = &[#(#entries),*];
         }
     }
 }

@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use proc_macro2::{Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::Ident;
@@ -8,7 +10,6 @@ pub(crate) fn impl_captures(
     regex_name: &Ident,
     groups: Vec<Group>,
 ) -> (Ident, Literal, TokenStream) {
-    #![allow(nonstandard_style)]
     let Capture = quote!(::ct_regex::internal::expr::Capture);
     let FromRanges = quote!(::ct_regex::internal::expr::FromRanges);
     let HaystackSlice = quote!(::ct_regex::internal::haystack::HaystackSlice);
@@ -109,7 +110,6 @@ pub(crate) fn impl_captures(
 }
 
 pub(crate) fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStream {
-    #![allow(nonstandard_style)]
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
 

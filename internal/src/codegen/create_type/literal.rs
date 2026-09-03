@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use proc_macro2::{Literal, TokenStream};
 use quote::quote;
 use syn::Ident;
@@ -12,7 +14,6 @@ pub(crate) fn impl_literals<I: CodegenItem>(metadata: ExprMetadata<I>) -> TokenS
 }
 
 pub(crate) fn impl_literal(name: &Ident, index: usize, literal: Box<[u8]>) -> TokenStream {
-    #![allow(nonstandard_style)]
     let LiteralTrait = quote!(::ct_regex::internal::matcher::Literal);
 
     let name = codegen::create_literal_id(name, index);

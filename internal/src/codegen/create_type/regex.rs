@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::{Ident, Visibility};
@@ -13,7 +15,6 @@ pub fn make_regex(
     }: RegexArgs,
     impl_anon: bool,
 ) -> TokenStream {
-    #![allow(nonstandard_style)]
     let fmt = quote!(::std::fmt);
     let HaystackSlice = quote!(::ct_regex::internal::haystack::HaystackSlice);
     let Regex = quote!(::ct_regex::internal::expr::Regex);

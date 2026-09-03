@@ -3,21 +3,17 @@ use quote::quote;
 use regex_syntax::hir::{Capture, Hir, HirKind, Look, Properties};
 use syn::Ident;
 
-use crate::codegen::{CodegenItem, ConfigExt, ExprMetadata, IntoMatcherExpr, classes};
+use crate::codegen::{CodegenItem, ConfigExt, ExprMetadata, IntoMatcherExpr, simplify_classes};
 
 #[derive(Debug, Clone)]
-pub(crate) struct TypeExpressions {
+pub(crate) struct TypeExpressions<I: CodegenItem> {
     pub matcher: TokenStream,
     pub anchors: TokenStream,
-    pub meta: ExprMetadata,
+    pub meta: ExprMetadata<I>,
 }
 
-impl TypeExpressions {
-    pub fn parse_regex<I: CodegenItem>(
-        name: &Ident,
-        pat: &str,
-        config: &ConfigExt,
-    ) -> TypeExpressions {
+impl<I: CodegenItem> TypeExpressions<I> {
+    pub fn parse_regex(name: &Ident, pat: &str, config: &ConfigExt) -> TypeExpressions<I> {
         let mut ast = config
             .ast
             .build()
@@ -25,19 +21,19 @@ impl TypeExpressions {
             .expect("failed to parse regex");
 
         if !config.complex_classes {
-            classes::simplify_classes(&mut ast);
+            simplify_classes::simplify_classes(&mut ast);
         }
 
         let hir = config.hir.build()
             .translate(pat, &ast)
             .expect("failed to parse regex");
 
-        TypeExpressions::create::<I>(hir, name)
+        TypeExpressions::<I>::create(hir, name)
     }
 
-    pub fn create<I: CodegenItem>(hir: Hir, name: &Ident) -> TypeExpressions {
+    pub fn create(hir: Hir, name: &Ident) -> TypeExpressions<I> {
         let mut meta = ExprMetadata::new(name.clone());
-        let anchors = TypeExpressions::create_anchor_expression(hir.properties());
+        let anchors = TypeExpressions::<I>::create_anchor_expression(hir.properties());
 
         TypeExpressions {
             matcher: Self::remove_redundant_lookarounds(hir).into_matcher_expr::<I>(&mut meta),

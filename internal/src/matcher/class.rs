@@ -7,7 +7,7 @@ use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::{Matcher, impl_all_captures_single, impl_all_matches_single};
 use crate::sealed::Sealed;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct ClassEntry<I: HaystackItem> {
     pub value: I,
     pub is_upper_bound: bool,
@@ -52,7 +52,6 @@ impl<I: HaystackItem, C: Class<I>> Matcher<I> for ClassMatcher<I, C> {
         let Some(item) = hay.next() else {
             return false;
         };
-        // FIXME: could be out of bounds?
         match C::ENTRIES.binary_search_by(|entry| entry.cmp_item(&item)) {
             Ok(_) => true,
             // We've failed the exact binary search, but if the target index for insertion is an

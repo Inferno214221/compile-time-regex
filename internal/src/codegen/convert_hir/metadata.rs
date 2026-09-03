@@ -4,24 +4,29 @@ use std::mem;
 use quote::format_ident;
 use syn::Ident;
 
+use crate::codegen::{CodegenItem, type_ident};
+use crate::matcher::ClassEntry;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Group {
     pub name: Option<Box<str>>,
     pub required: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct ExprMetadata {
+#[derive(Debug, Clone)]
+pub(crate) struct ExprMetadata<I: CodegenItem> {
     pub name: Ident,
     // Group ids are provided by regex_syntax as a u32, and not returned in the right order, so we
     // store them in a map before checking them and creating a Vec later.
     pub groups: HashMap<u32, Group>,
     pub required: bool,
     pub literals: Vec<Box<[u8]>>,
+    // TODO: avoid duplicates
+    pub classes: Vec<Box<[ClassEntry<I>]>>,
 }
 
-impl ExprMetadata {
-    pub fn new(name: Ident) -> ExprMetadata {
+impl<I: CodegenItem> ExprMetadata<I> {
+    pub fn new(name: Ident) -> ExprMetadata<I> {
         let mut groups = HashMap::new();
         groups.insert(0, Group {
             name: Some("whole_match".into()),
@@ -32,6 +37,7 @@ impl ExprMetadata {
             groups,
             required: true,
             literals: Vec::new(),
+            classes: Vec::new(),
         }
     }
 
@@ -62,8 +68,26 @@ impl ExprMetadata {
         self.literals.push(literal);
         create_literal_id(&self.name, index)
     }
+
+    pub fn insert_class(&mut self, entry: Box<[ClassEntry<I>]>) -> Ident {
+        let index = self.classes.len();
+        self.classes.push(entry);
+        create_class_id::<I>(&self.name, index)
+    }
 }
 
-pub fn create_literal_id(name: &Ident, num: usize) -> Ident {
+impl<I: CodegenItem, J: CodegenItem> PartialEq<ExprMetadata<J>> for ExprMetadata<I> {
+    fn eq(&self, other: &ExprMetadata<J>) -> bool {
+        self.name == other.name
+            && self.groups == other.groups
+            && self.literals == other.literals
+    }
+}
+
+pub(crate) fn create_literal_id(name: &Ident, num: usize) -> Ident {
     format_ident!("{}Literal{}", name, num)
+}
+
+pub(crate) fn create_class_id<I: CodegenItem>(name: &Ident, num: usize) -> Ident {
+    format_ident!("{}{}Class{}", name, type_ident::<I>(), num)
 }

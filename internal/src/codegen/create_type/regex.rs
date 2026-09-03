@@ -2,7 +2,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::{Ident, Visibility};
 
-use crate::codegen::{AnonRegexArgs, RegexArgs, TypeExpressions, capture, literal};
+use crate::codegen::{AnonRegexArgs, RegexArgs, TypeExpressions, capture, class, literal};
 
 pub fn make_regex(
     RegexArgs {
@@ -35,16 +35,20 @@ pub fn make_regex(
         matcher: byte_matcher,
         anchors: byte_anchors,
         meta: byte_meta,
-    } = TypeExpressions::parse_regex::<u8>(&name, &pat_str, &config);
+    } = TypeExpressions::<u8>::parse_regex(&name, &pat_str, &config);
 
     config.unicode(true).utf8(true);
     let TypeExpressions {
         matcher: scalar_matcher,
         anchors: scalar_anchors,
         meta: mut scalar_meta,
-    } = TypeExpressions::parse_regex::<char>(&name, &pat_str, &config);
+    } = TypeExpressions::<char>::parse_regex(&name, &pat_str, &config);
 
     assert_eq!(byte_meta, scalar_meta);
+
+    let byte_classes_impl = class::impl_classes(&byte_meta);
+    let scalar_classes_impl = class::impl_classes(&scalar_meta);
+
     let (captures_name, captures_len, captures_impl) = capture::impl_captures(
         &name,
         scalar_meta.take_groups()
@@ -66,6 +70,8 @@ pub fn make_regex(
         #[doc(hidden)]
         #[allow(non_snake_case)]
         mod #mod_name {
+            #byte_classes_impl
+            #scalar_classes_impl
             #literal_impl
 
             #[doc = #doc]

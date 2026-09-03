@@ -4,4 +4,4 @@ pub mod metadata;
 
 pub(crate) use into_matcher::*;
 pub(crate) use item::*;
-pub use metadata::*;
+pub(crate) use metadata::*;

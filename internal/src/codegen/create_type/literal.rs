@@ -2,9 +2,9 @@ use proc_macro2::{Literal, TokenStream};
 use quote::quote;
 use syn::Ident;
 
-use crate::codegen::{self, ExprMetadata};
+use crate::codegen::{self, CodegenItem, ExprMetadata};
 
-pub(crate) fn impl_literals(metadata: ExprMetadata) -> TokenStream {
+pub(crate) fn impl_literals<I: CodegenItem>(metadata: ExprMetadata<I>) -> TokenStream {
     metadata.literals.into_iter()
         .enumerate()
         .map(|(index, literal)| impl_literal(&metadata.name, index, literal))

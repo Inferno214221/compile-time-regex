@@ -4,11 +4,9 @@ use std::any;
 
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
-use regex_syntax::hir::{
-    Capture, Class, ClassBytesRange, ClassUnicodeRange, Hir, HirKind, Literal, Look, Repetition,
-};
+use regex_syntax::hir::{Capture, Class, Hir, HirKind, Literal, Look, Repetition};
 
-use crate::codegen::{CodegenItem, ExprMetadata};
+use crate::codegen::{ClassIter, ClassRange, CodegenItem, ExprMetadata};
 use crate::matcher::{Always as A, ClassEntry, Or, Then};
 
 pub(crate) fn type_name<T>() -> &'static str {
@@ -56,74 +54,10 @@ impl IntoMatcherExpr for u8 {
     }
 }
 
-impl IntoMatcherExpr for &ClassBytesRange {
-    fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata<I>) -> TokenStream {
-        assert_eq!(type_name::<I>(), type_name::<u8>());
-        if self.start() == self.end() {
-            self.start().into_matcher_expr(meta)
-        } else {
-            let start = self.start();
-            let end = self.end();
-            quote!(::ct_regex::internal::matcher::ByteRange<#start, #end>)
-        }
-    }
-}
-
-impl IntoMatcherExpr for &[ClassBytesRange] {
-    fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata<I>) -> TokenStream {
-        let class = self.iter().flat_map(|range| {
-            let mut range_entries = vec![
-                ClassEntry {
-                    value: I::upcast_byte(range.start()),
-                    is_upper_bound: false,
-                }
-            ];
-            if range.start() != range.end() {
-                range_entries.push(
-                    ClassEntry {
-                        value: I::upcast_byte(range.end()),
-                        is_upper_bound: true,
-                    }
-                )
-            }
-            range_entries
-        }).collect::<Box<[_]>>();
-
-        let ClassTy = meta.insert_class(class);
-        let ItemTy = type_ident::<I>();
-        quote!(::ct_regex::internal::matcher::ClassMatcher<#ItemTy, #ClassTy>)
-    }
-}
-
 impl IntoMatcherExpr for char {
     fn into_matcher_expr<I: CodegenItem>(self, _meta: &mut ExprMetadata<I>) -> TokenStream {
         assert_eq!(type_name::<I>(), type_name::<char>());
         quote!(::ct_regex::internal::matcher::Scalar<#self>)
-    }
-}
-
-impl IntoMatcherExpr for &[ClassUnicodeRange] {
-    fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata<I>) -> TokenStream {
-        let class = self.iter().flat_map(|range| {
-            let mut range_entries = vec![
-                ClassEntry {
-                    value: I::upcast_char(range.start()),
-                    is_upper_bound: false,
-                }
-            ];
-            if range.start() != range.end() {
-                range_entries.push(
-                    ClassEntry {
-                        value: I::upcast_char(range.end()),
-                        is_upper_bound: true,
-                    }
-                )
-            }
-            range_entries
-        }).collect::<Box<[_]>>();
-        let ClassTy = meta.insert_class(class);
-        let ItemTy = type_ident::<I>();
-        quote!(::ct_regex::internal::matcher::ClassMatcher<#ItemTy, #ClassTy>)
     }
 }
 
@@ -142,14 +76,29 @@ impl IntoMatcherExpr for Literal {
 
 impl IntoMatcherExpr for Class {
     fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata<I>) -> TokenStream {
-        match I::normalize_class(self) {
-            Class::Unicode(unicode) => {
-                unicode.ranges().into_matcher_expr(meta)
-            },
-            Class::Bytes(bytes) => {
-                bytes.ranges().into_matcher_expr(meta)
-            },
-        }
+        let normalized = I::normalize_class(self);
+
+        let class = normalized.ranges().flat_map(|range| {
+            let mut range_entries = vec![
+                ClassEntry {
+                    value: range.start(),
+                    is_upper_bound: false,
+                }
+            ];
+            if range.start() != range.end() {
+                range_entries.push(
+                    ClassEntry {
+                        value: range.end(),
+                        is_upper_bound: true,
+                    }
+                )
+            }
+            range_entries
+        }).collect::<Box<[_]>>();
+
+        let ClassTy = meta.insert_class(class);
+        let ItemTy = type_ident::<I>();
+        quote!(::ct_regex::internal::matcher::ClassMatcher<#ItemTy, #ClassTy>)
     }
 }
 

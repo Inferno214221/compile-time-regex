@@ -47,20 +47,6 @@ struct Concat(pub Vec<Hir>);
 #[derive(Debug, Clone)]
 struct Alternation(pub Vec<Hir>);
 
-impl IntoMatcherExpr for u8 {
-    fn into_matcher_expr<I: CodegenItem>(self, _meta: &mut ExprMetadata<I>) -> TokenStream {
-        assert_eq!(type_name::<I>(), type_name::<u8>());
-        quote!(::ct_regex::internal::matcher::Byte<#self>)
-    }
-}
-
-impl IntoMatcherExpr for char {
-    fn into_matcher_expr<I: CodegenItem>(self, _meta: &mut ExprMetadata<I>) -> TokenStream {
-        assert_eq!(type_name::<I>(), type_name::<char>());
-        quote!(::ct_regex::internal::matcher::Scalar<#self>)
-    }
-}
-
 impl IntoMatcherExpr for Empty {
     fn into_matcher_expr<I: CodegenItem>(self, _meta: &mut ExprMetadata<I>) -> TokenStream {
         quote!(::ct_regex::internal::matcher::Always)

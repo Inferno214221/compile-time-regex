@@ -1,28 +1,15 @@
 use quote::ToTokens;
 use regex_syntax::hir::{Class, ClassBytes, ClassBytesRange, ClassUnicode, ClassUnicodeRange};
 
-use crate::codegen::IntoMatcherExpr;
 use crate::haystack::HaystackItem;
 
-pub(crate) trait CodegenItem: HaystackItem + IntoMatcherExpr + ToTokens {
+pub(crate) trait CodegenItem: HaystackItem + ToTokens {
     type HirClass: ClassIter<Self>;
-
-    fn upcast_byte(byte: u8) -> Self;
-    fn upcast_char(scalar: char) -> Self;
-
     fn normalize_class(value: Class) -> Self::HirClass;
 }
 
 impl CodegenItem for u8 {
     type HirClass = ClassBytes;
-
-    fn upcast_byte(byte: u8) -> Self {
-        byte
-    }
-
-    fn upcast_char(_scalar: char) -> Self {
-        panic!("failed to assert type equality u8 != char")
-    }
 
     fn normalize_class(value: Class) -> Self::HirClass {
         match value {
@@ -36,14 +23,6 @@ impl CodegenItem for u8 {
 
 impl CodegenItem for char {
     type HirClass = ClassUnicode;
-
-    fn upcast_byte(_byte: u8) -> Self {
-        panic!("failed to assert type equality char != u8")
-    }
-
-    fn upcast_char(scalar: char) -> Self {
-        scalar
-    }
 
     fn normalize_class(value: Class) -> Self::HirClass {
         match value {

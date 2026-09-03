@@ -69,8 +69,9 @@ impl<I: CodegenItem> ExprMetadata<I> {
         create_literal_id(&self.name, index)
     }
 
-    pub fn insert_class(&mut self, entry: Box<[ClassEntry<I>]>) -> Ident {
+    pub fn insert_class(&mut self, mut entry: Box<[ClassEntry<I>]>) -> Ident {
         let index = self.classes.len();
+        entry.sort();
         self.classes.push(entry);
         create_class_id::<I>(&self.name, index)
     }

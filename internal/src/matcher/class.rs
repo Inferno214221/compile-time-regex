@@ -29,6 +29,18 @@ impl<I: HaystackItem> PartialEq<I> for ClassEntry<I> {
     }
 }
 
+impl<I: HaystackItem> PartialOrd for ClassEntry<I> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<I: HaystackItem> Ord for ClassEntry<I> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.value.cmp(&other.value)
+    }
+}
+
 impl<I: HaystackItem> Debug for ClassEntry<I> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.is_upper_bound {

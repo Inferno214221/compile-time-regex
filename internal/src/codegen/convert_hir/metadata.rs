@@ -90,5 +90,5 @@ pub(crate) fn create_literal_id(name: &Ident, num: usize) -> Ident {
 }
 
 pub(crate) fn create_class_id<I: CodegenItem>(name: &Ident, num: usize) -> Ident {
-    format_ident!("{}{}Class{}", name, type_ident::<I>(), num)
+    format_ident!("{}{}Class{}", name, I::ident_fragment(), num)
 }

@@ -1,11 +1,13 @@
-use quote::ToTokens;
+use quote::{ToTokens, format_ident};
 use regex_syntax::hir::{Class, ClassBytes, ClassBytesRange, ClassUnicode, ClassUnicodeRange};
+use syn::Ident;
 
 use crate::haystack::HaystackItem;
 
 pub(crate) trait CodegenItem: HaystackItem + ToTokens {
     type HirClass: ClassIter<Self>;
     fn normalize_class(value: Class) -> Self::HirClass;
+    fn ident_fragment() -> Ident;
 }
 
 impl CodegenItem for u8 {
@@ -19,6 +21,10 @@ impl CodegenItem for u8 {
             Class::Bytes(bytes) => bytes,
         }
     }
+
+    fn ident_fragment() -> Ident {
+        format_ident!("Byte")
+    }
 }
 
 impl CodegenItem for char {
@@ -31,6 +37,10 @@ impl CodegenItem for char {
                 bytes.to_unicode_class().expect("failed to convert to unicode class")
             },
         }
+    }
+
+    fn ident_fragment() -> Ident {
+        format_ident!("Scalar")
     }
 }
 

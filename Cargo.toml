@@ -1,10 +1,26 @@
-[workspace]
-members = ["bench", "internal", "macro"]
-
 [package]
 name = "ct-regex"
 version = "0.1.0"
+authors = ["Inferno214221 <inferno214221@gmail.com>"]
 edition = "2024"
+repository = "https://github.com/Inferno214221/compile-time-regex"
+license = "GPL-3.0"
+keywords = ["regex", "compile", "const"]
+categories = ["text-processing"]
+description = "A crate for compiling regular expressions into Rust code at compile-time."
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = [
+    "--theme", "./doc/kali-dark.css",
+    "--html-in-header", "./doc/robots.html",
+    "--enable-index-page",
+    "--generate-macro-expansion",
+    "-Z", "unstable-options"
+]
+
+[workspace]
+members = ["bench", "internal", "macro"]
 
 [dependencies]
 ct-regex-internal = { path = "internal", features = [] }

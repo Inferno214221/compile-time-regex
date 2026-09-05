@@ -1,7 +1,11 @@
 [package]
 name = "ct-regex-internal"
 version = "0.1.0"
+authors = ["Inferno214221 <inferno214221@gmail.com>"]
 edition = "2024"
+repository = "https://github.com/Inferno214221/compile-time-regex"
+license = "GPL-3.0"
+description = "A supporting crate for ct-regex, containing the implementation itself."
 
 [dependencies]
 proc-macro2 = "1.0.106"

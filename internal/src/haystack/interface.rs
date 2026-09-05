@@ -133,7 +133,6 @@ pub trait Haystack<'a>: Debug + Clone + Iterator<Item = <Self::Slice as Haystack
     }
 
     fn is_crlf_end(&self) -> bool {
-        // TODO: Clarify semantics surrounding "\r?(EndCRLF)"
         match self.item() {
             Some(n) if n.is_newline() => !self.prev_item().is_some_and(HaystackItem::is_return),
             Some(r) if r.is_return() => true,

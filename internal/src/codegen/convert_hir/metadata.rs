@@ -4,7 +4,7 @@ use std::mem;
 use quote::format_ident;
 use syn::Ident;
 
-use crate::codegen::{CodegenItem, type_ident};
+use crate::codegen::{CodegenItem};
 use crate::matcher::ClassEntry;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

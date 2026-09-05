@@ -367,8 +367,6 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         count
     }
 
-    // TODO: Does this need to be Item = M, or can it be M::Slice?
-
     /// Replaces matching substrings in the provided haystack with the values produced by the
     /// iterator, until no matches remain or the iterator returns `None`. The return type of this
     /// iterator needs to match the provided haystack. The returned integer represents the number of

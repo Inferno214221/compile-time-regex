@@ -1,9 +1,8 @@
 use std::fmt::Debug;
 use std::ops::Range;
 
-use standard_lib::collections::cons::ConsBranch;
-
 use crate::haystack::HaystackSlice;
+use crate::util::cons_tree::ConsBranch;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct IndexedCaptures(pub ConsBranch<IndexedCapture>);

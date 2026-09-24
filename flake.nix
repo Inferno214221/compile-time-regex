@@ -68,7 +68,6 @@
             # complain about "unexpected syntax token near '||'". We need doDocFail anyway, so the
             # generated code is `|| false`. (No effect)
           in old: [
-            "cargo $cargo_options rustdoc -p standard-lib ${advancedOptions}"
             "cargo $cargo_options rustdoc -p ct-regex --all-features ${advancedOptions}"
             "cargo $cargo_options rustdoc -p ct-regex-internal --all-features ${advancedOptions}"
           ];
@@ -80,7 +79,7 @@
         }).doc;
 
         packages.docs = let
-          findAndSed = "find ./standard_lib ./ct_regex ./ct_regex_internal -type f -name \"*html\" -exec sed -E";
+          findAndSed = "find ./ct_regex ./ct_regex_internal -type f -name \"*html\" -exec sed -E";
         in stdenv.mkDerivation {
           name = "compile-time-regex-doc";
           version = "0.1.0";
@@ -95,7 +94,6 @@
             ${findAndSed} "s/(>|>([^\">]*[; \[\(\w])?)(&amp;|-&gt;|::|\*)([^/])/\1<span class=\"extra-op\">\3<\/span>\4/g" -i {} \;
             # Where
             ${findAndSed} "s/(<div class=\"where\">)(where)/\1<span class=\"extra-kw\">\2<\/span>/g" -i {} \;
-            # TODO: '\w+, mut, <>, (), []
           '';
 
           installPhase = ''

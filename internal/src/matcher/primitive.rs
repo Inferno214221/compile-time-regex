@@ -5,6 +5,8 @@ use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::{Matcher, impl_all_captures_single, impl_all_matches_single};
 use crate::sealed::Sealed;
 
+// Note: this type is no longer produced in macro generated type expressions. It hasn't been removed
+// because it makes testing other Matcher types with hand written code far easier.
 #[derive(Default, Clone, Copy)]
 pub struct Byte<const N: u8>;
 
@@ -30,6 +32,8 @@ impl<const N: u8> Debug for Byte<N> {
     }
 }
 
+// Note: this type is no longer produced in macro generated type expressions. It hasn't been removed
+// because it makes testing other Matcher types with hand written code far easier.
 #[derive(Default, Clone, Copy)]
 pub struct ByteRange<const A: u8, const B: u8>;
 
@@ -58,6 +62,8 @@ impl<const A: u8, const B: u8> Debug for ByteRange<A, B> {
     }
 }
 
+// Note: this type is no longer produced in macro generated type expressions. It hasn't been removed
+// because it makes testing other Matcher types with hand written code far easier.
 #[derive(Default, Clone, Copy)]
 pub struct Scalar<const N: char>;
 
@@ -83,6 +89,8 @@ impl<const N: char> Debug for Scalar<N> {
     }
 }
 
+// Note: this type is no longer produced in macro generated type expressions. It hasn't been removed
+// because it makes testing other Matcher types with hand written code far easier.
 #[derive(Default, Clone, Copy)]
 pub struct ScalarRange<const A: char, const B: char>;
 

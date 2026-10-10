@@ -8,7 +8,7 @@ use crate::haystack::HaystackItem;
 /// The implementer of this trait is usually but not always, the only implementer of
 /// [`IntoHaystack`] for a haystack type.
 ///
-/// It should be noted that this trait is often implemented of a reference to the type in question,
+/// It should be noted that this trait is often implemented on a reference to the type in question,
 /// e.g. `&str` or `&[u8]` rather than `str` or `[u8]` themselves, so that the implementing type can
 /// be cloned as required.
 pub trait HaystackSlice<'a>: Debug + Clone + Sized + ToOwned {

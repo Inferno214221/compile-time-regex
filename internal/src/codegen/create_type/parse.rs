@@ -1,3 +1,4 @@
+use match_vec::match_vec;
 use proc_macro2::TokenStream;
 use quote::quote;
 use regex_syntax::hir::{Capture, Hir, HirKind, Look, Properties};
@@ -14,9 +15,7 @@ pub(crate) struct TypeExpressions<I: CodegenItem> {
 
 impl<I: CodegenItem> TypeExpressions<I> {
     pub fn parse_regex(name: &Ident, pat: &str, config: &ConfigExt) -> TypeExpressions<I> {
-        let mut ast = config
-            .ast
-            .build()
+        let mut ast = config.ast.build()
             .parse(pat)
             .expect("failed to parse regex");
 
@@ -59,16 +58,17 @@ impl<I: CodegenItem> TypeExpressions<I> {
             }
         }
 
-        match &anchors[..] {
+        match_vec!(match anchors {
             [] => quote!(::ct_regex::internal::anchor::AnchorNone),
-            [a] => quote!(#a),
+            [a] => a,
             [a, b] => quote!(::ct_regex::internal::anchor::AnchorPair<#a, #b>),
             [a, b, c] => quote!(::ct_regex::internal::anchor::AnchorSet<#a, #b, #c>),
             _ => panic!("an excessive number for anchor assertions were found"),
-        }
+        })
     }
 
     pub fn remove_redundant_lookarounds(hir: Hir) -> Hir {
+        // Smart constructors mean that we have to do this using references and clones.
         match hir.kind() {
             HirKind::Look(Look::Start) => Hir::empty(),
             HirKind::Concat(sub) => match &sub[..] {

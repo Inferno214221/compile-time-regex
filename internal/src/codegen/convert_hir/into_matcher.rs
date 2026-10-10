@@ -2,6 +2,7 @@
 
 use std::any;
 
+use match_vec::match_vec;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use regex_syntax::hir::{Capture, Class, Hir, HirKind, Literal, Look, Repetition};
@@ -171,46 +172,47 @@ impl IntoMatcherExpr for Concat {
 
 fn write_chunked<T, I: CodegenItem, W: IntoMatcherExpr>(
     meta: &mut ExprMetadata<I>,
-    mut items: Vec<W>,
+    items: Vec<W>,
 ) -> TokenStream {
-    let n = items.len();
     let base = format_ident!("{}", type_name::<T>());
     let ItemTy = type_ident::<I>();
 
-    match n {
-        0 => panic!("literal contains no items"),
-        1 => items.pop().unwrap().into_matcher_expr(meta),
-        2 => {
-            let mut iter = items.into_iter();
-            let first = iter.next().unwrap().into_matcher_expr(meta);
-            let second = iter.next().unwrap().into_matcher_expr(meta);
+    match_vec!(match items {
+        [] => panic!("literal contains no items"),
+        [item] => item.into_matcher_expr(meta),
+        [first, second] => {
+            let first = first.into_matcher_expr(meta);
+            let second = second.into_matcher_expr(meta);
 
             quote!(::ct_regex::internal::matcher::#base<#ItemTy, #first, #second>)
         },
-        3 => {
-            let mut iter = items.into_iter();
-            let first = iter.next().unwrap().into_matcher_expr(meta);
-            let chunked = write_chunked::<T, I, W>(meta, iter.collect());
+        [first, rem @ ..] if rem.len() == 2 => {
+            let first = first.into_matcher_expr(meta);
+            let chunked = write_chunked::<T, I, W>(meta, rem);
 
             quote!(::ct_regex::internal::matcher::#base<#ItemTy, #first, #chunked>)
         },
-        4 | 8 | 16 => write_n_items::<T, I, W>(meta, items, n),
-        _ => {
+        chunk if matches!(chunk.len(), 4 | 8 | 16) => {
+            let n = chunk.len();
+            write_n_items::<T, I, W>(meta, chunk, n)
+        },
+        mut other => {
             // Take largest chunk that fits, combine with remainder
-            let chunk_size = if n > 16 {
+            let chunk_size = if other.len() > 16 {
                 16
-            } else if n > 8 {
+            } else if other.len() > 8 {
                 8
             } else {
                 4
             };
-            let remainder = items.split_off(chunk_size);
-            let n_matcher = write_n_items::<T, I, W>(meta, items, chunk_size);
+
+            let remainder = other.split_off(chunk_size);
+            let n_matcher = write_n_items::<T, I, W>(meta, other, chunk_size);
             let chunked = write_chunked::<T, I, W>(meta, remainder);
 
             quote!(::ct_regex::internal::matcher::#base<#ItemTy, #n_matcher, #chunked>)
         },
-    }
+    })
 }
 
 fn write_n_items<T, I: CodegenItem, W: IntoMatcherExpr>(

@@ -1,24 +1,12 @@
 #![allow(non_snake_case)]
 
-use std::any;
-
 use match_vec::match_vec;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use regex_syntax::hir::{Capture, Class, Hir, HirKind, Literal, Look, Repetition};
 
 use crate::codegen::{ClassIter, ClassRange, CodegenItem, ExprMetadata};
-use crate::matcher::{Always as A, ClassEntry, Or, Then};
-
-pub(crate) fn type_name<T>() -> &'static str {
-    any::type_name::<T>()
-        .split('<').next().unwrap()
-        .rsplit("::").next().unwrap()
-}
-
-pub(crate) fn type_ident<T>() -> Ident {
-    format_ident!("{}", type_name::<T>())
-}
+use crate::matcher::ClassEntry;
 
 pub(crate) trait IntoMatcherExpr {
     fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata<I>) -> TokenStream;
@@ -84,7 +72,7 @@ impl IntoMatcherExpr for Class {
         }).collect::<Box<[_]>>();
 
         let ClassTy = meta.insert_class(class);
-        let ItemTy = type_ident::<I>();
+        let ItemTy = I::type_ident();
         quote!(::ct_regex::internal::matcher::ClassMatcher<#ItemTy, #ClassTy>)
     }
 }
@@ -112,7 +100,7 @@ impl IntoMatcherExpr for Repetition {
             meta.required = false;
         }
 
-        let ItemTy = type_ident::<I>();
+        let ItemTy = I::type_ident();
         let sub_matcher = sub.into_matcher_expr(meta);
         // I need to document this somewhere, might as well be here: usize is used for all generic
         // parameters, even though Hir types use u32, because it is used for array indexing during
@@ -146,7 +134,7 @@ impl IntoMatcherExpr for Repetition {
 impl IntoMatcherExpr for Capture {
     fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata<I>) -> TokenStream {
         meta.insert_group(self.index, self.name);
-        let ItemTy = type_ident::<I>();
+        let ItemTy = I::type_ident();
         let sub_matcher = self.sub.into_matcher_expr(meta);
         let index = self.index as usize;
 
@@ -158,7 +146,7 @@ impl IntoMatcherExpr for Alternation {
     fn into_matcher_expr<I: CodegenItem>(self, caps: &mut ExprMetadata<I>) -> TokenStream {
         let required = caps.required;
         caps.required = false;
-        let tokens = write_chunked::<Or<u8, A, A>, I, _>(caps, self.0);
+        let tokens = write_chunked::<I, _>(&format_ident!("Or"), caps, self.0);
         caps.required = required;
         tokens
     }
@@ -166,16 +154,16 @@ impl IntoMatcherExpr for Alternation {
 
 impl IntoMatcherExpr for Concat {
     fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata<I>) -> TokenStream {
-        write_chunked::<Then<u8, A, A>, I, _>(meta, self.0)
+        write_chunked::<I, _>(&format_ident!("Then"), meta, self.0)
     }
 }
 
-fn write_chunked<T, I: CodegenItem, W: IntoMatcherExpr>(
+fn write_chunked<I: CodegenItem, W: IntoMatcherExpr>(
+    matcher: &Ident,
     meta: &mut ExprMetadata<I>,
     items: Vec<W>,
 ) -> TokenStream {
-    let base = format_ident!("{}", type_name::<T>());
-    let ItemTy = type_ident::<I>();
+    let ItemTy = I::type_ident();
 
     match_vec!(match items {
         [] => panic!("literal contains no items"),
@@ -184,17 +172,17 @@ fn write_chunked<T, I: CodegenItem, W: IntoMatcherExpr>(
             let first = first.into_matcher_expr(meta);
             let second = second.into_matcher_expr(meta);
 
-            quote!(::ct_regex::internal::matcher::#base<#ItemTy, #first, #second>)
+            quote!(::ct_regex::internal::matcher::#matcher<#ItemTy, #first, #second>)
         },
         [first, rem @ ..] if rem.len() == 2 => {
             let first = first.into_matcher_expr(meta);
-            let chunked = write_chunked::<T, I, W>(meta, rem);
+            let chunked = write_chunked::<I, W>(matcher, meta, rem);
 
-            quote!(::ct_regex::internal::matcher::#base<#ItemTy, #first, #chunked>)
+            quote!(::ct_regex::internal::matcher::#matcher<#ItemTy, #first, #chunked>)
         },
         chunk if matches!(chunk.len(), 4 | 8 | 16) => {
             let n = chunk.len();
-            write_n_items::<T, I, W>(meta, chunk, n)
+            write_n_items::<I, W>(matcher, meta, chunk, n)
         },
         mut other => {
             // Take largest chunk that fits, combine with remainder
@@ -207,23 +195,24 @@ fn write_chunked<T, I: CodegenItem, W: IntoMatcherExpr>(
             };
 
             let remainder = other.split_off(chunk_size);
-            let n_matcher = write_n_items::<T, I, W>(meta, other, chunk_size);
-            let chunked = write_chunked::<T, I, W>(meta, remainder);
+            let n_matcher = write_n_items::<I, W>(matcher, meta, other, chunk_size);
+            let chunked = write_chunked::<I, W>(matcher, meta, remainder);
 
-            quote!(::ct_regex::internal::matcher::#base<#ItemTy, #n_matcher, #chunked>)
+            quote!(::ct_regex::internal::matcher::#matcher<#ItemTy, #n_matcher, #chunked>)
         },
     })
 }
 
-fn write_n_items<T, I: CodegenItem, W: IntoMatcherExpr>(
+fn write_n_items<I: CodegenItem, W: IntoMatcherExpr>(
+    matcher: &Ident,
     meta: &mut ExprMetadata<I>,
     items: Vec<W>,
     n: usize,
 ) -> TokenStream {
-    let name = format_ident!("{}{}", type_name::<T>(), n);
-    let ItemTy = type_ident::<I>();
+    let matcher_n = format_ident!("{}{}", matcher, n);
+    let ItemTy = I::type_ident();
 
-    let mut tokens = quote!(::ct_regex::internal::matcher::#name<#ItemTy);
+    let mut tokens = quote!(::ct_regex::internal::matcher::#matcher_n<#ItemTy);
 
     for item in items {
         tokens.extend(quote!(,));

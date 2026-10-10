@@ -7,6 +7,7 @@ use crate::haystack::HaystackItem;
 pub(crate) trait CodegenItem: HaystackItem + ToTokens {
     type HirClass: ClassIter<Self>;
     fn normalize_class(value: Class) -> Self::HirClass;
+    fn type_ident() -> Ident;
     fn ident_fragment() -> Ident;
 }
 
@@ -20,6 +21,10 @@ impl CodegenItem for u8 {
             },
             Class::Bytes(bytes) => bytes,
         }
+    }
+
+    fn type_ident() -> Ident {
+        format_ident!("u8")
     }
 
     fn ident_fragment() -> Ident {
@@ -37,6 +42,10 @@ impl CodegenItem for char {
                 bytes.to_unicode_class().expect("failed to convert to unicode class")
             },
         }
+    }
+
+    fn type_ident() -> Ident {
+        format_ident!("char")
     }
 
     fn ident_fragment() -> Ident {

@@ -31,7 +31,7 @@ pub(crate) fn impl_class<I: CodegenItem>(name: &Ident, index: usize, entries: &[
     let ClassTrait = quote!(::ct_regex::internal::matcher::Class);
     let ClassEntry = quote!(::ct_regex::internal::matcher::ClassEntry);
 
-    let ItemTy = codegen::type_ident::<I>();
+    let ItemTy = I::type_ident();
 
     let name = codegen::create_class_id::<I>(name, index);
     let entries = entries.iter().map(|entry| quote!(#entry));

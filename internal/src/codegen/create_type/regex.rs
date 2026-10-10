@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Ident, Visibility};
+use syn::Visibility;
 
 use crate::codegen::{AnonRegexArgs, RegexArgs, TypeExpressions, capture, class, literal};
 
@@ -112,7 +112,7 @@ pub fn make_anon_regex(AnonRegexArgs { pat, flags }: AnonRegexArgs) -> TokenStre
     let impl_tokens = make_regex(
         RegexArgs {
             vis: Visibility::Inherited,
-            name: Ident::new("__AnonRegex", Span::call_site()),
+            name: format_ident!("__AnonRegex"),
             pat,
             flags,
         },

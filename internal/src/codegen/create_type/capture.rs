@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use proc_macro2::{Literal, Span, TokenStream};
+use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
 use syn::Ident;
 
@@ -49,7 +49,7 @@ pub(crate) fn impl_captures(
 
     let named_groups = groups.iter().enumerate().filter_map(|(index, cap)| {
         cap.name.as_ref().map(|cap_name| {
-            impl_capture_getters(index, cap, Ident::new(cap_name, Span::call_site()))
+            impl_capture_getters(index, cap, format_ident!("{}", &**cap_name))
         })
     });
 

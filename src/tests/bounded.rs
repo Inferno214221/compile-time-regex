@@ -70,7 +70,7 @@ mod greedy {
         assert_eq!(BoundedExpr::all_ranges("cba abc"), vec![0..3]);
         assert_eq!(BoundedExpr::all_ranges("aa ba ca"), vec![0..2, 3..5, 6..8]);
         assert_eq!(BoundedExpr::all_ranges("abaca"), vec![0..5]);
-        assert_eq!(BoundedExpr::all_ranges(" "), vec![]);
+        assert_eq!(BoundedExpr::all_ranges(" "), vec![0..0; 0]);
     }
 
     #[test]
@@ -80,7 +80,7 @@ mod greedy {
         assert_eq!(BoundedExpr::all_ranges_overlap("cba abc"), vec![0..3, 1..3]);
         assert_eq!(BoundedExpr::all_ranges_overlap("aa ba ca"), vec![0..2, 3..5, 6..8]);
         assert_eq!(BoundedExpr::all_ranges_overlap("abaca"), vec![0..5, 1..5, 2..5, 3..5]);
-        assert_eq!(BoundedExpr::all_ranges_overlap(" "), vec![]);
+        assert_eq!(BoundedExpr::all_ranges_overlap(" "), vec![0..0; 0]);
     }
 
     #[test]
@@ -297,7 +297,7 @@ mod lazy {
         assert_eq!(LazyBoundedExpr::all_ranges("cba abc"), vec![0..3]);
         assert_eq!(LazyBoundedExpr::all_ranges("aa ba ca"), vec![0..2, 3..5, 6..8]);
         assert_eq!(LazyBoundedExpr::all_ranges("abaca"), vec![0..3, 3..5]);
-        assert_eq!(LazyBoundedExpr::all_ranges(" "), vec![]);
+        assert_eq!(LazyBoundedExpr::all_ranges(" "), vec![0..0; 0]);
     }
 
     #[test]
@@ -307,7 +307,7 @@ mod lazy {
         assert_eq!(LazyBoundedExpr::all_ranges_overlap("cba abc"), vec![0..3, 1..3]);
         assert_eq!(LazyBoundedExpr::all_ranges_overlap("aa ba ca"), vec![0..2, 3..5, 6..8]);
         assert_eq!(LazyBoundedExpr::all_ranges_overlap("abaca"), vec![0..3, 1..3, 2..5, 3..5]);
-        assert_eq!(LazyBoundedExpr::all_ranges_overlap(" "), vec![]);
+        assert_eq!(LazyBoundedExpr::all_ranges_overlap(" "), vec![0..0; 0]);
     }
 
     #[test]

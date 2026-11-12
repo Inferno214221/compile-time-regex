@@ -56,7 +56,7 @@ impl<const N: usize> Sealed for MinLen<N> {}
 
 impl<const N: usize> Anchor for MinLen<N> {
     fn assert<'a, H: Haystack<'a>>(hay: &H) -> ControlFlow<(), bool> {
-        if hay.remainder_as_slice().as_bytes().len() >= N {
+        if hay.remainder_as_slice().into_bytes().len() >= N {
             ControlFlow::Continue(true)
         } else {
             ControlFlow::Break(())
@@ -64,7 +64,7 @@ impl<const N: usize> Anchor for MinLen<N> {
     }
 
     fn assert_fixed<'a, H: Haystack<'a>>(hay: &H) -> bool {
-        hay.remainder_as_slice().as_bytes().len() >= N
+        hay.remainder_as_slice().into_bytes().len() >= N
     }
 }
 
@@ -79,7 +79,7 @@ impl<const N: usize> Anchor for MaxLen<N> {
     }
 
     fn assert_fixed<'a, H: Haystack<'a>>(hay: &H) -> bool {
-        hay.remainder_as_slice().as_bytes().len() <= N
+        hay.remainder_as_slice().into_bytes().len() <= N
     }
 }
 
@@ -90,7 +90,7 @@ impl<const N: usize> Sealed for EndAndMaxLen<N> {}
 
 impl<const N: usize> Anchor for EndAndMaxLen<N> {
     fn assert<'a, H: Haystack<'a>>(hay: &H) -> ControlFlow<(), bool> {
-        if hay.remainder_as_slice().as_bytes().len() <= N {
+        if hay.remainder_as_slice().into_bytes().len() <= N {
             ControlFlow::Continue(true)
         } else {
             ControlFlow::Continue(false)
@@ -98,7 +98,7 @@ impl<const N: usize> Anchor for EndAndMaxLen<N> {
     }
 
     fn assert_fixed<'a, H: Haystack<'a>>(hay: &H) -> bool {
-        hay.remainder_as_slice().as_bytes().len() <= N
+        hay.remainder_as_slice().into_bytes().len() <= N
     }
 }
 

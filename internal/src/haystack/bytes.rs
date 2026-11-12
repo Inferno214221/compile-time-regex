@@ -59,8 +59,12 @@ impl<'a> HaystackSlice<'a> for &'a [u8] {
         &self[range]
     }
 
-    fn as_bytes(&self) -> &[u8] {
+    fn into_bytes(self) -> &'a [u8] {
         self
+    }
+
+    unsafe fn into_str(self) -> &'a str {
+        unsafe { str::from_utf8_unchecked(self) }
     }
 }
 

@@ -63,8 +63,12 @@ impl<'a> HaystackSlice<'a> for &'a str {
         &self[range]
     }
 
-    fn as_bytes(&self) -> &[u8] {
+    fn into_bytes(self) -> &'a [u8] {
         str::as_bytes(self)
+    }
+
+    unsafe fn into_str(self) -> &'a str {
+        self
     }
 }
 

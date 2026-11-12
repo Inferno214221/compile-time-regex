@@ -19,7 +19,15 @@ pub trait HaystackSlice<'a>: Debug + Clone + Sized + ToOwned {
     /// values of capture groups.
     fn slice_with(&self, range: Range<usize>) -> Self;
 
-    fn as_bytes(&self) -> &[u8];
+    /// Returns the contents in the form of a byte slice.
+    fn into_bytes(self) -> &'a [u8];
+
+    /// Returns the contents in the form of a string slice.
+    ///
+    /// # Safety
+    /// It is the callers responsibility to ensure that this slice is valid utf8. Failure to do so
+    /// is undefined behaviour.
+    unsafe fn into_str(self) -> &'a str;
 }
 
 /// A trait used to interface the haystack types use when matching of capturing against a

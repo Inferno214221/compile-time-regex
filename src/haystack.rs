@@ -37,14 +37,14 @@
 pub use ct_regex_internal::haystack::ext::*;
 pub use ct_regex_internal::haystack::{ByteStack, Haystack, HaystackItem, OwnedHaystackable, HaystackOf, HaystackSlice, IntoHaystack, StrStack};
 
-#[cfg(feature = "arcstr")]
-#[doc(cfg(feature = "arcstr"))]
-pub use ct_regex_internal::haystack::arcstr;
+// #[cfg(feature = "arcstr")]
+// #[doc(cfg(feature = "arcstr"))]
+// pub use ct_regex_internal::haystack::arcstr;
 
 #[cfg(feature = "bstr")]
 #[doc(cfg(feature = "bstr"))]
 pub use ct_regex_internal::haystack::bstr;
 
-#[cfg(feature = "hipstr")]
-#[doc(cfg(feature = "hipstr"))]
-pub use ct_regex_internal::haystack::hipstr;
+// #[cfg(feature = "hipstr")]
+// #[doc(cfg(feature = "hipstr"))]
+// pub use ct_regex_internal::haystack::hipstr;

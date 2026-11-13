@@ -1,9 +1,7 @@
 #[doc(hidden)]
 #[allow(non_snake_case)]
 mod __regex_Email {
-    use std::marker::PhantomData;
-
-use crate::group::CaptureGroup;
+    use crate::group::CaptureGroup;
 
     #[derive(Default, Clone, Copy)]
     pub struct EmailByteClass0;
@@ -395,10 +393,9 @@ As is common with regular expressions, group `0` refers to the whole match (and 
         const U: bool,
     > EmailCapture<'a, S, U> {
         pub fn cap_0(&self) -> CaptureGroup<'a, S, U> {
-            CaptureGroup {
-                slice: self.0.slice_with(self.cap_0_range()),
-                _phantom: PhantomData,
-            }
+            CaptureGroup::new(
+                self.0.slice_with(self.cap_0_range())
+            )
         }
         pub fn cap_0_range(&self) -> ::std::ops::Range<usize> {
             self.1.clone()

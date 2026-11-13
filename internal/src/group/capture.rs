@@ -1,6 +1,6 @@
-use std::{marker::PhantomData};
+use std::marker::PhantomData;
 
-use crate::{haystack::HaystackSlice};
+use crate::haystack::HaystackSlice;
 
 // To start with, this will be implemented with UTF8 only when the entire expression matches UTF8.
 // More atomic group-specific flags may be implemented in the future.
@@ -8,12 +8,19 @@ use crate::{haystack::HaystackSlice};
 /// An pre-sliced representation of a group's capture.
 #[derive(Debug, Clone)]
 pub struct CaptureGroup<'a, S: HaystackSlice<'a>, const UTF8: bool> {
-    pub slice: S,
-    pub _phantom: PhantomData<&'a ()>,
+    slice: S,
+    _phantom: PhantomData<&'a ()>,
 }
 
 impl<'a, S: HaystackSlice<'a>, const U: bool> CaptureGroup<'a, S, U> {
-    pub fn into_slice(self) -> S {
+    pub fn new(slice: S) -> Self {
+        CaptureGroup {
+            slice,
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn into_inner(self) -> S {
         self.slice
     }
 

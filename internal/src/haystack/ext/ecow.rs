@@ -4,6 +4,12 @@ use ecow::{EcoString, EcoVec};
 
 use crate::haystack::{ByteStack, Haystack, IntoHaystack, OwnedHaystackable, StrStack};
 
+impl<'a> IntoHaystack<'a, StrStack<'a>> for &'a EcoString {
+    fn into_haystack(self) -> StrStack<'a> {
+        self.as_str().into_haystack()
+    }
+}
+
 impl OwnedHaystackable<char> for EcoString {
     type Hay<'a> = StrStack<'a>;
 
@@ -28,6 +34,12 @@ impl OwnedHaystackable<char> for EcoString {
 
     fn len(&self) -> usize {
         self.len()
+    }
+}
+
+impl<'a> IntoHaystack<'a, ByteStack<'a>> for &'a EcoVec<u8> {
+    fn into_haystack(self) -> ByteStack<'a> {
+        self.as_slice().into_haystack()
     }
 }
 

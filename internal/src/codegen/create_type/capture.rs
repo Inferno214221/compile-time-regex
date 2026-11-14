@@ -68,18 +68,18 @@ pub(crate) fn impl_captures(
     let captures_impl = quote! {
         #[doc = #doc]
         #[derive(Debug, Clone)]
-        pub struct #name<'a, S: 'a + #HaystackSlice + ?Sized>(
+        pub struct #name<'a, S: #HaystackSlice + ?Sized>(
             &'a S,
             #(#inner),*
         );
 
-        impl<'a, S: 'a + #HaystackSlice + ?Sized> #name<'a, S> {
+        impl<'a, S: #HaystackSlice + ?Sized> #name<'a, S> {
             #(#numbered_groups)*
 
             #(#named_groups)*
         }
 
-        impl<'a, S: 'a + #HaystackSlice + ?Sized> #Capture<'a, S> for #name<'a, S> {
+        impl<'a, S: #HaystackSlice + ?Sized> #Capture<'a, S> for #name<'a, S> {
             fn whole_match_range(&self) -> #Range {
                 self.1.clone()
             }
@@ -89,7 +89,7 @@ pub(crate) fn impl_captures(
             }
         }
 
-        impl<'a, S: 'a + #HaystackSlice + ?Sized> #FromRanges<'a, S, #len> for #name<'a, S> {
+        impl<'a, S: #HaystackSlice + ?Sized> #FromRanges<'a, S, #len> for #name<'a, S> {
             fn from_ranges(
                 ranges: [#Option<#Range>; #len],
                 hay: &'a S,

@@ -64,6 +64,7 @@ impl HaystackSlice for [u8] {
     }
 
     unsafe fn as_str(&self) -> &str {
+        // SAFETY: It is up to the caller to ensure that this slice is valid utf8.
         unsafe { str::from_utf8_unchecked(self) }
     }
 }

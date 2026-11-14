@@ -52,8 +52,9 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// Note that an `Capture` type represents the contents of all groups from a single match. Each
     /// group only occurs once, if you're expecting the expression the match multiple times in a
     /// haystack, you will have many `Capture`s.
-    type Capture<'a, S: 'a + HaystackSlice + ?Sized>: Capture<'a, S> + FromRanges<'a, S, N>
+    type Capture<'a, S>: Capture<'a, S> + FromRanges<'a, S, N>
     where
+        S: HaystackSlice + ?Sized + 'a,
         I: 'a;
 
     /// Returns `true` if this Regex matches the **entire** haystack provided. This should probably

@@ -5,11 +5,11 @@ use crate::haystack::HaystackSlice;
 
 /// An pre-sliced representation of a group's capture.
 #[derive(Debug, Clone)]
-pub struct CaptureGroup<'a, S: 'a + HaystackSlice + ?Sized, const UTF8: bool> {
+pub struct CaptureGroup<'a, S: HaystackSlice + ?Sized, const UTF8: bool> {
     slice: &'a S,
 }
 
-impl<'a, S: 'a + HaystackSlice + ?Sized, const U: bool> CaptureGroup<'a, S, U> {
+impl<'a, S: HaystackSlice + ?Sized, const U: bool> CaptureGroup<'a, S, U> {
     pub fn new(slice: &'a S) -> Self {
         CaptureGroup {
             slice,
@@ -25,7 +25,7 @@ impl<'a, S: 'a + HaystackSlice + ?Sized, const U: bool> CaptureGroup<'a, S, U> {
     }
 }
 
-impl<'a, S: 'a + HaystackSlice + ?Sized> CaptureGroup<'a, S, true> {
+impl<'a, S: HaystackSlice + ?Sized> CaptureGroup<'a, S, true> {
     pub fn as_str(self) -> &'a str {
         unsafe { self.slice.as_str() }
     }

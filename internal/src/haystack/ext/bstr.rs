@@ -4,18 +4,18 @@ use bstr::{BStr, BString};
 
 use crate::haystack::{Haystack, HaystackSlice, IntoHaystack, OwnedHaystackable};
 
-impl<'a> HaystackSlice<'a> for &'a BStr {
+impl HaystackSlice for BStr {
     type Item = u8;
 
-    fn slice_with(&self, range: Range<usize>) -> Self {
+    fn slice_with(&self, range: Range<usize>) -> &Self {
         &self[range]
     }
 
-    fn into_bytes(self) -> &'a [u8] {
+    fn as_bytes(&self) -> &[u8] {
         self
     }
 
-    unsafe fn into_str(self) -> &'a str {
+    unsafe fn as_str(&self) -> &str {
         unsafe { str::from_utf8_unchecked(self) }
     }
 }
@@ -65,7 +65,7 @@ impl<'a> Iterator for BStrStack<'a> {
 }
 
 impl<'a> Haystack<'a> for BStrStack<'a> {
-    type Slice = &'a BStr;
+    type Slice = BStr;
 
     fn item(&self) -> Option<Self::Item> {
         self.inner.get(self.index).copied()
@@ -79,11 +79,11 @@ impl<'a> Haystack<'a> for BStrStack<'a> {
         self.index
     }
 
-    fn inner_slice(&self) -> Self::Slice {
+    fn inner_slice(&self) -> &'a Self::Slice {
         self.inner
     }
 
-    fn remainder_as_slice(&self) -> Self::Slice {
+    fn remainder_as_slice(&self) -> &'a Self::Slice {
         &self.inner[self.index..]
     }
 
@@ -98,7 +98,7 @@ impl OwnedHaystackable<u8> for BString {
     fn replace_range<'a>(
         &mut self,
         range: Range<usize>,
-        with: <Self::Hay<'a> as Haystack<'a>>::Slice
+        with: &'a <Self::Hay<'a> as Haystack<'a>>::Slice
     ) where Self: 'a {
         self.splice(range, with.iter().copied());
     }
@@ -107,7 +107,7 @@ impl OwnedHaystackable<u8> for BString {
         self.into_haystack()
     }
 
-    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as Haystack<'a>>::Slice {
+    fn as_slice<'a>(&'a self) -> &'a <Self::Hay<'a> as Haystack<'a>>::Slice {
         BStr::new(self)
     }
 

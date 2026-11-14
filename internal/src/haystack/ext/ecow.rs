@@ -10,7 +10,7 @@ impl OwnedHaystackable<char> for EcoString {
     fn replace_range<'a>(
         &mut self,
         range: Range<usize>,
-        with: <Self::Hay<'a> as Haystack<'a>>::Slice
+        with: &'a <Self::Hay<'a> as Haystack<'a>>::Slice
     ) where Self: 'a {
         let tail = EcoString::from(self.split_at(range.end).1);
         self.truncate(range.start);
@@ -22,7 +22,7 @@ impl OwnedHaystackable<char> for EcoString {
         self.into_haystack()
     }
 
-    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as Haystack<'a>>::Slice {
+    fn as_slice<'a>(&'a self) -> &'a <Self::Hay<'a> as Haystack<'a>>::Slice {
         self
     }
 
@@ -37,7 +37,7 @@ impl OwnedHaystackable<u8> for EcoVec<u8> {
     fn replace_range<'a>(
         &mut self,
         range: Range<usize>,
-        with: <Self::Hay<'a> as Haystack<'a>>::Slice
+        with: &'a <Self::Hay<'a> as Haystack<'a>>::Slice
     ) where Self: 'a {
         if range.len() == with.len() {
             let mut_self = self.make_mut();
@@ -56,7 +56,7 @@ impl OwnedHaystackable<u8> for EcoVec<u8> {
         self.into_haystack()
     }
 
-    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as Haystack<'a>>::Slice {
+    fn as_slice<'a>(&'a self) -> &'a <Self::Hay<'a> as Haystack<'a>>::Slice {
         self
     }
 

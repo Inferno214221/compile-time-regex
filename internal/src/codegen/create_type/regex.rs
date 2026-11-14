@@ -59,9 +59,9 @@ pub fn make_regex(
 
     let anon_impl = if impl_anon {
         quote! {
-            impl #AnonRegex<u8, #captures_len> for #name {}
+            impl #AnonRegex<u8, #captures_len, false> for #name {}
 
-            impl #AnonRegex<char, #captures_len> for #name {}
+            impl #AnonRegex<char, #captures_len, true> for #name {}
         }
     } else {
         quote!()
@@ -79,23 +79,23 @@ pub fn make_regex(
             #[derive(Clone, Copy)]
             pub struct #name;
 
-            impl #Regex<u8, #captures_len> for #name {
+            impl #Regex<u8, #captures_len, false> for #name {
                 type Pattern = #byte_matcher;
                 type Anchors = #byte_anchors;
-                type Capture<'a, S: 'a + #HaystackSlice + ?Sized> = #captures_name<'a, S>;
+                type Capture<'a, S: 'a + #HaystackSlice + ?Sized> = #captures_name<'a, S, false>;
             }
 
-            impl #Regex<char, #captures_len> for #name {
+            impl #Regex<char, #captures_len, true> for #name {
                 type Pattern = #scalar_matcher;
                 type Anchors = #scalar_anchors;
-                type Capture<'a, S: 'a + #HaystackSlice + ?Sized> = #captures_name<'a, S>;
+                type Capture<'a, S: 'a + #HaystackSlice + ?Sized> = #captures_name<'a, S, true>;
             }
 
             #anon_impl
 
             impl #fmt::Debug for #name {
                 fn fmt(&self, f: &mut #fmt::Formatter<'_>) -> #fmt::Result {
-                    write!(f, "/{:?}/", <Self as #Regex<char, #captures_len>>::Pattern::default())
+                    write!(f, "/{:?}/", <Self as #Regex<char, #captures_len, true>>::Pattern::default())
                 }
             }
 

@@ -18,17 +18,17 @@ pub(crate) fn zip_literal(
     vec.into_iter().zip(iter::repeat(lit)).collect::<Vec<_>>()
 }
 
-pub(crate) trait RegexTestExt<const N: usize>: Regex<char, N> {
+pub(crate) trait RegexTestExt<const N: usize>: Regex<char, N, true> {
     fn cap_to_parts<'a>(cap: Self::Capture<'a, str>) -> (Range<usize>, &'a str) {
-        (cap.whole_match_range(), cap.whole_match())
+        (cap.whole_match_range(), cap.whole_match().as_str())
     }
 
     fn quote_capture<'a>(cap: Self::Capture<'a, str>) -> String {
-        format!("'{}'", cap.whole_match())
+        format!("'{}'", cap.whole_match().as_str())
     }
 
     fn slice_first_byte<'a>(cap: Self::Capture<'a, str>) -> String {
-        cap.whole_match()[1..].into()
+        cap.whole_match().as_str()[1..].into()
     }
 
     fn all_ranges(hay: &str) -> Vec<Range<usize>> {
@@ -109,4 +109,4 @@ pub(crate) trait RegexTestExt<const N: usize>: Regex<char, N> {
     }
 }
 
-impl<R: Regex<char, N>, const N: usize> RegexTestExt<N> for R {}
+impl<R: Regex<char, N, true>, const N: usize> RegexTestExt<N> for R {}

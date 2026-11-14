@@ -220,7 +220,7 @@ mod __regex_Email {
     ///A macro-generated regular expression matching the pattern: `(\w+)@(?<domain>(\w+)(\.\w+)?)` with flags: []. See the [`Regex`](crate::expr::Regex) trait for associated matching and capturing functions.
     #[derive(Clone, Copy)]
     pub struct Email;
-    impl crate::expr::Regex<u8, 5> for Email {
+    impl crate::expr::Regex<u8, 5, false> for Email {
         type Pattern = crate::matcher::Then<
             u8,
             crate::matcher::CaptureGroup<
@@ -283,10 +283,10 @@ mod __regex_Email {
         type Capture<'a, S: 'a + crate::haystack::HaystackSlice + ?Sized> = EmailCapture<
             'a,
             S,
-            true,
+            false,
         >;
     }
-    impl crate::expr::Regex<char, 5> for Email {
+    impl crate::expr::Regex<char, 5, true> for Email {
         type Pattern = crate::matcher::Then<
             char,
             crate::matcher::CaptureGroup<
@@ -363,6 +363,7 @@ mod __regex_Email {
                     <Self as crate::expr::Regex<
                         char,
                         5,
+                        true,
                     >>::Pattern::default(),
                 ),
             )
@@ -376,7 +377,7 @@ As is common with regular expressions, group `0` refers to the whole match (and 
     #[derive(Debug, Clone)]
     pub struct EmailCapture<
         'a,
-        S: 'a + crate::haystack::HaystackSlice + ?Sized,
+        S: crate::haystack::HaystackSlice + ?Sized,
         const UTF8: bool,
     >(
         &'a S,
@@ -440,14 +441,14 @@ As is common with regular expressions, group `0` refers to the whole match (and 
     }
     impl<
         'a,
-        S: 'a + crate::haystack::HaystackSlice + ?Sized,
+        S: crate::haystack::HaystackSlice + ?Sized,
         const U: bool,
-    > crate::expr::Capture<'a, S> for EmailCapture<'a, S, U> {
+    > crate::expr::Capture<'a, S, U> for EmailCapture<'a, S, U> {
         fn whole_match_range(&self) -> ::std::ops::Range<usize> {
             self.1.clone()
         }
-        fn whole_match(&self) -> &'a S {
-            self.0.slice_with(self.whole_match_range())
+        fn whole_match(&self) -> CaptureGroup<'a, S, U> {
+            CaptureGroup::new(self.0.slice_with(self.whole_match_range()))
         }
     }
     impl<

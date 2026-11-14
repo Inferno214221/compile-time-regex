@@ -10,15 +10,15 @@ use crate::haystack::{Haystack, HaystackItem, HaystackOf, IntoHaystack, OwnedHay
 ///
 /// An `AnonRegex` can be created by invoking `regex!()` without a type identifier or visibility.
 /// The result is an instance of an unnameable type implementing `AnonRegex`.
-pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
+pub trait AnonRegex<I: HaystackItem, const N: usize, const U: bool>: Regex<I, N, U> {
     /// See [`Regex::is_match`].
     fn is_match<'a, H: HaystackOf<'a, I>>(&self, hay: impl IntoHaystack<'a, H>) -> bool {
-        <Self as Regex<I, N>>::is_match(hay)
+        <Self as Regex<I, N, U>>::is_match(hay)
     }
 
     /// See [`Regex::contains_match`].
     fn contains_match<'a, H: HaystackOf<'a, I>>(&self, hay: impl IntoHaystack<'a, H>) -> bool {
-        <Self as Regex<I, N>>::contains_match(hay)
+        <Self as Regex<I, N, U>>::contains_match(hay)
     }
 
     /// See [`Regex::count_matches`].
@@ -27,7 +27,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool,
     ) -> usize {
-        <Self as Regex<I, N>>::count_matches(hay, overlapping)
+        <Self as Regex<I, N, U>>::count_matches(hay, overlapping)
     }
 
     /// See [`Regex::range_of_match`].
@@ -35,7 +35,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         &self,
         hay: impl IntoHaystack<'a, H>,
     ) -> Option<Range<usize>> {
-        <Self as Regex<I, N>>::range_of_match(hay)
+        <Self as Regex<I, N, U>>::range_of_match(hay)
     }
 
     /// See [`Regex::range_of_all_matches`].
@@ -43,8 +43,8 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         &self,
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool,
-    ) -> RangeOfAllMatches<'a, Self, I, H, N> {
-        <Self as Regex<I, N>>::range_of_all_matches(hay, overlapping)
+    ) -> RangeOfAllMatches<'a, Self, I, H, N, U> {
+        <Self as Regex<I, N, U>>::range_of_all_matches(hay, overlapping)
     }
 
     /// See [`Regex::slice_match`].
@@ -52,7 +52,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         &self,
         hay: impl IntoHaystack<'a, H>,
     ) -> Option<&'a H::Slice> {
-        <Self as Regex<I, N>>::slice_match(hay)
+        <Self as Regex<I, N, U>>::slice_match(hay)
     }
 
     /// See [`Regex::slice_all_matches`].
@@ -60,8 +60,8 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         &self,
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool,
-    ) -> SliceAllMatches<'a, Self, I, H, N> {
-        <Self as Regex<I, N>>::slice_all_matches(hay, overlapping)
+    ) -> SliceAllMatches<'a, Self, I, H, N, U> {
+        <Self as Regex<I, N, U>>::slice_all_matches(hay, overlapping)
     }
 
     /// See [`Regex::do_capture`].
@@ -69,7 +69,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         &self,
         hay: impl IntoHaystack<'a, H>,
     ) -> Option<Self::Capture<'a, H::Slice>> {
-        <Self as Regex<I, N>>::do_capture(hay)
+        <Self as Regex<I, N, U>>::do_capture(hay)
     }
 
     /// See [`Regex::find_capture`].
@@ -77,7 +77,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         &self,
         hay: impl IntoHaystack<'a, H>,
     ) -> Option<Self::Capture<'a, H::Slice>> {
-        <Self as Regex<I, N>>::find_capture(hay)
+        <Self as Regex<I, N, U>>::find_capture(hay)
     }
 
     /// See [`Regex::find_all_captures`].
@@ -85,8 +85,8 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         &self,
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool,
-    ) -> FindAllCaptures<'a, Self, I, H, N> {
-        <Self as Regex<I, N>>::find_all_captures(hay, overlapping)
+    ) -> FindAllCaptures<'a, Self, I, H, N, U> {
+        <Self as Regex<I, N, U>>::find_all_captures(hay, overlapping)
     }
 
     /// See [`Regex::replace`].
@@ -95,7 +95,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         hay_mut: &mut M,
         with: &'a <M::Hay<'a> as Haystack<'a>>::Slice,
     ) -> bool {
-        <Self as Regex<I, N>>::replace(hay_mut, with)
+        <Self as Regex<I, N, U>>::replace(hay_mut, with)
     }
 
     /// See [`Regex::replace_all`].
@@ -104,7 +104,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         hay_mut: &mut M,
         with: &'a <M::Hay<'a> as Haystack<'a>>::Slice,
     ) -> usize {
-        <Self as Regex<I, N>>::replace_all(hay_mut, with)
+        <Self as Regex<I, N, U>>::replace_all(hay_mut, with)
     }
 
     /// See [`Regex::replace_all_using`].
@@ -113,7 +113,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         hay_mut: &mut M,
         using: impl FnMut() -> M,
     ) -> usize {
-        <Self as Regex<I, N>>::replace_all_using(hay_mut, using)
+        <Self as Regex<I, N, U>>::replace_all_using(hay_mut, using)
     }
 
     /// See [`Regex::replace_using_iter`].
@@ -122,7 +122,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         hay_mut: &mut M,
         iter: impl IntoIterator<Item = M>,
     ) -> usize {
-        <Self as Regex<I, N>>::replace_using_iter(hay_mut, iter)
+        <Self as Regex<I, N, U>>::replace_using_iter(hay_mut, iter)
     }
 
     /// See [`Regex::replace_captured`].
@@ -131,7 +131,7 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         M: OwnedHaystackable<I>,
         F: for<'a> FnOnce(Self::Capture<'a, <M::Hay<'a> as Haystack<'a>>::Slice>) -> M,
     {
-        <Self as Regex<I, N>>::replace_captured::<M, F>(hay_mut, replacer)
+        <Self as Regex<I, N, U>>::replace_captured::<M, F>(hay_mut, replacer)
     }
 
     /// See [`Regex::replace_all_captured`].
@@ -140,6 +140,6 @@ pub trait AnonRegex<I: HaystackItem, const N: usize>: Regex<I, N> {
         M: OwnedHaystackable<I>,
         F: for<'a> FnMut(Self::Capture<'a, <M::Hay<'a> as Haystack<'a>>::Slice>) -> M,
     {
-        <Self as Regex<I, N>>::replace_all_captured::<M, F>(hay_mut, replacer)
+        <Self as Regex<I, N, U>>::replace_all_captured::<M, F>(hay_mut, replacer)
     }
 }

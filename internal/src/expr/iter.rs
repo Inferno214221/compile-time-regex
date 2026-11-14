@@ -7,12 +7,14 @@ use crate::expr::{FromRanges, IndexedCaptures, Regex};
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::matcher::Matcher;
 
+// TODO: These bounds are getting pretty crazy.
+
 /// An `Iterator` over each match in the haystack, as a [`Range<usize>`](Range). See
 /// [`Regex::range_of_all_matches`].
 #[derive(Debug, Clone, Hash)]
-pub struct RangeOfAllMatches<'a, R, I, H, const N: usize>
+pub struct RangeOfAllMatches<'a, R, I, H, const N: usize, const U: bool>
 where
-    R: Regex<I, N> + ?Sized,
+    R: Regex<I, N, U> + ?Sized,
     I: HaystackItem,
     H: HaystackOf<'a, I>,
 {
@@ -22,9 +24,9 @@ where
     pub(crate) _phantom: PhantomData<(&'a (), I, R)>,
 }
 
-impl<'a, R, I, H, const N: usize> RangeOfAllMatches<'a, R, I, H, N>
+impl<'a, R, I, H, const N: usize, const U: bool> RangeOfAllMatches<'a, R, I, H, N, U>
 where
-    R: Regex<I, N> + ?Sized,
+    R: Regex<I, N, U> + ?Sized,
     I: HaystackItem,
     H: HaystackOf<'a, I>,
 {
@@ -38,9 +40,9 @@ where
     }
 }
 
-impl<'a, R, I, H, const N: usize> Iterator for RangeOfAllMatches<'a, R, I, H, N>
+impl<'a, R, I, H, const N: usize, const U: bool> Iterator for RangeOfAllMatches<'a, R, I, H, N, U>
 where
-    R: Regex<I, N> + ?Sized,
+    R: Regex<I, N, U> + ?Sized,
     I: HaystackItem,
     H: HaystackOf<'a, I>,
 {
@@ -77,9 +79,9 @@ where
     }
 }
 
-impl<'a, R, I, H, const N: usize> FusedIterator for RangeOfAllMatches<'a, R, I, H, N>
+impl<'a, R, I, H, const N: usize, const U: bool> FusedIterator for RangeOfAllMatches<'a, R, I, H, N, U>
 where
-    R: Regex<I, N> + ?Sized,
+    R: Regex<I, N, U> + ?Sized,
     I: HaystackItem,
     H: HaystackOf<'a, I>,
 {}
@@ -87,18 +89,18 @@ where
 /// An `Iterator` over each match in the haystack, as an `H::Slice`. See
 /// [`Regex::slice_all_matches`].
 #[derive(Debug, Clone, Hash)]
-pub struct SliceAllMatches<'a, R, I, H, const N: usize>
+pub struct SliceAllMatches<'a, R, I, H, const N: usize, const U: bool>
 where
-    R: Regex<I, N> + ?Sized,
+    R: Regex<I, N, U> + ?Sized,
     I: HaystackItem,
     H: HaystackOf<'a, I>,
 {
-    pub(crate) inner: RangeOfAllMatches<'a, R, I, H, N>,
+    pub(crate) inner: RangeOfAllMatches<'a, R, I, H, N, U>,
 }
 
-impl<'a, R, I, H, const N: usize> Iterator for SliceAllMatches<'a, R, I, H, N>
+impl<'a, R, I, H, const N: usize, const U: bool> Iterator for SliceAllMatches<'a, R, I, H, N, U>
 where
-    R: Regex<I, N> + ?Sized,
+    R: Regex<I, N, U> + ?Sized,
     I: HaystackItem,
     H: HaystackOf<'a, I>,
 {
@@ -110,9 +112,9 @@ where
     }
 }
 
-impl<'a, R, I, H, const N: usize> FusedIterator for SliceAllMatches<'a, R, I, H, N>
+impl<'a, R, I, H, const N: usize, const U: bool> FusedIterator for SliceAllMatches<'a, R, I, H, N, U>
 where
-    R: Regex<I, N> + ?Sized,
+    R: Regex<I, N, U> + ?Sized,
     I: HaystackItem,
     H: HaystackOf<'a, I>,
 {}
@@ -120,9 +122,9 @@ where
 /// An `Iterator` over each capture in the haystack, as an `R::Capture`. See
 /// [`Regex::find_all_captures`].
 #[derive(Debug, Clone, Hash)]
-pub struct FindAllCaptures<'a, R, I, H, const N: usize>
+pub struct FindAllCaptures<'a, R, I, H, const N: usize, const U: bool>
 where
-    R: Regex<I, N> + ?Sized,
+    R: Regex<I, N, U> + ?Sized,
     I: HaystackItem,
     H: HaystackOf<'a, I>,
 {
@@ -132,9 +134,9 @@ where
     pub(crate) _phantom: PhantomData<(&'a (), I, R)>,
 }
 
-impl<'a, R, I, H, const N: usize> FindAllCaptures<'a, R, I, H, N>
+impl<'a, R, I, H, const N: usize, const U: bool> FindAllCaptures<'a, R, I, H, N, U>
 where
-    R: Regex<I, N> + ?Sized,
+    R: Regex<I, N, U> + ?Sized,
     I: HaystackItem,
     H: HaystackOf<'a, I>,
 {
@@ -148,9 +150,9 @@ where
     }
 }
 
-impl<'a, R, I, H, const N: usize> Iterator for FindAllCaptures<'a, R, I, H, N>
+impl<'a, R, I, H, const N: usize, const U: bool> Iterator for FindAllCaptures<'a, R, I, H, N, U>
 where
-    R: Regex<I, N> + ?Sized,
+    R: Regex<I, N, U> + ?Sized,
     I: HaystackItem + 'a,
     H: HaystackOf<'a, I>,
 {
@@ -195,9 +197,9 @@ where
     }
 }
 
-impl<'a, R, I, H, const N: usize> FusedIterator for FindAllCaptures<'a, R, I, H, N>
+impl<'a, R, I, H, const N: usize, const U: bool> FusedIterator for FindAllCaptures<'a, R, I, H, N, U>
 where
-    R: Regex<I, N> + ?Sized,
+    R: Regex<I, N, U> + ?Sized,
     I: HaystackItem + 'a,
     H: HaystackOf<'a, I>,
 {}

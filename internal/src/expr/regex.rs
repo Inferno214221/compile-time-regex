@@ -33,7 +33,10 @@ use crate::matcher::Matcher;
 /// \* Note that these function runs through the Regex first and then the haystack. This means that
 /// substring involved is the one that matches the Regex first, not necessarily the first match in
 /// the haystack. In many cases, this makes no difference.
-pub trait Regex<I: HaystackItem, const N: usize>: Debug {
+pub trait Regex<I: HaystackItem, const N: usize, const U: bool>: Debug {
+    // If const_generic_exprs was stable these const bounds could be replaced with associated
+    // constants.
+
     /// This type is a macro generated combination of ZSTs responsible for doing all of the heavy
     /// lifting involved in actually matching or capturing against a `Haystack`. For realistic
     /// expressions, this type will be very long an unpleasant to type, hence implementing it as an
@@ -52,7 +55,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// Note that an `Capture` type represents the contents of all groups from a single match. Each
     /// group only occurs once, if you're expecting the expression the match multiple times in a
     /// haystack, you will have many `Capture`s.
-    type Capture<'a, S>: Capture<'a, S> + FromRanges<'a, S, N>
+    type Capture<'a, S>: Capture<'a, S, U> + FromRanges<'a, S, N>
     where
         S: HaystackSlice + ?Sized + 'a,
         I: 'a;
@@ -167,7 +170,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         hay: impl IntoHaystack<'a, H>,
     ) -> Option<Range<usize>> {
         let mut hay = hay.into_haystack();
-        range_of_match::<Self, _, _>(&mut hay)
+        range_of_match::<Self, _, _, _>(&mut hay)
     }
 
     /// Returns an iterator over the ranges of all substrings in the provided haystack that match
@@ -180,7 +183,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     fn range_of_all_matches<'a, H: HaystackOf<'a, I>>(
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool,
-    ) -> RangeOfAllMatches<'a, Self, I, H, N> {
+    ) -> RangeOfAllMatches<'a, Self, I, H, N, U> {
         RangeOfAllMatches::new(hay.into_haystack(), overlapping)
     }
 
@@ -191,7 +194,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// has to be the entire haystack.
     fn slice_match<'a, H: HaystackOf<'a, I>>(hay: impl IntoHaystack<'a, H>) -> Option<&'a H::Slice> {
         let mut hay = hay.into_haystack();
-        let range = range_of_match::<Self, _, _>(&mut hay)?;
+        let range = range_of_match::<Self, _, _, _>(&mut hay)?;
         Some(hay.slice_with(range))
     }
 
@@ -207,7 +210,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     fn slice_all_matches<'a, H: HaystackOf<'a, I>>(
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool,
-    ) -> SliceAllMatches<'a, Self, I, H, N> {
+    ) -> SliceAllMatches<'a, Self, I, H, N, U> {
         SliceAllMatches {
             inner: RangeOfAllMatches::new(hay.into_haystack(), overlapping),
         }
@@ -292,7 +295,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     fn find_all_captures<'a, H: HaystackOf<'a, I>>(
         hay: impl IntoHaystack<'a, H>,
         overlapping: bool,
-    ) -> FindAllCaptures<'a, Self, I, H, N> {
+    ) -> FindAllCaptures<'a, Self, I, H, N, U> {
         FindAllCaptures::new(hay.into_haystack(), overlapping)
     }
 
@@ -305,7 +308,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     ) -> bool {
         let Some(range) = ({
             let mut hay = hay_mut.as_haystack();
-            range_of_match::<Self, _, _>(&mut hay)
+            range_of_match::<Self, _, _, _>(&mut hay)
         }) else {
             return false;
         };
@@ -321,7 +324,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         with: &'a <M::Hay<'a> as Haystack<'a>>::Slice,
     ) -> usize {
         // Avoids redirecting to replace_all_using to avoid unnecessary clones.
-        let ranges = RangeOfAllMatches::<Self, I, M::Hay<'_>, N>::new(
+        let ranges = RangeOfAllMatches::<Self, I, M::Hay<'_>, N, U>::new(
             hay_mut.as_haystack(),
             false
         ).collect::<Vec<_>>();
@@ -351,7 +354,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         mut using: impl FnMut() -> M,
     ) -> usize {
         // Collect the Iterator to end the borrow of hay_mut.
-        let ranges = RangeOfAllMatches::<Self, I, M::Hay<'_>, N>::new(
+        let ranges = RangeOfAllMatches::<Self, I, M::Hay<'_>, N, U>::new(
             hay_mut.as_haystack(),
             false
         ).collect::<Vec<_>>();
@@ -384,7 +387,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
         let iter = iter.into_iter();
 
         // Zip with ranges first, because it is internal and the side effects don't matter.
-        let ranges_with_replacement = RangeOfAllMatches::<Self, I, M::Hay<'_>, N>::new(
+        let ranges_with_replacement = RangeOfAllMatches::<Self, I, M::Hay<'_>, N, U>::new(
             hay_mut.as_haystack(),
             false
         ).zip(iter).collect::<Vec<_>>();
@@ -482,7 +485,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     }
 }
 
-fn range_of_match<'a, R: Regex<I, N> + ?Sized, I: HaystackItem, const N: usize>(
+fn range_of_match<'a, R: Regex<I, N, U> + ?Sized, I: HaystackItem, const N: usize, const U: bool>(
     hay: &mut impl HaystackOf<'a, I>,
 ) -> Option<Range<usize>> {
     loop {

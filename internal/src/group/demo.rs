@@ -280,7 +280,7 @@ mod __regex_Email {
             >,
         >;
         type Anchors = crate::anchor::MinLen<3usize>;
-        type Capture<'a, S: crate::haystack::HaystackSlice<'a>> = EmailCapture<
+        type Capture<'a, S: 'a + crate::haystack::HaystackSlice + ?Sized> = EmailCapture<
             'a,
             S,
             true,
@@ -349,7 +349,7 @@ mod __regex_Email {
             >,
         >;
         type Anchors = crate::anchor::MinLen<3usize>;
-        type Capture<'a, S: crate::haystack::HaystackSlice<'a>> = EmailCapture<
+        type Capture<'a, S: 'a + crate::haystack::HaystackSlice + ?Sized> = EmailCapture<
             'a,
             S,
             true,
@@ -376,20 +376,19 @@ As is common with regular expressions, group `0` refers to the whole match (and 
     #[derive(Debug, Clone)]
     pub struct EmailCapture<
         'a,
-        S: crate::haystack::HaystackSlice<'a>,
+        S: 'a + crate::haystack::HaystackSlice + ?Sized,
         const UTF8: bool,
     >(
-        S,
+        &'a S,
         ::std::ops::Range<usize>,
         ::std::ops::Range<usize>,
         ::std::ops::Range<usize>,
         ::std::ops::Range<usize>,
         ::std::option::Option<::std::ops::Range<usize>>,
-        ::std::marker::PhantomData<&'a ()>,
     );
     impl<
         'a,
-        S: crate::haystack::HaystackSlice<'a>,
+        S: 'a + crate::haystack::HaystackSlice + ?Sized,
         const U: bool,
     > EmailCapture<'a, S, U> {
         pub fn cap_0(&self) -> CaptureGroup<'a, S, U> {
@@ -400,25 +399,25 @@ As is common with regular expressions, group `0` refers to the whole match (and 
         pub fn cap_0_range(&self) -> ::std::ops::Range<usize> {
             self.1.clone()
         }
-        pub fn cap_1(&self) -> S {
+        pub fn cap_1(&self) -> &'a S {
             self.0.slice_with(self.cap_1_range())
         }
         pub fn cap_1_range(&self) -> ::std::ops::Range<usize> {
             self.2.clone()
         }
-        pub fn cap_2(&self) -> S {
+        pub fn cap_2(&self) -> &'a S {
             self.0.slice_with(self.cap_2_range())
         }
         pub fn cap_2_range(&self) -> ::std::ops::Range<usize> {
             self.3.clone()
         }
-        pub fn cap_3(&self) -> S {
+        pub fn cap_3(&self) -> &'a S {
             self.0.slice_with(self.cap_3_range())
         }
         pub fn cap_3_range(&self) -> ::std::ops::Range<usize> {
             self.4.clone()
         }
-        pub fn cap_4(&self) -> ::std::option::Option<S> {
+        pub fn cap_4(&self) -> ::std::option::Option<&'a S> {
             self.cap_4_range().map(|r| self.0.slice_with(r))
         }
         pub fn cap_4_range(
@@ -426,13 +425,13 @@ As is common with regular expressions, group `0` refers to the whole match (and 
         ) -> ::std::option::Option<::std::ops::Range<usize>> {
             self.5.clone()
         }
-        pub fn whole_match(&self) -> S {
+        pub fn whole_match(&self) -> &'a S {
             self.0.slice_with(self.whole_match_range())
         }
         pub fn whole_match_range(&self) -> ::std::ops::Range<usize> {
             self.1.clone()
         }
-        pub fn domain(&self) -> S {
+        pub fn domain(&self) -> &'a S {
             self.0.slice_with(self.domain_range())
         }
         pub fn domain_range(&self) -> ::std::ops::Range<usize> {
@@ -441,28 +440,28 @@ As is common with regular expressions, group `0` refers to the whole match (and 
     }
     impl<
         'a,
-        S: crate::haystack::HaystackSlice<'a>,
+        S: 'a + crate::haystack::HaystackSlice + ?Sized,
         const U: bool,
     > crate::expr::Capture<'a, S> for EmailCapture<'a, S, U> {
         fn whole_match_range(&self) -> ::std::ops::Range<usize> {
             self.1.clone()
         }
-        fn whole_match(&self) -> S {
+        fn whole_match(&self) -> &'a S {
             self.0.slice_with(self.whole_match_range())
         }
     }
     impl<
         'a,
-        S: crate::haystack::HaystackSlice<'a>,
+        S: 'a + crate::haystack::HaystackSlice + ?Sized,
         const U: bool,
     > crate::expr::FromRanges<'a, S, 5> for EmailCapture<'a, S, U> {
         fn from_ranges(
             ranges: [::std::option::Option<::std::ops::Range<usize>>; 5],
-            hay: S,
+            hay: &'a S,
         ) -> ::std::option::Option<Self> {
             let [c0, c1, c2, c3, c4] = ranges;
             ::std::option::Option::Some(
-                Self(hay, c0?, c1?, c2?, c3?, c4, ::std::marker::PhantomData),
+                Self(hay, c0?, c1?, c2?, c3?, c4),
             )
         }
     }

@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use crate::haystack::HaystackSlice;
 
 // To start with, this will be implemented with UTF8 only when the entire expression matches UTF8.
@@ -7,31 +5,29 @@ use crate::haystack::HaystackSlice;
 
 /// An pre-sliced representation of a group's capture.
 #[derive(Debug, Clone)]
-pub struct CaptureGroup<'a, S: HaystackSlice<'a>, const UTF8: bool> {
-    slice: S,
-    _phantom: PhantomData<&'a ()>,
+pub struct CaptureGroup<'a, S: 'a + HaystackSlice + ?Sized, const UTF8: bool> {
+    slice: &'a S,
 }
 
-impl<'a, S: HaystackSlice<'a>, const U: bool> CaptureGroup<'a, S, U> {
-    pub fn new(slice: S) -> Self {
+impl<'a, S: 'a + HaystackSlice + ?Sized, const U: bool> CaptureGroup<'a, S, U> {
+    pub fn new(slice: &'a S) -> Self {
         CaptureGroup {
             slice,
-            _phantom: PhantomData,
         }
     }
 
-    pub fn into_inner(self) -> S {
+    pub fn as_slice(self) -> &'a S {
         self.slice
     }
 
-    pub fn into_bytes(self) -> &'a [u8] {
-        self.slice.into_bytes()
+    pub fn as_bytes(self) -> &'a [u8] {
+        self.slice.as_bytes()
     }
 }
 
-impl<'a, S: HaystackSlice<'a>> CaptureGroup<'a, S, true> {
-    pub fn into_str(self) -> &'a str {
-        unsafe { self.slice.into_str() }
+impl<'a, S: 'a + HaystackSlice + ?Sized> CaptureGroup<'a, S, true> {
+    pub fn as_str(self) -> &'a str {
+        unsafe { self.slice.as_str() }
     }
 }
 

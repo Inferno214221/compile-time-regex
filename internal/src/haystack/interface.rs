@@ -11,23 +11,26 @@ use crate::haystack::HaystackItem;
 /// It should be noted that this trait is often implemented on a reference to the type in question,
 /// e.g. `&str` or `&[u8]` rather than `str` or `[u8]` themselves, so that the implementing type can
 /// be cloned as required.
-pub trait HaystackSlice<'a>: Debug + Clone + Sized + ToOwned {
+pub trait HaystackSlice: Debug + ToOwned {
     /// The `HaystackItem` contained within this slice.
     type Item: HaystackItem;
 
     /// Slices the underlying slice with the provided (half-open) `range`, used for retrieving
     /// values of capture groups.
-    fn slice_with(&self, range: Range<usize>) -> Self;
+    fn slice_with(&self, range: Range<usize>) -> &Self;
+
+    // We're introducing a double reference here, but I think it makes sense. `as_` conveys that
+    // this conversion is cheap and between references.
 
     /// Returns the contents in the form of a byte slice.
-    fn into_bytes(self) -> &'a [u8];
+    fn as_bytes(&self) -> &[u8];
 
     /// Returns the contents in the form of a string slice.
     ///
     /// # Safety
     /// It is the callers responsibility to ensure that this slice is valid utf8. Failure to do so
     /// is undefined behaviour.
-    unsafe fn into_str(self) -> &'a str;
+    unsafe fn as_str(&self) -> &str;
 }
 
 /// A trait used to interface the haystack types use when matching of capturing against a
@@ -64,11 +67,11 @@ pub trait HaystackSlice<'a>: Debug + Clone + Sized + ToOwned {
 ///
 /// Although possible, there is no point implementing a `Haystack` that shares a `Slice` with
 /// another `Haystack`.
-pub trait Haystack<'a>: Debug + Clone + Iterator<Item = <Self::Slice as HaystackSlice<'a>>::Item> {
+pub trait Haystack<'a>: 'a + Debug + Clone + Iterator<Item = <Self::Slice as HaystackSlice>::Item> {
     /// The `HaystackSlice` returned by this type when slicing the underlying haystack. This type is
     /// usually also contained within the implementer used to create an instance via
     /// [`IntoHaystack`].
-    type Slice: HaystackSlice<'a>;
+    type Slice: HaystackSlice + ?Sized;
 
     /// Returns the item currently being matched in the haystack. Repeatedly calling this method
     /// should return the same item, until progressed with [`Iterator::next`].
@@ -88,15 +91,15 @@ pub trait Haystack<'a>: Debug + Clone + Iterator<Item = <Self::Slice as Haystack
 
     /// Returns the underlying slice, as it was when this `Haystack` was created - representing
     /// the entire haystack being matched against.
-    fn inner_slice(&self) -> Self::Slice;
+    fn inner_slice(&self) -> &'a Self::Slice;
 
-    fn slice_with(&self, range: Range<usize>) -> Self::Slice {
+    fn slice_with(&self, range: Range<usize>) -> &'a Self::Slice {
         self.inner_slice().slice_with(range)
     }
 
     /// Returns the remaining contents of this haystack, as a `Slice`. For slice based haystacks,
     /// this is can be implemented as `&self.inner[self.index..]`.
-    fn remainder_as_slice(&self) -> Self::Slice;
+    fn remainder_as_slice(&self) -> &'a Self::Slice;
 
     /// Restores the `index` of the haystack to the provided one. This should only be called with
     /// indexes obtained by calling [`index`](Self::index) on this `Haystack`.
@@ -154,12 +157,12 @@ pub trait Haystack<'a>: Debug + Clone + Iterator<Item = <Self::Slice as Haystack
 /// that `Item = I`.
 ///
 /// It is also blanket-implemented for all types that implement `Haystack<Item = I>`.
-pub trait HaystackOf<'a, I: HaystackItem>: Haystack<'a, Slice: HaystackSlice<'a, Item = I>> {}
+pub trait HaystackOf<'a, I: HaystackItem>: Haystack<'a, Slice: HaystackSlice<Item = I> + 'a> {}
 
 impl<'a, I, T> HaystackOf<'a, I> for T
 where
     I: HaystackItem,
-    T: Haystack<'a, Slice<>: HaystackSlice<'a, Item = I>>
+    T: Haystack<'a, Slice: HaystackSlice<Item = I> + 'a>
 {}
 
 /// A trait that is responsible for converting a slice into a stateful [`Haystack`], of type `H`.
@@ -199,7 +202,7 @@ pub trait OwnedHaystackable<I: HaystackItem> {
     fn replace_range<'a>(
         &mut self,
         range: Range<usize>,
-        replacement: <Self::Hay<'a> as Haystack<'a>>::Slice
+        replacement: &'a <Self::Hay<'a> as Haystack<'a>>::Slice
     ) where Self: 'a;
 
     /// Creates a temporary [`Haystack`] out of the underlying slice. This should usually be done by
@@ -209,7 +212,7 @@ pub trait OwnedHaystackable<I: HaystackItem> {
     /// Borrows the underlying [`HaystackSlice`] without creating a haystack. Used for slicing
     /// substrings. Note that `HaystackSlice` is inherently borrowed and probably be implemented for
     /// a reference.
-    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as Haystack<'a>>::Slice;
+    fn as_slice<'a>(&'a self) -> &'a <Self::Hay<'a> as Haystack<'a>>::Slice;
 
     /// Returns the length of the underlying slice.
     fn len(&self) -> usize;

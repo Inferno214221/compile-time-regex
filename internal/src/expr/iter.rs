@@ -102,7 +102,7 @@ where
     I: HaystackItem,
     H: HaystackOf<'a, I>,
 {
-    type Item = H::Slice;
+    type Item = &'a H::Slice;
 
     fn next(&mut self) -> Option<Self::Item> {
         let range = self.inner.next()?;

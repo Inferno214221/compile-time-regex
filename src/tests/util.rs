@@ -19,15 +19,15 @@ pub(crate) fn zip_literal(
 }
 
 pub(crate) trait RegexTestExt<const N: usize>: Regex<char, N> {
-    fn cap_to_parts<'a>(cap: Self::Capture<'a, &'a str>) -> (Range<usize>, &'a str) {
+    fn cap_to_parts<'a>(cap: Self::Capture<'a, str>) -> (Range<usize>, &'a str) {
         (cap.whole_match_range(), cap.whole_match())
     }
 
-    fn quote_capture<'a>(cap: Self::Capture<'a, &'a str>) -> String {
+    fn quote_capture<'a>(cap: Self::Capture<'a, str>) -> String {
         format!("'{}'", cap.whole_match())
     }
 
-    fn slice_first_byte<'a>(cap: Self::Capture<'a, &'a str>) -> String {
+    fn slice_first_byte<'a>(cap: Self::Capture<'a, str>) -> String {
         cap.whole_match()[1..].into()
     }
 

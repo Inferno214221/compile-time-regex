@@ -52,7 +52,9 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// Note that an `Capture` type represents the contents of all groups from a single match. Each
     /// group only occurs once, if you're expecting the expression the match multiple times in a
     /// haystack, you will have many `Capture`s.
-    type Capture<'a, S: HaystackSlice<'a>>: Capture<'a, S> + FromRanges<'a, S, N> where I: 'a;
+    type Capture<'a, S: 'a + HaystackSlice + ?Sized>: Capture<'a, S> + FromRanges<'a, S, N>
+    where
+        I: 'a;
 
     /// Returns `true` if this Regex matches the **entire** haystack provided. This should probably
     /// be the default _matching_ function to use.
@@ -186,7 +188,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     ///
     /// Note that there is no slicing equivalent of [`is_match`](Self::is_match), because any match
     /// has to be the entire haystack.
-    fn slice_match<'a, H: HaystackOf<'a, I>>(hay: impl IntoHaystack<'a, H>) -> Option<H::Slice> {
+    fn slice_match<'a, H: HaystackOf<'a, I>>(hay: impl IntoHaystack<'a, H>) -> Option<&'a H::Slice> {
         let mut hay = hay.into_haystack();
         let range = range_of_match::<Self, _, _>(&mut hay)?;
         Some(hay.slice_with(range))
@@ -298,7 +300,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// boolean indicating whether a match was found and replaced.
     fn replace<'a, M: OwnedHaystackable<I>>(
         hay_mut: &mut M,
-        with: <M::Hay<'a> as Haystack<'a>>::Slice,
+        with: &'a <M::Hay<'a> as Haystack<'a>>::Slice,
     ) -> bool {
         let Some(range) = ({
             let mut hay = hay_mut.as_haystack();
@@ -315,7 +317,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
     /// value is an integer representing the number of matches and replacements that occurred.
     fn replace_all<'a, M: OwnedHaystackable<I>>(
         hay_mut: &mut M,
-        with: <M::Hay<'a> as Haystack<'a>>::Slice,
+        with: &'a <M::Hay<'a> as Haystack<'a>>::Slice,
     ) -> usize {
         // Avoids redirecting to replace_all_using to avoid unnecessary clones.
         let ranges = RangeOfAllMatches::<Self, I, M::Hay<'_>, N>::new(
@@ -330,7 +332,7 @@ pub trait Regex<I: HaystackItem, const N: usize>: Debug {
             delta.apply_to(&mut range);
 
             let initial_len = hay_mut.len();
-            hay_mut.replace_range(range, with.clone());
+            hay_mut.replace_range(range, with);
             delta.add_diff(hay_mut.len(), initial_len);
         }
 

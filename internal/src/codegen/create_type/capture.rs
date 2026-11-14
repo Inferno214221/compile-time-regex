@@ -15,7 +15,6 @@ pub(crate) fn impl_captures(
     let HaystackSlice = quote!(::ct_regex::internal::haystack::HaystackSlice);
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
-    let PhantomData = quote!(::std::marker::PhantomData);
 
     let len_usize = groups.len();
 
@@ -69,38 +68,36 @@ pub(crate) fn impl_captures(
     let captures_impl = quote! {
         #[doc = #doc]
         #[derive(Debug, Clone)]
-        pub struct #name<'a, S: #HaystackSlice<'a>>(
-            S,
-            #(#inner),*,
-            #PhantomData<&'a ()>,
+        pub struct #name<'a, S: 'a + #HaystackSlice + ?Sized>(
+            &'a S,
+            #(#inner),*
         );
 
-        impl<'a, S: #HaystackSlice<'a>> #name<'a, S> {
+        impl<'a, S: 'a + #HaystackSlice + ?Sized> #name<'a, S> {
             #(#numbered_groups)*
 
             #(#named_groups)*
         }
 
-        impl<'a, S: #HaystackSlice<'a>> #Capture<'a, S> for #name<'a, S> {
+        impl<'a, S: 'a + #HaystackSlice + ?Sized> #Capture<'a, S> for #name<'a, S> {
             fn whole_match_range(&self) -> #Range {
                 self.1.clone()
             }
 
-            fn whole_match(&self) -> S {
+            fn whole_match(&self) -> &'a S {
                 self.0.slice_with(self.whole_match_range())
             }
         }
 
-        impl<'a, S: #HaystackSlice<'a>> #FromRanges<'a, S, #len> for #name<'a, S> {
+        impl<'a, S: 'a + #HaystackSlice + ?Sized> #FromRanges<'a, S, #len> for #name<'a, S> {
             fn from_ranges(
                 ranges: [#Option<#Range>; #len],
-                hay: S,
+                hay: &'a S,
             ) -> #Option<Self> {
                 let [#(#capture_destructure),*] = ranges;
                 #Option::Some(Self(
                     hay,
                     #(#capture_constructor),*,
-                    #PhantomData,
                 ))
             }
         }
@@ -119,7 +116,7 @@ pub(crate) fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -
 
     if cap.required {
         quote! {
-            pub fn #cap_name(&self) -> S {
+            pub fn #cap_name(&self) -> &'a S {
                 self.0.slice_with(self.#cap_name_full())
             }
 
@@ -129,7 +126,7 @@ pub(crate) fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -
         }
     } else {
         quote! {
-            pub fn #cap_name(&self) -> #Option<S> {
+            pub fn #cap_name(&self) -> #Option<&'a S> {
                 self.#cap_name_full().map(|r| self.0.slice_with(r))
             }
 

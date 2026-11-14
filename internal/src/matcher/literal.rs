@@ -18,7 +18,7 @@ impl<L: Literal> Sealed for LiteralMatcher<L> {}
 impl<L: Literal, I: HaystackItem> Matcher<I> for LiteralMatcher<L> {
     fn matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         let success = hay.remainder_as_slice()
-            .into_bytes()
+            .as_bytes()
             .starts_with(L::LITERAL);
 
         // This should avoid unnecessary branching here, because hay's state is undefined in the

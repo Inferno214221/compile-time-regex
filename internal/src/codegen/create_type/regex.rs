@@ -82,13 +82,13 @@ pub fn make_regex(
             impl #Regex<u8, #captures_len> for #name {
                 type Pattern = #byte_matcher;
                 type Anchors = #byte_anchors;
-                type Capture<'a, S: #HaystackSlice<'a>> = #captures_name<'a, S>;
+                type Capture<'a, S: 'a + #HaystackSlice + ?Sized> = #captures_name<'a, S>;
             }
 
             impl #Regex<char, #captures_len> for #name {
                 type Pattern = #scalar_matcher;
                 type Anchors = #scalar_anchors;
-                type Capture<'a, S: #HaystackSlice<'a>> = #captures_name<'a, S>;
+                type Capture<'a, S: 'a + #HaystackSlice + ?Sized> = #captures_name<'a, S>;
             }
 
             #anon_impl

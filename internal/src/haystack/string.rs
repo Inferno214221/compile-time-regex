@@ -28,7 +28,7 @@ impl<'a> Iterator for StrStack<'a> {
 }
 
 impl<'a> Haystack<'a> for StrStack<'a> {
-    type Slice = &'a str;
+    type Slice = str;
 
     fn item(&self) -> Option<Self::Item> {
         first_char(self.remainder_as_slice())
@@ -43,11 +43,11 @@ impl<'a> Haystack<'a> for StrStack<'a> {
         self.index
     }
 
-    fn inner_slice(&self) -> Self::Slice {
+    fn inner_slice(&self) -> &'a Self::Slice {
         self.inner
     }
 
-    fn remainder_as_slice(&self) -> Self::Slice {
+    fn remainder_as_slice(&self) -> &'a Self::Slice {
         &self.inner[self.index..]
     }
 
@@ -56,18 +56,18 @@ impl<'a> Haystack<'a> for StrStack<'a> {
     }
 }
 
-impl<'a> HaystackSlice<'a> for &'a str {
+impl HaystackSlice for str {
     type Item = char;
 
-    fn slice_with(&self, range: Range<usize>) -> Self {
+    fn slice_with(&self, range: Range<usize>) -> &Self {
         &self[range]
     }
 
-    fn into_bytes(self) -> &'a [u8] {
+    fn as_bytes(&self) -> &[u8] {
         str::as_bytes(self)
     }
 
-    unsafe fn into_str(self) -> &'a str {
+    unsafe fn as_str(&self) -> &str {
         self
     }
 }
@@ -96,7 +96,7 @@ impl OwnedHaystackable<char> for String {
     fn replace_range<'a>(
         &mut self,
         range: Range<usize>,
-        with: <Self::Hay<'a> as Haystack<'a>>::Slice
+        with: &'a <Self::Hay<'a> as Haystack<'a>>::Slice
     ) where Self: 'a {
         self.replace_range(range, with);
     }
@@ -105,7 +105,7 @@ impl OwnedHaystackable<char> for String {
         self.into_haystack()
     }
 
-    fn as_slice<'a>(&'a self) -> <Self::Hay<'a> as Haystack<'a>>::Slice {
+    fn as_slice<'a>(&'a self) -> &'a <Self::Hay<'a> as Haystack<'a>>::Slice {
         self
     }
 

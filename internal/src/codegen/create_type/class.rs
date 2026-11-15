@@ -4,7 +4,7 @@ use proc_macro2::TokenStream;
 use quote::{ToTokens, quote};
 use syn::Ident;
 
-use crate::{codegen::{self, CodegenItem, ExprMetadata}, matcher::ClassEntry};
+use crate::{codegen::{CodegenItem, ExprMetadata}, matcher::ClassEntry};
 
 impl<I: CodegenItem> ToTokens for ClassEntry<I> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -22,18 +22,16 @@ impl<I: CodegenItem> ToTokens for ClassEntry<I> {
 
 pub(crate) fn impl_classes<I: CodegenItem>(metadata: &ExprMetadata<I>) -> TokenStream {
     metadata.classes.iter()
-        .enumerate()
-        .map(|(index, entries)| impl_class(&metadata.name, index, entries))
+        .map(|(entries, name)| impl_class(name, entries))
         .collect()
 }
 
-pub(crate) fn impl_class<I: CodegenItem>(name: &Ident, index: usize, entries: &[ClassEntry<I>]) -> TokenStream {
+pub(crate) fn impl_class<I: CodegenItem>(name: &Ident, entries: &[ClassEntry<I>]) -> TokenStream {
     let ClassTrait = quote!(::ct_regex::internal::matcher::Class);
     let ClassEntry = quote!(::ct_regex::internal::matcher::ClassEntry);
 
     let ItemTy = I::type_ident();
 
-    let name = codegen::create_class_id::<I>(name, index);
     let entries = entries.iter().map(|entry| quote!(#entry));
 
     quote! {

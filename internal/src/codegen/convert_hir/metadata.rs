@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::mem;
 
 use quote::format_ident;
@@ -15,13 +16,12 @@ pub(crate) struct Group {
 #[derive(Debug, Clone)]
 pub(crate) struct ExprMetadata<I: CodegenItem> {
     pub name: Ident,
-    // Group ids are provided by regex_syntax as a u32, and not returned in the right order, so we
-    // store them by index in a Vec and checking them later.
+    // Group ids are provided by regex_syntax in a strange order, so we store them by index in a Vec
+    // and checking them later.
     pub groups: Vec<Option<Group>>,
     pub required: bool,
-    pub literals: Vec<Box<[u8]>>,
-    // TODO: avoid duplicates
-    pub classes: Vec<Box<[ClassEntry<I>]>>,
+    pub literals: BTreeMap<Box<[u8]>, Ident>,
+    pub classes: BTreeMap<Box<[ClassEntry<I>]>, Ident>,
 }
 
 impl<I: CodegenItem> ExprMetadata<I> {
@@ -36,8 +36,8 @@ impl<I: CodegenItem> ExprMetadata<I> {
             name,
             groups,
             required: true,
-            literals: Vec::new(),
-            classes: Vec::new(),
+            literals: BTreeMap::new(),
+            classes: BTreeMap::new(),
         }
     }
 
@@ -77,15 +77,19 @@ impl<I: CodegenItem> ExprMetadata<I> {
 
     pub fn insert_literal(&mut self, literal: Box<[u8]>) -> Ident {
         let index = self.literals.len();
-        self.literals.push(literal);
-        create_literal_id(&self.name, index)
+        self.literals.entry(literal)
+            .or_insert_with(|| create_literal_id(&self.name, index))
+            .clone()
     }
 
-    pub fn insert_class(&mut self, mut entry: Box<[ClassEntry<I>]>) -> Ident {
+    pub fn insert_class(&mut self, entry: Box<[ClassEntry<I>]>) -> Ident {
         let index = self.classes.len();
-        entry.sort();
-        self.classes.push(entry);
-        create_class_id::<I>(&self.name, index)
+
+        // Entries are already sorted by regex_syntax.
+
+        self.classes.entry(entry)
+            .or_insert_with(|| create_class_id::<I>(&self.name, index))
+            .clone()
     }
 }
 

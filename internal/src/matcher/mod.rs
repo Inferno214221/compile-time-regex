@@ -7,6 +7,7 @@ pub mod lazy;
 pub mod literal;
 pub mod primitive;
 pub mod quantifier;
+pub mod utf8;
 
 pub use capture::*;
 pub use class::*;
@@ -17,6 +18,7 @@ pub use lazy::*;
 pub use literal::*;
 pub use primitive::*;
 pub use quantifier::*;
+pub use utf8::*;
 
 #[cfg(test)]
 mod tests;

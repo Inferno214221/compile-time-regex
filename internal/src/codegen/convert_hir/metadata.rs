@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::mem;
 
 use quote::format_ident;
@@ -17,8 +16,8 @@ pub(crate) struct Group {
 pub(crate) struct ExprMetadata<I: CodegenItem> {
     pub name: Ident,
     // Group ids are provided by regex_syntax as a u32, and not returned in the right order, so we
-    // store them in a map before checking them and creating a Vec later.
-    pub groups: HashMap<u32, Group>,
+    // store them by index in a Vec and checking them later.
+    pub groups: Vec<Option<Group>>,
     pub required: bool,
     pub literals: Vec<Box<[u8]>>,
     // TODO: avoid duplicates
@@ -27,11 +26,12 @@ pub(crate) struct ExprMetadata<I: CodegenItem> {
 
 impl<I: CodegenItem> ExprMetadata<I> {
     pub fn new(name: Ident) -> ExprMetadata<I> {
-        let mut groups = HashMap::new();
-        groups.insert(0, Group {
-            name: Some("whole_match".into()),
-            required: true,
-        });
+        let groups = vec![
+            Some(Group {
+                name: Some("whole_match".into()),
+                required: true,
+            })
+        ];
         ExprMetadata {
             name,
             groups,
@@ -42,25 +42,37 @@ impl<I: CodegenItem> ExprMetadata<I> {
     }
 
     pub fn insert_group(&mut self, index: u32, name: Option<Box<str>>) {
-        self.groups.insert(index, Group {
+        let index = index as usize;
+        // Pad the vec with Nones first if required.
+        while self.groups.len() <= index {
+            self.groups.push(None);
+        }
+
+        let group = Some(Group {
             name,
             required: self.required,
         });
+
+        if self.groups.len() == index {
+            self.groups.push(group);
+        } else {
+            self.groups[index] = group;
+        }
     }
 
     pub fn take_groups(&mut self) -> Vec<Group> {
-        let mut items: Vec<_> = mem::take(&mut self.groups).into_iter().collect();
-        items.sort_by_key(|(i, _)| *i);
+        let items: Vec<_> = mem::take(&mut self.groups)
+            .into_iter()
+            .collect();
 
-        if items
-            .iter()
-            .enumerate()
-            .any(|(num, (index, _))| num != *index as usize)
-        {
+        // If we have any gaps in the group list, panic.
+        if items.iter().any(Option::is_none) {
             panic!("missing a capture group");
         }
 
-        items.into_iter().map(|(_, item)| item).collect()
+        items.into_iter()
+            .flatten()
+            .collect()
     }
 
     pub fn insert_literal(&mut self, literal: Box<[u8]>) -> Ident {

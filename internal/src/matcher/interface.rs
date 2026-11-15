@@ -1,12 +1,13 @@
 use std::fmt::Debug;
+use std::iter::FusedIterator;
 
 use crate::expr::IndexedCaptures;
 use crate::haystack::{HaystackItem, HaystackOf};
 use crate::sealed::Sealed;
 
 pub trait Matcher<I: HaystackItem>: Sealed + Debug + Default + Clone + Copy {
-    type AllMatches<'a, H: HaystackOf<'a, I>>: Iterator<Item = usize>;
-    type AllCaptures<'a, H: HaystackOf<'a, I>>: Iterator<Item = (usize, IndexedCaptures)>;
+    type AllMatches<'a, H: HaystackOf<'a, I>>: FusedIterator<Item = usize>;
+    type AllCaptures<'a, H: HaystackOf<'a, I>>: FusedIterator<Item = (usize, IndexedCaptures)>;
 
     /// Checks if the start of the haystack contains a match for this [`Matcher`]. If this method
     /// successfully matches the start of the haystack, `hay` is progressed so that `hay.item()`
@@ -62,8 +63,8 @@ pub trait Matcher<I: HaystackItem>: Sealed + Debug + Default + Clone + Copy {
 //   expression.
 
 pub trait LazyMatcher<I: HaystackItem>: Matcher<I> {
-    type LazyAllMatches<'a, H: HaystackOf<'a, I>>: Iterator<Item = usize>;
-    type LazyAllCaptures<'a, H: HaystackOf<'a, I>>: Iterator<Item = (usize, IndexedCaptures)>;
+    type LazyAllMatches<'a, H: HaystackOf<'a, I>>: FusedIterator<Item = usize>;
+    type LazyAllCaptures<'a, H: HaystackOf<'a, I>>: FusedIterator<Item = (usize, IndexedCaptures)>;
 
     /// Functions exactly the same as [`Matcher::matches`], except that the haystack's index is left
     /// at the first location where the match is considered successful.

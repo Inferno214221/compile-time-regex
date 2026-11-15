@@ -232,6 +232,14 @@ where
     }
 }
 
+
+impl<'a, I, H, A, const N: usize, const M: usize> FusedIterator for LazyAllMatchesNToM<'a, I, H, A, N, M>
+where
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+    A: Matcher<I>,
+{}
+
 pub struct LazyAllCapturesNToM<'a, I, H, A, const N: usize, const M: usize>
 where
     I: HaystackItem,
@@ -265,6 +273,13 @@ where
         }
     }
 }
+
+impl<'a, I, H, A, const N: usize, const M: usize> FusedIterator for LazyAllCapturesNToM<'a, I, H, A, N, M>
+where
+    I: HaystackItem,
+    H: HaystackOf<'a, I>,
+    A: Matcher<I>,
+{}
 
 impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> LazyMatcher<I> for QuantifierNToM<I, A, N, M> {
     type LazyAllMatches<'a, H: HaystackOf<'a, I>> = iter::Chain<AllMatchesSingle, LazyAllMatchesNToM<'a, I, H, A, N, M>>;

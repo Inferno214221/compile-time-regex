@@ -16,7 +16,7 @@ impl HaystackSlice for BStr {
     }
 
     unsafe fn as_str(&self) -> &str {
-        unsafe { str::from_utf8_unchecked(self) }
+        unsafe { <[u8]>::as_str(self) }
     }
 }
 

@@ -13,7 +13,7 @@ pub(crate) fn impl_captures(
     let Capture = quote!(::ct_regex::internal::expr::Capture);
     let FromRanges = quote!(::ct_regex::internal::expr::FromRanges);
     let HaystackSlice = quote!(::ct_regex::internal::haystack::HaystackSlice);
-    let CaptureGroup = quote!(::ct_regex::internal::group::CaptureGroup);
+    let SlicedGroup = quote!(::ct_regex::internal::group::SlicedGroup);
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
 
@@ -85,8 +85,8 @@ pub(crate) fn impl_captures(
                 self.1.clone()
             }
 
-            fn whole_match(&self) -> #CaptureGroup<'a, S, U> {
-                #CaptureGroup::new(self.0.slice_with(self.whole_match_range()))
+            fn whole_match(&self) -> #SlicedGroup<'a, S, U> {
+                #SlicedGroup::new(self.0.slice_with(self.whole_match_range()))
             }
         }
 
@@ -108,7 +108,7 @@ pub(crate) fn impl_captures(
 }
 
 pub(crate) fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -> TokenStream {
-    let CaptureGroup = quote!(::ct_regex::internal::group::CaptureGroup);
+    let SlicedGroup = quote!(::ct_regex::internal::group::SlicedGroup);
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
 
@@ -118,8 +118,8 @@ pub(crate) fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -
 
     if cap.required {
         quote! {
-            pub fn #cap_name(&self) -> #CaptureGroup<'a, S, U> {
-                #CaptureGroup::new(self.0.slice_with(self.#cap_name_full()))
+            pub fn #cap_name(&self) -> #SlicedGroup<'a, S, U> {
+                #SlicedGroup::new(self.0.slice_with(self.#cap_name_full()))
             }
 
             pub fn #cap_name_full(&self) -> #Range {
@@ -128,8 +128,8 @@ pub(crate) fn impl_capture_getters(index: usize, cap: &Group, cap_name: Ident) -
         }
     } else {
         quote! {
-            pub fn #cap_name(&self) -> #Option<#CaptureGroup<'a, S, U>> {
-                self.#cap_name_full().map(|r| #CaptureGroup::new(self.0.slice_with(r)))
+            pub fn #cap_name(&self) -> #Option<#SlicedGroup<'a, S, U>> {
+                self.#cap_name_full().map(|r| #SlicedGroup::new(self.0.slice_with(r)))
             }
 
             pub fn #cap_name_full(&self) -> #Option<#Range> {

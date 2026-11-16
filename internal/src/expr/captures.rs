@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::ops::Range;
 
-use crate::group::CaptureGroup;
+use crate::group::SlicedGroup;
 use crate::haystack::HaystackSlice;
 use crate::util::cons_tree::ConsBranch;
 
@@ -40,7 +40,7 @@ impl IndexedCaptures {
 
 pub trait Capture<'a, S: HaystackSlice + ?Sized, const U: bool>: Debug {
     fn whole_match_range(&self) -> Range<usize>;
-    fn whole_match(&self) -> CaptureGroup<'a, S, U>;
+    fn whole_match(&self) -> SlicedGroup<'a, S, U>;
 }
 
 pub trait FromRanges<'a, S: HaystackSlice + ?Sized, const N: usize>: Sized + Debug {

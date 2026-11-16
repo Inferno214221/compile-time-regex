@@ -5,18 +5,19 @@ use crate::haystack::HaystackSlice;
 
 /// An pre-sliced representation of a group's capture.
 #[derive(Debug, Clone)]
-pub struct CaptureGroup<'a, S: HaystackSlice + ?Sized, const UTF8: bool> {
+pub struct SlicedGroup<'a, S: HaystackSlice + ?Sized, const UTF8: bool> {
     slice: &'a S,
 }
 
-impl<'a, S: HaystackSlice + ?Sized, const U: bool> CaptureGroup<'a, S, U> {
+impl<'a, S: HaystackSlice + ?Sized, const U: bool> SlicedGroup<'a, S, U> {
+    #[doc(hidden)]
     pub fn new(slice: &'a S) -> Self {
-        CaptureGroup {
+        SlicedGroup {
             slice,
         }
     }
 
-    pub fn as_slice(self) -> &'a S {
+    pub fn into_inner(self) -> &'a S {
         self.slice
     }
 
@@ -25,7 +26,7 @@ impl<'a, S: HaystackSlice + ?Sized, const U: bool> CaptureGroup<'a, S, U> {
     }
 }
 
-impl<'a, S: HaystackSlice + ?Sized> CaptureGroup<'a, S, true> {
+impl<'a, S: HaystackSlice + ?Sized> SlicedGroup<'a, S, true> {
     pub fn as_str(self) -> &'a str {
         unsafe { self.slice.as_str() }
     }

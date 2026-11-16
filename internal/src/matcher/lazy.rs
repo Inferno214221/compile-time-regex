@@ -128,9 +128,19 @@ where
     A: Matcher<I>,
 {}
 
-impl<I: HaystackItem, A: Matcher<I>, const N: usize> LazyMatcher<I> for QuantifierNOrMore<I, A, N> {
-    type LazyAllMatches<'a, H: HaystackOf<'a, I>> = iter::Chain<AllMatchesSingle, LazyAllMatchesNOrMore<'a, I, H, A, N>>;
-    type LazyAllCaptures<'a, H: HaystackOf<'a, I>> = iter::Chain<AllCapturesSingle, LazyAllCapturesNOrMore<'a, I, H, A, N>>;
+impl<I, A, const N: usize> LazyMatcher<I> for QuantifierNOrMore<I, A, N>
+where
+    I: HaystackItem,
+    A: Matcher<I>
+{
+    type LazyAllMatches<'a, H: HaystackOf<'a, I>> = iter::Chain<
+        AllMatchesSingle,
+        LazyAllMatchesNOrMore<'a, I, H, A, N>
+    >;
+    type LazyAllCaptures<'a, H: HaystackOf<'a, I>> = iter::Chain<
+        AllCapturesSingle,
+        LazyAllCapturesNOrMore<'a, I, H, A, N>
+    >;
 
     fn lazy_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         let mut count = 0;
@@ -281,9 +291,19 @@ where
     A: Matcher<I>,
 {}
 
-impl<I: HaystackItem, A: Matcher<I>, const N: usize, const M: usize> LazyMatcher<I> for QuantifierNToM<I, A, N, M> {
-    type LazyAllMatches<'a, H: HaystackOf<'a, I>> = iter::Chain<AllMatchesSingle, LazyAllMatchesNToM<'a, I, H, A, N, M>>;
-    type LazyAllCaptures<'a, H: HaystackOf<'a, I>> = iter::Chain<AllCapturesSingle, LazyAllCapturesNToM<'a, I, H, A, N, M>>;
+impl<I, A, const N: usize, const M: usize> LazyMatcher<I> for QuantifierNToM<I, A, N, M>
+where
+    I: HaystackItem,
+    A: Matcher<I>
+{
+    type LazyAllMatches<'a, H: HaystackOf<'a, I>> = iter::Chain<
+        AllMatchesSingle,
+        LazyAllMatchesNToM<'a, I, H, A, N, M>
+    >;
+    type LazyAllCaptures<'a, H: HaystackOf<'a, I>> = iter::Chain<
+        AllCapturesSingle,
+        LazyAllCapturesNToM<'a, I, H, A, N, M>
+    >;
 
     fn lazy_matches<'a, H: HaystackOf<'a, I>>(hay: &mut H) -> bool {
         let mut count = 0;

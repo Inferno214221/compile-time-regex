@@ -113,30 +113,4 @@ impl<I: CodegenItem> TypeExpressions<I> {
             _ => hir,
         }
     }
-
-    pub fn wrap_zero_with(hir: Hir, config: &ConfigExt) -> CheckZeroWith {
-        CheckZeroWith(
-            config.enforce_utf8 && hir.properties().minimum_len().unwrap_or(0) == 0,
-            hir
-        )
-    }
-
-//     pub fn prevent_unicode_opt_out(hir: &Hir, config: &ConfigExt) {
-//         dbg!(hir);
-//         // Allow opting in if the expression itself isn't unicode.
-//         if config.enforce_utf8 {
-//             Self::assert_utf8(hir);
-//         }
-//     }
-//
-//     pub fn assert_utf8(hir: &Hir) {
-//         assert!(hir.properties().is_utf8());
-//         match hir.kind() {
-//             HirKind::Repetition(rep)   => Self::assert_utf8(&rep.sub),
-//             HirKind::Capture(cap)      => Self::assert_utf8(&cap.sub),
-//             HirKind::Concat(hirs)      => hirs.iter().for_each(Self::assert_utf8),
-//             HirKind::Alternation(hirs) => hirs.iter().for_each(Self::assert_utf8),
-//             _ => {},
-//         };
-//     }
 }

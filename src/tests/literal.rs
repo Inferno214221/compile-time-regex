@@ -1,4 +1,5 @@
 use super::*;
+use util::RegexTestScalar;
 
 regex! {
     pub LiteralExpr = r"eae"
@@ -127,22 +128,22 @@ fn find_capture() {
 #[allow(clippy::single_range_in_vec_init)]
 #[test]
 fn find_all_captures_non_overlapping() {
-    assert_eq!(LiteralExpr::all_captures("eae"), zip_literal(vec![0..3], "eae"));
-    assert_eq!(LiteralExpr::all_captures("eae eae"), zip_literal(vec![0..3, 4..7], "eae"));
-    assert_eq!(LiteralExpr::all_captures("eae eae eae eae"), zip_literal(vec![0..3, 4..7, 8..11, 12..15], "eae"));
-    assert_eq!(LiteralExpr::all_captures("eaeae"), zip_literal(vec![0..3], "eae"));
-    assert_eq!(LiteralExpr::all_captures("eaeaeaeaeae"), zip_literal(vec![0..3, 4..7, 8..11], "eae"));
+    assert_eq!(LiteralExpr::all_captures("eae"), LiteralExpr::zip_literal(vec![0..3], "eae"));
+    assert_eq!(LiteralExpr::all_captures("eae eae"), LiteralExpr::zip_literal(vec![0..3, 4..7], "eae"));
+    assert_eq!(LiteralExpr::all_captures("eae eae eae eae"), LiteralExpr::zip_literal(vec![0..3, 4..7, 8..11, 12..15], "eae"));
+    assert_eq!(LiteralExpr::all_captures("eaeae"), LiteralExpr::zip_literal(vec![0..3], "eae"));
+    assert_eq!(LiteralExpr::all_captures("eaeaeaeaeae"), LiteralExpr::zip_literal(vec![0..3, 4..7, 8..11], "eae"));
     assert_eq!(LiteralExpr::all_captures("ea"), vec![]);
 }
 
 #[allow(clippy::single_range_in_vec_init)]
 #[test]
 fn find_all_captures_overlapping() {
-    assert_eq!(LiteralExpr::all_captures_overlap("eae"), zip_literal(vec![0..3], "eae"));
-    assert_eq!(LiteralExpr::all_captures_overlap("eae eae"), zip_literal(vec![0..3, 4..7], "eae"));
-    assert_eq!(LiteralExpr::all_captures_overlap("eae eae eae eae"), zip_literal(vec![0..3, 4..7, 8..11, 12..15], "eae"));
-    assert_eq!(LiteralExpr::all_captures_overlap("eaeae"), zip_literal(vec![0..3, 2..5], "eae"));
-    assert_eq!(LiteralExpr::all_captures_overlap("eaeaeaeaeae"), zip_literal(vec![0..3, 2..5, 4..7, 6..9, 8..11], "eae"));
+    assert_eq!(LiteralExpr::all_captures_overlap("eae"), LiteralExpr::zip_literal(vec![0..3], "eae"));
+    assert_eq!(LiteralExpr::all_captures_overlap("eae eae"), LiteralExpr::zip_literal(vec![0..3, 4..7], "eae"));
+    assert_eq!(LiteralExpr::all_captures_overlap("eae eae eae eae"), LiteralExpr::zip_literal(vec![0..3, 4..7, 8..11, 12..15], "eae"));
+    assert_eq!(LiteralExpr::all_captures_overlap("eaeae"), LiteralExpr::zip_literal(vec![0..3, 2..5], "eae"));
+    assert_eq!(LiteralExpr::all_captures_overlap("eaeaeaeaeae"), LiteralExpr::zip_literal(vec![0..3, 2..5, 4..7, 6..9, 8..11], "eae"));
     assert_eq!(LiteralExpr::all_captures_overlap("ea"), vec![]);
 }
 

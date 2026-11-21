@@ -2,6 +2,7 @@ use super::*;
 
 mod start {
     use super::*;
+    use util::RegexTestScalar;
 
     regex! {
         pub StartExpr = r"^"
@@ -95,17 +96,17 @@ mod start {
     #[allow(clippy::single_range_in_vec_init)]
     #[test]
     fn find_all_captures_non_overlapping() {
-        assert_eq!(StartExpr::all_captures(""), zip_literal(vec![0..0], ""));
-        assert_eq!(StartExpr::all_captures("a"), zip_literal(vec![0..0], ""));
-        assert_eq!(StartExpr::all_captures("abc def"), zip_literal(vec![0..0], ""));
+        assert_eq!(StartExpr::all_captures(""), StartExpr::zip_literal(vec![0..0], ""));
+        assert_eq!(StartExpr::all_captures("a"), StartExpr::zip_literal(vec![0..0], ""));
+        assert_eq!(StartExpr::all_captures("abc def"), StartExpr::zip_literal(vec![0..0], ""));
     }
 
     #[allow(clippy::single_range_in_vec_init)]
     #[test]
     fn find_all_captures_overlapping() {
-        assert_eq!(StartExpr::all_captures_overlap(""), zip_literal(vec![0..0], ""));
-        assert_eq!(StartExpr::all_captures_overlap("a"), zip_literal(vec![0..0], ""));
-        assert_eq!(StartExpr::all_captures_overlap("abc def"), zip_literal(vec![0..0], ""));
+        assert_eq!(StartExpr::all_captures_overlap(""), StartExpr::zip_literal(vec![0..0], ""));
+        assert_eq!(StartExpr::all_captures_overlap("a"), StartExpr::zip_literal(vec![0..0], ""));
+        assert_eq!(StartExpr::all_captures_overlap("abc def"), StartExpr::zip_literal(vec![0..0], ""));
     }
 
     #[test]
@@ -153,6 +154,7 @@ mod start {
 
 mod end {
     use super::*;
+    use util::RegexTestScalar;
 
     regex! {
         pub EndExpr = r"$"
@@ -246,17 +248,17 @@ mod end {
     #[allow(clippy::single_range_in_vec_init)]
     #[test]
     fn find_all_captures_non_overlapping() {
-        assert_eq!(EndExpr::all_captures(""), zip_literal(vec![0..0], ""));
-        assert_eq!(EndExpr::all_captures("a"), zip_literal(vec![1..1], ""));
-        assert_eq!(EndExpr::all_captures("abc def"), zip_literal(vec![7..7], ""));
+        assert_eq!(EndExpr::all_captures(""), EndExpr::zip_literal(vec![0..0], ""));
+        assert_eq!(EndExpr::all_captures("a"), EndExpr::zip_literal(vec![1..1], ""));
+        assert_eq!(EndExpr::all_captures("abc def"), EndExpr::zip_literal(vec![7..7], ""));
     }
 
     #[allow(clippy::single_range_in_vec_init)]
     #[test]
     fn find_all_captures_overlapping() {
-        assert_eq!(EndExpr::all_captures_overlap(""), zip_literal(vec![0..0], ""));
-        assert_eq!(EndExpr::all_captures_overlap("a"), zip_literal(vec![1..1], ""));
-        assert_eq!(EndExpr::all_captures_overlap("abc def"), zip_literal(vec![7..7], ""));
+        assert_eq!(EndExpr::all_captures_overlap(""), EndExpr::zip_literal(vec![0..0], ""));
+        assert_eq!(EndExpr::all_captures_overlap("a"), EndExpr::zip_literal(vec![1..1], ""));
+        assert_eq!(EndExpr::all_captures_overlap("abc def"), EndExpr::zip_literal(vec![7..7], ""));
     }
 
     #[test]
@@ -302,8 +304,9 @@ mod end {
     }
 }
 
-mod empty {
+mod empty_scalar {
     use super::*;
+    use util::RegexTestScalar;
 
     regex! {
         pub EmptyExpr = r""
@@ -314,6 +317,7 @@ mod empty {
         assert!(EmptyExpr::is_match(""));
         assert!(!EmptyExpr::is_match("a"));
         assert!(!EmptyExpr::is_match("abc def"));
+        assert!(!EmptyExpr::is_match("😀🧑‍🔬"));
     }
 
     #[test]
@@ -321,6 +325,7 @@ mod empty {
         assert!(EmptyExpr::contains_match(""));
         assert!(EmptyExpr::contains_match("a"));
         assert!(EmptyExpr::contains_match("abc def"));
+        assert!(EmptyExpr::contains_match("😀🧑‍🔬"));
     }
 
     #[test]
@@ -328,6 +333,7 @@ mod empty {
         assert_eq!(EmptyExpr::count_matches("", false), 1);
         assert_eq!(EmptyExpr::count_matches("a", false), 2);
         assert_eq!(EmptyExpr::count_matches("abc def", false), 8);
+        assert_eq!(EmptyExpr::count_matches("😀🧑‍🔬", false), 5);
     }
 
     #[test]
@@ -335,6 +341,7 @@ mod empty {
         assert_eq!(EmptyExpr::count_matches("", true), 1);
         assert_eq!(EmptyExpr::count_matches("a", true), 2);
         assert_eq!(EmptyExpr::count_matches("abc def", true), 8);
+        assert_eq!(EmptyExpr::count_matches("😀🧑‍🔬", true), 5);
     }
 
     #[test]
@@ -342,6 +349,7 @@ mod empty {
         assert_eq!(EmptyExpr::range_of_match(""), Some(0..0));
         assert_eq!(EmptyExpr::range_of_match("a"), Some(0..0));
         assert_eq!(EmptyExpr::range_of_match("abc def"), Some(0..0));
+        assert_eq!(EmptyExpr::range_of_match("😀🧑‍🔬"), Some(0..0));
     }
 
     #[test]
@@ -351,6 +359,10 @@ mod empty {
         assert_eq!(
             EmptyExpr::all_ranges("abc def"),
             vec![0..0, 1..1, 2..2, 3..3, 4..4, 5..5, 6..6, 7..7]
+        );
+        assert_eq!(
+            EmptyExpr::all_ranges("😀🧑‍🔬"),
+            vec![0..0, 4..4, 8..8, 11..11, 15..15]
         );
     }
 
@@ -362,13 +374,18 @@ mod empty {
             EmptyExpr::all_ranges_overlap("abc def"),
             vec![0..0, 1..1, 2..2, 3..3, 4..4, 5..5, 6..6, 7..7]
         );
+        assert_eq!(
+            EmptyExpr::all_ranges_overlap("😀🧑‍🔬"),
+            vec![0..0, 4..4, 8..8, 11..11, 15..15]
+        );
     }
 
     #[test]
     fn slice_match() {
-        assert_eq!(EmptyExpr::slice_match(""), Some(""));
-        assert_eq!(EmptyExpr::slice_match("a"), Some(""));
-        assert_eq!(EmptyExpr::slice_match("abc def"), Some(""));
+        assert_eq!(EmptyExpr::slice_match("".as_bytes()), Some("".as_bytes()));
+        assert_eq!(EmptyExpr::slice_match("a".as_bytes()), Some("".as_bytes()));
+        assert_eq!(EmptyExpr::slice_match("abc def".as_bytes()), Some("".as_bytes()));
+        assert_eq!(EmptyExpr::slice_match("😀🧑‍🔬".as_bytes()), Some("".as_bytes()));
     }
 
     #[test]
@@ -376,6 +393,7 @@ mod empty {
         assert_eq!(EmptyExpr::all_slices(""), vec![""]);
         assert_eq!(EmptyExpr::all_slices("a"), vec![""; 2]);
         assert_eq!(EmptyExpr::all_slices("abc def"), vec![""; 8]);
+        assert_eq!(EmptyExpr::all_slices("😀🧑‍🔬"), vec![""; 5]);
     }
 
 
@@ -384,6 +402,7 @@ mod empty {
         assert_eq!(EmptyExpr::all_slices_overlap(""), vec![""]);
         assert_eq!(EmptyExpr::all_slices_overlap("a"), vec![""; 2]);
         assert_eq!(EmptyExpr::all_slices_overlap("abc def"), vec![""; 8]);
+        assert_eq!(EmptyExpr::all_slices_overlap("😀🧑‍🔬"), vec![""; 5]);
     }
 
     #[test]
@@ -391,6 +410,7 @@ mod empty {
         assert_eq!(EmptyExpr::whole_capture(""), Some((0..0, "")));
         assert_eq!(EmptyExpr::whole_capture("a"), None);
         assert_eq!(EmptyExpr::whole_capture("abc def"), None);
+        assert_eq!(EmptyExpr::whole_capture("😀🧑‍🔬"), None);
     }
 
     #[test]
@@ -398,27 +418,36 @@ mod empty {
         assert_eq!(EmptyExpr::first_capture(""), Some((0..0, "")));
         assert_eq!(EmptyExpr::first_capture("a"), Some((0..0, "")));
         assert_eq!(EmptyExpr::first_capture("abc def"), Some((0..0, "")));
+        assert_eq!(EmptyExpr::first_capture("😀🧑‍🔬"), Some((0..0, "")));
     }
 
     #[allow(clippy::single_range_in_vec_init)]
     #[test]
     fn find_all_captures_non_overlapping() {
-        assert_eq!(EmptyExpr::all_captures(""), zip_literal(vec![0..0], ""));
-        assert_eq!(EmptyExpr::all_captures("a"), zip_literal(vec![0..0, 1..1], ""));
+        assert_eq!(EmptyExpr::all_captures(""), EmptyExpr::zip_literal(vec![0..0], ""));
+        assert_eq!(EmptyExpr::all_captures("a"), EmptyExpr::zip_literal(vec![0..0, 1..1], ""));
         assert_eq!(
             EmptyExpr::all_captures("abc def"),
-            zip_literal(vec![0..0, 1..1, 2..2, 3..3, 4..4, 5..5, 6..6, 7..7], "")
+            EmptyExpr::zip_literal(vec![0..0, 1..1, 2..2, 3..3, 4..4, 5..5, 6..6, 7..7], "")
+        );
+        assert_eq!(
+            EmptyExpr::all_captures("😀🧑‍🔬"),
+            EmptyExpr::zip_literal(vec![0..0, 4..4, 8..8, 11..11, 15..15], "")
         );
     }
 
     #[allow(clippy::single_range_in_vec_init)]
     #[test]
     fn find_all_captures_overlapping() {
-        assert_eq!(EmptyExpr::all_captures_overlap(""), zip_literal(vec![0..0], ""));
-        assert_eq!(EmptyExpr::all_captures_overlap("a"), zip_literal(vec![0..0, 1..1], ""));
+        assert_eq!(EmptyExpr::all_captures_overlap(""), EmptyExpr::zip_literal(vec![0..0], ""));
+        assert_eq!(EmptyExpr::all_captures_overlap("a"), EmptyExpr::zip_literal(vec![0..0, 1..1], ""));
         assert_eq!(
             EmptyExpr::all_captures_overlap("abc def"),
-            zip_literal(vec![0..0, 1..1, 2..2, 3..3, 4..4, 5..5, 6..6, 7..7], "")
+            EmptyExpr::zip_literal(vec![0..0, 1..1, 2..2, 3..3, 4..4, 5..5, 6..6, 7..7], "")
+        );
+        assert_eq!(
+            EmptyExpr::all_captures_overlap("😀🧑‍🔬"),
+            EmptyExpr::zip_literal(vec![0..0, 4..4, 8..8, 11..11, 15..15], "")
         );
     }
 
@@ -427,6 +456,8 @@ mod empty {
         assert_eq!(EmptyExpr::first_replaced("", "r"), (true, "r".into()));
         assert_eq!(EmptyExpr::first_replaced("a", "r"), (true, "ra".into()));
         assert_eq!(EmptyExpr::first_replaced("abc def", "r"), (true, "rabc def".into()));
+        assert_eq!(EmptyExpr::first_replaced("abc def", "r"), (true, "rabc def".into()));
+        assert_eq!(EmptyExpr::first_replaced("😀🧑‍🔬", "r"), (true, "r😀🧑‍🔬".into()));
     }
 
     #[test]
@@ -434,6 +465,7 @@ mod empty {
         assert_eq!(EmptyExpr::all_replaced("", "r"), (1, "r".into()));
         assert_eq!(EmptyExpr::all_replaced("a", "r"), (2, "rar".into()));
         assert_eq!(EmptyExpr::all_replaced("abc def", "r"), (8, "rarbrcr rdrerfr".into()));
+        assert_eq!(EmptyExpr::all_replaced("😀🧑‍🔬", "r"), (5, "r😀r🧑r\u{200d}r🔬r".into()));
     }
 
     #[test]
@@ -441,6 +473,7 @@ mod empty {
         assert_eq!(EmptyExpr::all_replaced_using(""), (1, "1".into()));
         assert_eq!(EmptyExpr::all_replaced_using("a"), (2, "1a2".into()));
         assert_eq!(EmptyExpr::all_replaced_using("abc def"), (8, "1a2b3c4 5d6e7f8".into()));
+        assert_eq!(EmptyExpr::all_replaced_using("😀🧑‍🔬"), (5, "1😀2🧑3\u{200d}4🔬5".into()));
     }
 
     #[test]
@@ -448,6 +481,7 @@ mod empty {
         assert_eq!(EmptyExpr::replaced_using_iter(""), (1, "1".into()));
         assert_eq!(EmptyExpr::replaced_using_iter("a"), (2, "1a2".into()));
         assert_eq!(EmptyExpr::replaced_using_iter("abc def"), (2, "1a2bc def".into()));
+        assert_eq!(EmptyExpr::replaced_using_iter("😀🧑‍🔬"), (2, "1😀2🧑‍🔬".into()));
     }
 
     #[test]
@@ -455,6 +489,7 @@ mod empty {
         assert_eq!(EmptyExpr::capture_replaced_quoted(""), (true, "''".into()));
         assert_eq!(EmptyExpr::capture_replaced_quoted("a"), (true, "''a".into()));
         assert_eq!(EmptyExpr::capture_replaced_quoted("abc def"), (true, "''abc def".into()));
+        assert_eq!(EmptyExpr::capture_replaced_quoted("😀🧑‍🔬"), (true, "''😀🧑‍🔬".into()));
     }
 
     #[test]
@@ -462,5 +497,6 @@ mod empty {
         assert_eq!(EmptyExpr::all_captures_replaced_quoted(""), (1, "''".into()));
         assert_eq!(EmptyExpr::all_captures_replaced_quoted("a"), (2, "''a''".into()));
         assert_eq!(EmptyExpr::all_captures_replaced_quoted("abc def"), (8, "''a''b''c'' ''d''e''f''".into()));
+        assert_eq!(EmptyExpr::all_captures_replaced_quoted("😀🧑‍🔬"), (5, "''😀''🧑''\u{200d}''🔬''".into()));
     }
 }

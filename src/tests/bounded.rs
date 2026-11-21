@@ -1,4 +1,5 @@
 use super::*;
+use util::RegexTestScalar;
 
 mod greedy {
     use super::*;

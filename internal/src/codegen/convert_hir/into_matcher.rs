@@ -36,6 +36,9 @@ struct Concat(pub Vec<Hir>);
 #[derive(Debug, Clone)]
 struct Alternation(pub Vec<Hir>);
 
+#[derive(Debug, Clone)]
+pub struct CheckZeroWith(pub bool, pub Hir);
+
 impl IntoMatcherExpr for Empty {
     fn into_matcher_expr<I: CodegenItem>(self, _meta: &mut ExprMetadata<I>) -> TokenStream {
         quote!(::ct_regex::internal::matcher::Always)
@@ -155,6 +158,18 @@ impl IntoMatcherExpr for Alternation {
 impl IntoMatcherExpr for Concat {
     fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata<I>) -> TokenStream {
         write_chunked::<I, _>(&format_ident!("Then"), meta, self.0)
+    }
+}
+
+impl IntoMatcherExpr for CheckZeroWith {
+    fn into_matcher_expr<I: CodegenItem>(self, meta: &mut ExprMetadata<I>) -> TokenStream {
+        let ItemTy = I::type_ident();
+        let inner = self.1.into_matcher_expr(meta);
+        if self.0 {
+            quote!(::ct_regex::internal::matcher::ZeroWidthCheck<#ItemTy, #inner>)
+        } else {
+            inner
+        }
     }
 }
 

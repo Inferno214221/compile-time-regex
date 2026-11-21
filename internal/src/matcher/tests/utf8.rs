@@ -3,7 +3,7 @@ use crate::expr::IndexedCaptures;
 use crate::haystack::{Haystack, IntoHaystack};
 use crate::test_matches_with_index;
 
-type Empty = ZeroWidthCheck<Always>;
+type Empty = ZeroWidthCheck<u8, Always>;
 
 mod zero_width_check {
     use super::*;

@@ -4,7 +4,7 @@ use quote::quote;
 use regex_syntax::{ast::Ast, hir::{Capture, Hir, HirKind, Look, Properties}};
 use syn::Ident;
 
-use crate::codegen::{CodegenItem, ConfigExt, ExprMetadata, IntoMatcherExpr, simplify_classes};
+use crate::codegen::{CheckZeroWith, CodegenItem, ConfigExt, ExprMetadata, IntoMatcherExpr, simplify_classes};
 
 #[derive(Debug, Clone)]
 pub(crate) struct TypeExpressions<I: CodegenItem> {
@@ -78,10 +78,9 @@ impl<I: CodegenItem> TypeExpressions<I> {
         }
     }
 
-    pub fn process_hir(mut hir: Hir, config: &ConfigExt) -> Hir {
+    pub fn process_hir(mut hir: Hir, config: &ConfigExt) -> impl IntoMatcherExpr {
         hir = Self::remove_redundant_lookarounds(hir);
-        // Self::prevent_unicode_opt_out(&hir, config);
-        hir
+        Self::wrap_zero_with(hir, config)
     }
 
     pub fn remove_redundant_lookarounds(hir: Hir) -> Hir {
@@ -104,6 +103,13 @@ impl<I: CodegenItem> TypeExpressions<I> {
             }),
             _ => hir,
         }
+    }
+
+    pub fn wrap_zero_with(hir: Hir, config: &ConfigExt) -> CheckZeroWith {
+        CheckZeroWith(
+            config.enforce_utf8 && hir.properties().minimum_len().unwrap_or(0) == 0,
+            hir
+        )
     }
 
 //     pub fn prevent_unicode_opt_out(hir: &Hir, config: &ConfigExt) {

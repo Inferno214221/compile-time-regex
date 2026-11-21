@@ -68,3 +68,17 @@ impl ConfigExt {
         self
     }
 }
+
+/// The documentation on regex_syntax in kinda unclear so I'm going to summarize here:
+///
+/// - [`TranslatorBuilder::unicode`]: Determines whether the resulting expression matches on a `u8`
+///   or `char` basis, with a value of true matching only `char`s.
+/// - [`TranslatorBuilder::utf8`]: Determine whether the resulting expression can match a haystack
+///   that contains invalid utf8, regardless of the item type. In Rust however, using only `char`s,
+///   you can't match invalid utf8, so this is only relevant for matching bytes. This method is not
+///   the flag, and setting it to true will not permit opting out within an expression. Setting this
+///   to true has the effect of asserting that all `Hir`s return true when `Properties::is_utf8` is
+///   called.
+///
+/// See [`Properties::is_utf8`](regex_syntax::hir::Properties::is_utf8).
+mod note {}

@@ -80,6 +80,7 @@ impl<I: CodegenItem> TypeExpressions<I> {
 
     pub fn process_hir(mut hir: Hir, config: &ConfigExt) -> Hir {
         hir = Self::remove_redundant_lookarounds(hir);
+        // Self::prevent_unicode_opt_out(&hir, config);
         hir
     }
 
@@ -104,4 +105,23 @@ impl<I: CodegenItem> TypeExpressions<I> {
             _ => hir,
         }
     }
+
+//     pub fn prevent_unicode_opt_out(hir: &Hir, config: &ConfigExt) {
+//         dbg!(hir);
+//         // Allow opting in if the expression itself isn't unicode.
+//         if config.enforce_utf8 {
+//             Self::assert_utf8(hir);
+//         }
+//     }
+//
+//     pub fn assert_utf8(hir: &Hir) {
+//         assert!(hir.properties().is_utf8());
+//         match hir.kind() {
+//             HirKind::Repetition(rep)   => Self::assert_utf8(&rep.sub),
+//             HirKind::Capture(cap)      => Self::assert_utf8(&cap.sub),
+//             HirKind::Concat(hirs)      => hirs.iter().for_each(Self::assert_utf8),
+//             HirKind::Alternation(hirs) => hirs.iter().for_each(Self::assert_utf8),
+//             _ => {},
+//         };
+//     }
 }

@@ -500,3 +500,200 @@ mod empty_scalar {
         assert_eq!(EmptyExpr::all_captures_replaced_quoted("😀🧑‍🔬"), (5, "''😀''🧑''\u{200d}''🔬''".into()));
     }
 }
+
+mod empty_byte {
+    use super::*;
+    use util::RegexTestByte;
+
+    regex! {
+        pub EmptyExpr = r""
+    }
+
+    #[test]
+    fn is_match() {
+        assert!(EmptyExpr::is_match("".as_bytes()));
+        assert!(!EmptyExpr::is_match("a".as_bytes()));
+        assert!(!EmptyExpr::is_match("abc def".as_bytes()));
+        assert!(!EmptyExpr::is_match("😀🧑‍🔬".as_bytes()));
+    }
+
+    #[test]
+    fn contains_match() {
+        assert!(EmptyExpr::contains_match("".as_bytes()));
+        assert!(EmptyExpr::contains_match("a".as_bytes()));
+        assert!(EmptyExpr::contains_match("abc def".as_bytes()));
+        assert!(EmptyExpr::contains_match("😀🧑‍🔬".as_bytes()));
+    }
+
+    #[test]
+    fn count_matches_non_overlapping() {
+        assert_eq!(EmptyExpr::count_matches("".as_bytes(), false), 1);
+        assert_eq!(EmptyExpr::count_matches("a".as_bytes(), false), 2);
+        assert_eq!(EmptyExpr::count_matches("abc def".as_bytes(), false), 8);
+        assert_eq!(EmptyExpr::count_matches("😀🧑‍🔬".as_bytes(), false), 5);
+    }
+
+    #[test]
+    fn count_matches_overlapping() {
+        assert_eq!(EmptyExpr::count_matches("".as_bytes(), true), 1);
+        assert_eq!(EmptyExpr::count_matches("a".as_bytes(), true), 2);
+        assert_eq!(EmptyExpr::count_matches("abc def".as_bytes(), true), 8);
+        assert_eq!(EmptyExpr::count_matches("😀🧑‍🔬".as_bytes(), true), 5);
+    }
+
+    #[test]
+    fn range_of_match() {
+        assert_eq!(EmptyExpr::range_of_match("".as_bytes()), Some(0..0));
+        assert_eq!(EmptyExpr::range_of_match("a".as_bytes()), Some(0..0));
+        assert_eq!(EmptyExpr::range_of_match("abc def".as_bytes()), Some(0..0));
+        assert_eq!(EmptyExpr::range_of_match("😀🧑‍🔬".as_bytes()), Some(0..0));
+    }
+
+    #[test]
+    fn range_of_all_matches_non_overlapping() {
+        assert_eq!(EmptyExpr::all_ranges(b""), vec![0..0]);
+        assert_eq!(EmptyExpr::all_ranges(b"a"), vec![0..0, 1..1]);
+        assert_eq!(
+            EmptyExpr::all_ranges(b"abc def"),
+            vec![0..0, 1..1, 2..2, 3..3, 4..4, 5..5, 6..6, 7..7]
+        );
+        assert_eq!(
+            EmptyExpr::all_ranges("😀🧑‍🔬".as_bytes()),
+            vec![0..0, 4..4, 8..8, 11..11, 15..15]
+        );
+    }
+
+    #[test]
+    fn range_of_all_matches_overlapping() {
+        assert_eq!(EmptyExpr::all_ranges_overlap(b""), vec![0..0]);
+        assert_eq!(EmptyExpr::all_ranges_overlap(b"a"), vec![0..0, 1..1]);
+        assert_eq!(
+            EmptyExpr::all_ranges_overlap(b"abc def"),
+            vec![0..0, 1..1, 2..2, 3..3, 4..4, 5..5, 6..6, 7..7]
+        );
+        assert_eq!(
+            EmptyExpr::all_ranges_overlap("😀🧑‍🔬".as_bytes()),
+            vec![0..0, 4..4, 8..8, 11..11, 15..15]
+        );
+    }
+
+    #[test]
+    fn slice_match() {
+        assert_eq!(EmptyExpr::slice_match("".as_bytes()), Some("".as_bytes()));
+        assert_eq!(EmptyExpr::slice_match("a".as_bytes()), Some("".as_bytes()));
+        assert_eq!(EmptyExpr::slice_match("abc def".as_bytes()), Some("".as_bytes()));
+        assert_eq!(EmptyExpr::slice_match("😀🧑‍🔬".as_bytes()), Some("".as_bytes()));
+    }
+
+    #[test]
+    fn slice_all_matches_non_overlapping() {
+        assert_eq!(EmptyExpr::all_slices(b""), vec![b""]);
+        assert_eq!(EmptyExpr::all_slices(b"a"), vec![b""; 2]);
+        assert_eq!(EmptyExpr::all_slices(b"abc def"), vec![b""; 8]);
+        assert_eq!(EmptyExpr::all_slices("😀🧑‍🔬".as_bytes()), vec![b""; 5]);
+    }
+
+
+    #[test]
+    fn slice_all_matches_overlapping() {
+        assert_eq!(EmptyExpr::all_slices_overlap(b""), vec![b""]);
+        assert_eq!(EmptyExpr::all_slices_overlap(b"a"), vec![b""; 2]);
+        assert_eq!(EmptyExpr::all_slices_overlap(b"abc def"), vec![b""; 8]);
+        assert_eq!(EmptyExpr::all_slices_overlap("😀🧑‍🔬".as_bytes()), vec![b""; 5]);
+    }
+
+    #[test]
+    fn do_capture() {
+        assert_eq!(EmptyExpr::whole_capture(b""), Some((0..0, "".as_bytes())));
+        assert_eq!(EmptyExpr::whole_capture(b"a"), None);
+        assert_eq!(EmptyExpr::whole_capture(b"abc def"), None);
+        assert_eq!(EmptyExpr::whole_capture("😀🧑‍🔬".as_bytes()), None);
+    }
+
+    #[test]
+    fn find_capture() {
+        assert_eq!(EmptyExpr::first_capture(b""), Some((0..0, "".as_bytes())));
+        assert_eq!(EmptyExpr::first_capture(b"a"), Some((0..0, "".as_bytes())));
+        assert_eq!(EmptyExpr::first_capture(b"abc def"), Some((0..0, "".as_bytes())));
+        assert_eq!(EmptyExpr::first_capture("😀🧑‍🔬".as_bytes()), Some((0..0, "".as_bytes())));
+    }
+
+    #[allow(clippy::single_range_in_vec_init)]
+    #[test]
+    fn find_all_captures_non_overlapping() {
+        assert_eq!(EmptyExpr::all_captures(b""), EmptyExpr::zip_literal(vec![0..0], b""));
+        assert_eq!(EmptyExpr::all_captures(b"a"), EmptyExpr::zip_literal(vec![0..0, 1..1], b""));
+        assert_eq!(
+            EmptyExpr::all_captures(b"abc def"),
+            EmptyExpr::zip_literal(vec![0..0, 1..1, 2..2, 3..3, 4..4, 5..5, 6..6, 7..7], b"")
+        );
+        assert_eq!(
+            EmptyExpr::all_captures("😀🧑‍🔬".as_bytes()),
+            EmptyExpr::zip_literal(vec![0..0, 4..4, 8..8, 11..11, 15..15], b"")
+        );
+    }
+
+    #[allow(clippy::single_range_in_vec_init)]
+    #[test]
+    fn find_all_captures_overlapping() {
+        assert_eq!(EmptyExpr::all_captures_overlap(b""), EmptyExpr::zip_literal(vec![0..0], b""));
+        assert_eq!(EmptyExpr::all_captures_overlap(b"a"), EmptyExpr::zip_literal(vec![0..0, 1..1], b""));
+        assert_eq!(
+            EmptyExpr::all_captures_overlap(b"abc def"),
+            EmptyExpr::zip_literal(vec![0..0, 1..1, 2..2, 3..3, 4..4, 5..5, 6..6, 7..7], b"")
+        );
+        assert_eq!(
+            EmptyExpr::all_captures_overlap("😀🧑‍🔬".as_bytes()),
+            EmptyExpr::zip_literal(vec![0..0, 4..4, 8..8, 11..11, 15..15], b"")
+        );
+    }
+
+    #[test]
+    fn replace() {
+        assert_eq!(EmptyExpr::first_replaced(b"", b"r"), (true, "r".into()));
+        assert_eq!(EmptyExpr::first_replaced(b"a", b"r"), (true, "ra".into()));
+        assert_eq!(EmptyExpr::first_replaced(b"abc def", b"r"), (true, "rabc def".into()));
+        assert_eq!(EmptyExpr::first_replaced(b"abc def", b"r"), (true, "rabc def".into()));
+        assert_eq!(EmptyExpr::first_replaced("😀🧑‍🔬".as_bytes(), b"r"), (true, "r😀🧑‍🔬".into()));
+    }
+
+    #[test]
+    fn replace_all() {
+        assert_eq!(EmptyExpr::all_replaced(b"", b"r"), (1, "r".into()));
+        assert_eq!(EmptyExpr::all_replaced(b"a", b"r"), (2, "rar".into()));
+        assert_eq!(EmptyExpr::all_replaced(b"abc def", b"r"), (8, "rarbrcr rdrerfr".into()));
+        assert_eq!(EmptyExpr::all_replaced("😀🧑‍🔬".as_bytes(), b"r"), (5, "r😀r🧑r\u{200d}r🔬r".into()));
+    }
+
+    #[test]
+    fn replace_all_using() {
+        assert_eq!(EmptyExpr::all_replaced_using(b""), (1, "1".into()));
+        assert_eq!(EmptyExpr::all_replaced_using(b"a"), (2, "1a2".into()));
+        assert_eq!(EmptyExpr::all_replaced_using(b"abc def"), (8, "1a2b3c4 5d6e7f8".into()));
+        assert_eq!(EmptyExpr::all_replaced_using("😀🧑‍🔬".as_bytes()), (5, "1😀2🧑3\u{200d}4🔬5".into()));
+    }
+
+    #[test]
+    fn replace_using_iter() {
+        assert_eq!(EmptyExpr::replaced_using_iter(b""), (1, "1".into()));
+        assert_eq!(EmptyExpr::replaced_using_iter(b"a"), (2, "1a2".into()));
+        assert_eq!(EmptyExpr::replaced_using_iter(b"abc def"), (2, "1a2bc def".into()));
+        assert_eq!(EmptyExpr::replaced_using_iter("😀🧑‍🔬".as_bytes()), (2, "1😀2🧑‍🔬".into()));
+    }
+
+    #[test]
+    fn replace_captured() {
+        assert_eq!(EmptyExpr::capture_replaced_quoted(b""), (true, "''".into()));
+        assert_eq!(EmptyExpr::capture_replaced_quoted(b"a"), (true, "''a".into()));
+        assert_eq!(EmptyExpr::capture_replaced_quoted(b"abc def"), (true, "''abc def".into()));
+        assert_eq!(EmptyExpr::capture_replaced_quoted("😀🧑‍🔬".as_bytes()), (true, "''😀🧑‍🔬".into()));
+    }
+
+    #[test]
+    fn replace_all_captured() {
+        assert_eq!(EmptyExpr::all_captures_replaced_quoted(b""), (1, "''".into()));
+        assert_eq!(EmptyExpr::all_captures_replaced_quoted(b"a"), (2, "''a''".into()));
+        assert_eq!(EmptyExpr::all_captures_replaced_quoted(b"abc def"), (8, "''a''b''c'' ''d''e''f''".into()));
+        assert_eq!(EmptyExpr::all_captures_replaced_quoted("😀🧑‍🔬".as_bytes()), (5, "''😀''🧑''\u{200d}''🔬''".into()));
+    }
+}

@@ -6,6 +6,12 @@ use syn::Ident;
 
 use crate::codegen::Group;
 
+pub(crate) fn captures_info(regex_name: &Ident, groups: &[Group]) -> (Ident, Literal) {
+    let len_usize = groups.len();
+    (format_ident!("{}Capture", regex_name), Literal::usize_unsuffixed(len_usize))
+
+}
+
 pub(crate) fn impl_captures(
     regex_name: &Ident,
     groups: Vec<Group>,
@@ -17,13 +23,10 @@ pub(crate) fn impl_captures(
     let Range = quote!(::std::ops::Range<usize>);
     let Option = quote!(::std::option::Option);
 
-    let len_usize = groups.len();
-
-    let name = format_ident!("{}Capture", regex_name);
-    let len = Literal::usize_unsuffixed(len_usize);
+    let (name, len) = captures_info(regex_name, &groups);
 
     let doc = format!(
-        "A macro-generated type that holds {len_usize} captures for the associated regex, \
+        "A macro-generated type that holds {len} captures for the associated regex, \
         [`{regex_name}`]. If present, named groups can be retrieved through their associated \
         method.\n\n\
         Capture types include methods to retrieve individual captures as a slice of the original \

@@ -35,61 +35,84 @@ pub fn make_regex(
     let TypeExpressions {
         matcher: byte_matcher,
         anchors: byte_anchors,
-        meta: byte_meta,
+        meta: mut byte_meta,
     } = TypeExpressions::<u8>::parse_regex(&name, &pat_str, &config);
 
-    // TODO: if !config.enforces_utf8 then don't implement for string
-    let TypeExpressions {
-        matcher: scalar_matcher,
-        anchors: scalar_anchors,
-        meta: mut scalar_meta,
-    } = TypeExpressions::<char>::parse_regex(&name, &pat_str, &config);
-
-    assert_eq!(byte_meta, scalar_meta);
-
     let byte_classes_impl = class::impl_classes(&byte_meta);
-    let scalar_classes_impl = class::impl_classes(&scalar_meta);
 
-    let (captures_name, captures_len, captures_impl) = capture::impl_captures(
-        &name,
-        scalar_meta.take_groups()
-    );
+    // TODO: if !config.enforces_utf8 then don't implement for string
+    let scalar_impl = if config.enforce_utf8 {
+        let TypeExpressions {
+            matcher: scalar_matcher,
+            anchors: scalar_anchors,
+            meta: mut scalar_meta,
+        } = TypeExpressions::<char>::parse_regex(&name, &pat_str, &config);
 
-    let literal_impl = literal::impl_literals(scalar_meta);
+        assert_eq!(byte_meta, scalar_meta);
 
-    let anon_impl = if impl_anon {
+        let scalar_classes_impl = class::impl_classes(&scalar_meta);
+
+        let (captures_name, captures_len) = capture::captures_info(
+            &name,
+            &scalar_meta.take_groups()
+        );
+
         quote! {
-            impl #AnonRegex<u8, #captures_len, false> for #name {}
-
-            impl #AnonRegex<char, #captures_len, true> for #name {}
-        }
-    } else {
-        quote!()
-    };
-
-    quote! {
-        #[doc(hidden)]
-        #[allow(non_snake_case)]
-        mod #mod_name {
-            #byte_classes_impl
             #scalar_classes_impl
-            #literal_impl
-
-            #[doc = #doc]
-            #[derive(Clone, Copy)]
-            pub struct #name;
-
-            impl #Regex<u8, #captures_len, false> for #name {
-                type Pattern = #byte_matcher;
-                type Anchors = #byte_anchors;
-                type Capture<'a, S: 'a + #HaystackSlice + ?Sized> = #captures_name<'a, S, false>;
-            }
 
             impl #Regex<char, #captures_len, true> for #name {
                 type Pattern = #scalar_matcher;
                 type Anchors = #scalar_anchors;
                 type Capture<'a, S: 'a + #HaystackSlice + ?Sized> = #captures_name<'a, S, true>;
             }
+        }
+    } else {
+        quote!()
+    };
+
+    let (captures_name, captures_len, captures_impl) = capture::impl_captures(
+        &name,
+        byte_meta.take_groups()
+    );
+
+    let literal_impl = literal::impl_literals(byte_meta);
+
+    let anon_impl = if impl_anon {
+        if config.enforce_utf8 {
+            quote! {
+                impl #AnonRegex<u8, #captures_len, true> for #name {}
+
+                impl #AnonRegex<char, #captures_len, true> for #name {}
+            }
+        } else {
+            quote! {
+                impl #AnonRegex<u8, #captures_len, false> for #name {}
+            }
+        }
+    } else {
+        quote!()
+    };
+
+    let enforce_utf8 = config.enforce_utf8;
+
+    quote! {
+        #[doc(hidden)]
+        #[allow(non_snake_case)]
+        mod #mod_name {
+            #byte_classes_impl
+            #literal_impl
+
+            #[doc = #doc]
+            #[derive(Clone, Copy)]
+            pub struct #name;
+
+            impl #Regex<u8, #captures_len, #enforce_utf8> for #name {
+                type Pattern = #byte_matcher;
+                type Anchors = #byte_anchors;
+                type Capture<'a, S: 'a + #HaystackSlice + ?Sized> = #captures_name<'a, S, #enforce_utf8>;
+            }
+
+            #scalar_impl
 
             #anon_impl
 

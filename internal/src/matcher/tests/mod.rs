@@ -8,3 +8,4 @@ mod lazy;
 mod literal;
 mod primitive;
 mod quantifier;
+mod utf8;

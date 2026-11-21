@@ -33,12 +33,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "940b3a0ca603d1eade50a4846a2afffd5ef57a9feac2c0e2ec2e14f9ead76000"
 
 [[package]]
-name = "arcstr"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03918c3dbd7701a85c6b9887732e2921175f26c350b4563841d0958c21d57e6d"
-
-[[package]]
 name = "autocfg"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -205,7 +199,6 @@ checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
 name = "ct-regex"
 version = "0.1.0"
 dependencies = [
- "arcstr",
  "bstr",
  "ct-regex-internal",
  "ct-regex-macro",
@@ -226,7 +219,6 @@ dependencies = [
 name = "ct-regex-internal"
 version = "0.1.0"
 dependencies = [
- "arcstr",
  "bstr",
  "ecow",
  "hipstr",

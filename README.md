@@ -18,7 +18,6 @@ This repository contains three crates:
 ## Feature Flags
 
 - `demo` - Intended for documentation only, exports a macro generated type as a demonstration.
-- `arcstr` - Adds haystack implementations for the [arcstr](https://docs.rs/arcstr/) crate.
 - `bstr` - Adds haystack implementations for the [bstr](https://docs.rs/bstr/) crate.
 - `ecow` - Adds haystack implementations for the [ecow](https://docs.rs/ecow/) crate.
 - `hipstr` - Adds haystack implementations for the [hipstr](https://docs.rs/hipstr/) crate.

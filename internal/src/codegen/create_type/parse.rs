@@ -4,7 +4,7 @@ use quote::quote;
 use regex_syntax::{ast::Ast, hir::{Capture, Hir, HirKind, Look, Properties}};
 use syn::Ident;
 
-use crate::codegen::{CheckZeroWith, CodegenItem, ConfigExt, ExprMetadata, IntoMatcherExpr, simplify_classes};
+use crate::codegen::{CodegenItem, ConfigExt, ExprMetadata, IntoMatcherExpr, simplify_classes};
 
 #[derive(Debug, Clone)]
 pub(crate) struct TypeExpressions<I: CodegenItem> {
@@ -33,7 +33,7 @@ impl<I: CodegenItem> TypeExpressions<I> {
 
     pub fn create(hir: Hir, name: &Ident, config: &ConfigExt) -> TypeExpressions<I> {
         let mut meta = ExprMetadata::new(name.clone());
-        let anchors = TypeExpressions::<I>::create_anchor_expression(hir.properties());
+        let anchors = TypeExpressions::<I>::create_anchor_expression(hir.properties(), config);
 
         TypeExpressions {
             matcher: Self::process_hir(hir, config).into_matcher_expr::<I>(&mut meta),
@@ -42,28 +42,38 @@ impl<I: CodegenItem> TypeExpressions<I> {
         }
     }
 
-    pub fn create_anchor_expression(props: &Properties) -> TokenStream {
+    pub fn create_anchor_expression(props: &Properties, config: &ConfigExt) -> TokenStream {
+        let anchor = quote!(::ct_regex::internal::anchor);
         let mut anchors = Vec::new();
 
         if props.look_set_prefix().contains(Look::Start) {
-            anchors.push(quote!(::ct_regex::internal::anchor::Start));
+            anchors.push(quote!(#anchor::Start));
         }
-        if let Some(min) = props.minimum_len() && min != 0 {
-            anchors.push(quote!(::ct_regex::internal::anchor::MinLen<#min>));
+        match props.minimum_len() {
+            None | Some(0) if config.enforce_utf8 => {
+                anchors.push(quote!(#anchor::ZeroWidthBoundary))
+            },
+            Some(min) => {
+                anchors.push(quote!(#anchor::MinLen<#min>))
+            },
+            _ => {}
         }
         if let Some(max) = props.maximum_len() {
             if props.look_set_suffix().contains(Look::End) {
-                anchors.push(quote!(::ct_regex::internal::anchor::EndAndMaxLen<#max>));
+                anchors.push(quote!(#anchor::EndAndMaxLen<#max>));
             } else {
-                anchors.push(quote!(::ct_regex::internal::anchor::MaxLen<#max>));
+                anchors.push(quote!(#anchor::MaxLen<#max>));
             }
         }
 
         match_vec!(match anchors {
-            [] => quote!(::ct_regex::internal::anchor::AnchorNone),
+            [] => quote!(#anchor::AnchorNone),
             [a] => a,
-            [a, b] => quote!(::ct_regex::internal::anchor::AnchorPair<#a, #b>),
-            [a, b, c] => quote!(::ct_regex::internal::anchor::AnchorSet<#a, #b, #c>),
+            [a, b] => quote!(#anchor::AnchorPair<#a, #b>),
+            [a, b, c] => quote!(#anchor::AnchorSet<#a, #b, #c>),
+            [a, b, c, d] => quote!(
+                #anchor::AnchorPair<#anchor::AnchorPair<#a, #b>, #anchor::AnchorPair<#c, #d>>
+            ),
             _ => panic!("an excessive number for anchor assertions were found"),
         })
     }
@@ -78,9 +88,8 @@ impl<I: CodegenItem> TypeExpressions<I> {
         }
     }
 
-    pub fn process_hir(mut hir: Hir, config: &ConfigExt) -> impl IntoMatcherExpr {
-        hir = Self::remove_redundant_lookarounds(hir);
-        Self::wrap_zero_with(hir, config)
+    pub fn process_hir(hir: Hir, _config: &ConfigExt) -> impl IntoMatcherExpr {
+        Self::remove_redundant_lookarounds(hir)
     }
 
     pub fn remove_redundant_lookarounds(hir: Hir) -> Hir {

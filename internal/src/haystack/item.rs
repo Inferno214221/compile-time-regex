@@ -28,6 +28,8 @@ pub trait HaystackItem: Sealed + Debug + Default + Copy + Eq + Ord + 'static {
     /// Check is this item is a carriage return character ('\r' or b'\r'). Used for string and line
     /// anchoring.
     fn is_return(self) -> bool;
+
+    fn is_utf8_boundary(item: Option<Self>) -> bool;
 }
 
 /// A helper for getting the first `char` of a provided `&str`. Returns the width of the character
@@ -43,6 +45,13 @@ pub(crate) fn first_char_and_width(value: &str) -> (usize, Option<char>) {
 
 pub(crate) fn first_char(value: &str) -> Option<char> {
     value.chars().next()
+}
+
+// Copied from Rust internals, not offered publicly for some reason.
+// https://github.com/rust-lang/rust/blob/5f4effd579500175af844241eb179e756190f1e7/library/core/src/num/mod.rs#L1236
+pub(crate) fn is_utf8_char_boundary(byte: u8) -> bool {
+    // Byte is outside this range.
+    !(128..192).contains(&byte)
 }
 
 impl Sealed for char {}
@@ -66,6 +75,10 @@ impl HaystackItem for char {
     fn is_return(self) -> bool {
         self == '\r'
     }
+
+    fn is_utf8_boundary(_item: Option<Self>) -> bool {
+        true
+    }
 }
 
 impl Sealed for u8 {}
@@ -85,5 +98,9 @@ impl HaystackItem for u8 {
 
     fn is_return(self) -> bool {
         self == b'\r'
+    }
+
+    fn is_utf8_boundary(item: Option<Self>) -> bool {
+        item.map(is_utf8_char_boundary).unwrap_or(true)
     }
 }

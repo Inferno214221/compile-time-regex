@@ -30,15 +30,15 @@ pub fn make_regex(
         matching and capturing functions."
     );
 
-    let mut config = flags.create_config();
-    config.unicode(false).utf8(false);
+    let config = flags.create_config();
+    // TODO: for empty regex, this can match non-utf8 strings.
     let TypeExpressions {
         matcher: byte_matcher,
         anchors: byte_anchors,
         meta: byte_meta,
     } = TypeExpressions::<u8>::parse_regex(&name, &pat_str, &config);
 
-    config.unicode(true).utf8(true);
+    // TODO: if !config.enforces_utf8 then don't implement for string
     let TypeExpressions {
         matcher: scalar_matcher,
         anchors: scalar_anchors,

@@ -11,6 +11,11 @@ pub mod bstr;
 #[cfg(feature = "ecow")]
 pub mod ecow;
 
-// /// Extra haystack implementations for the [`hipstr`](https://docs.rs/hipstr/latest/hipstr/) crate.
-// #[cfg(feature = "hipstr")]
-// pub mod hipstr;
+/// Extra haystack implementations for the [`hipstr`](https://docs.rs/hipstr/latest/hipstr/) crate.
+///
+/// This module doesn't actually contain any types but the feature gate enables
+/// [`OwnedHaystackable`](super::OwnedHaystackable) implementations for
+/// [`HipStr`](../trait.OwnedHaystackable.html#impl-OwnedHaystackable<char>-for-HipStr<'s,+B>) and
+/// [`HipByt`](../trait.OwnedHaystackable.html#impl-OwnedHaystackable<u8>-for-HipByt<'s,+B>).
+#[cfg(feature = "hipstr")]
+pub mod hipstr;
